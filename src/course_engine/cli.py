@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
+import sys
+import platform
 import typer
 import yaml
 from jinja2 import Template
@@ -13,6 +15,7 @@ from .generator.render import render_quarto
 from .generator.html_single import build_html_single_project
 from .plugins import BuildContext, load_plugins
 from .utils.fileops import write_text
+from .utils.preflight import PrereqError, has_quarto, require_pdf_toolchain
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -96,6 +99,36 @@ structure:
     typer.echo(f"Created {p / 'course.yml'}")
 
 
+@app.command()
+def check() -> None:
+    """
+    Check whether required external tools are installed.
+
+    Exit codes:
+      0 = ready (Quarto + PDF available)
+      1 = Quarto missing
+      2 = PDF toolchain missing (TinyTeX not installed / not working)
+    """
+    typer.echo(f"Python: {sys.version.split()[0]} ({platform.system()})")
+
+    if has_quarto():
+        typer.echo("✔ Quarto found")
+    else:
+        typer.echo("✖ Quarto not found")
+        typer.echo("Fix: Install Quarto from https://quarto.org/")
+        raise typer.Exit(code=1)
+
+    try:
+        require_pdf_toolchain()
+        typer.echo("✔ PDF rendering available (LaTeX OK)")
+    except PrereqError:
+        typer.echo("✖ PDF rendering unavailable")
+        typer.echo("Fix: quarto install tinytex")
+        raise typer.Exit(code=2)
+
+    typer.echo("\nSystem ready.")
+
+
 def _write_handout_pdf_quarto_config(out_dir: Path, templates_dir: Path) -> None:
     """
     Replace the generated _quarto.yml in a handout project with a PDF-specific config.
@@ -103,7 +136,7 @@ def _write_handout_pdf_quarto_config(out_dir: Path, templates_dir: Path) -> None
     Expects a template file:
       templates/_handout_pdf_quarto.yml.j2
 
-    For v0.6 we intentionally keep this template static (no variables required).
+    For v0.6/v0.7 we intentionally keep this template static (no variables required).
     """
     tpl_path = templates_dir / "_handout_pdf_quarto.yml.j2"
     if not tpl_path.exists():
@@ -182,13 +215,36 @@ def build(
         return
 
     if format == "pdf":
-        # Build the same single-page handout project...
-        out_dir = build_html_single_project(spec, out_root=out_root, templates_dir=templates_dir)
-        # ...then swap in a PDF-specific _quarto.yml config.
+        # v0.7: fail fast with a friendly message if PDF prerequisites are missing
+        try:
+            require_pdf_toolchain()
+        except PrereqError as e:
+            raise typer.BadParameter(str(e)) from e
+
+        # v0.7: build to a clearer folder name
+        out_dir = out_root / f"{spec.id}-pdf"
+        # Build using the existing handout generator, but target our chosen folder.
+        # Easiest approach: generate into the default handout folder then copy/rename is avoided here;
+        # instead we call build_html_single_project then rename after.
+        tmp_dir = build_html_single_project(spec, out_root=out_root, templates_dir=templates_dir)
+
+        # If the handout generator already uses a consistent name (e.g. <id>-handout),
+        # we rename it to <id>-pdf for clarity.
+        if tmp_dir != out_dir:
+            if out_dir.exists():
+                # ensure_empty_dir is not imported here; keep it simple
+                # and avoid destructive deletes unexpectedly.
+                raise typer.BadParameter(
+                    f"Target output folder already exists: {out_dir}\n"
+                    "Delete it or choose a different --out directory."
+                )
+            tmp_dir.rename(out_dir)
+
+        # Swap in a PDF-specific _quarto.yml config.
         _write_handout_pdf_quarto_config(out_dir, templates_dir)
 
         typer.echo(f"Built single-page PDF Quarto project: {out_dir}")
-        typer.echo("Next: course-engine render " + str(out_dir) + " --to pdf")
+        typer.echo("Next: course-engine render " + str(out_dir))
         return
 
 
