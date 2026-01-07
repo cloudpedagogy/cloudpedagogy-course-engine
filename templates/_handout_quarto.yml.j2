@@ -1,0 +1,14 @@
+project:
+  type: website
+
+website:
+  title: "{{ spec.title }}"
+
+format:
+  html:
+    theme: {{ spec.theme or "cosmo" }}
+    toc: true
+    number-sections: false
+
+# Quarto expects a built-in language code (e.g., "en"), not a locale like "en-GB"
+lang: {{ "en" if spec.language.startswith("en") else spec.language }}

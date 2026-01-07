@@ -1,0 +1,2 @@
+[console_scripts]
+course-engine = course_engine.cli:app

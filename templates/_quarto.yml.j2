@@ -1,0 +1,32 @@
+project:
+  type: website
+
+website:
+  title: "{{ spec.title }}"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: lessons/index.qmd
+        text: Lessons
+
+  sidebar:
+    style: "docked"
+    search: true
+    contents:
+      {% for m in nav.modules %}
+      - section: "{{ m.title }}"
+        contents:
+          {% for item in nav.flat_lessons if item.module_id == m.id %}
+          - href: "{{ item.href }}"
+            text: "{{ item.lesson_title }}"
+          {% endfor %}
+      {% endfor %}
+
+format:
+  html:
+    theme: {{ spec.theme or "cosmo" }}
+    toc: {{ "true" if spec.toc else "false" }}
+
+# Optional: if Quarto ever errors on this, remove the line entirely.
+lang: {{ "en" if spec.language.startswith("en") else spec.language }}

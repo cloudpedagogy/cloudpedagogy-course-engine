@@ -1,0 +1,112 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+import re
+
+from ..model import CourseSpec, Module, Lesson
+from ..utils.fileops import ensure_empty_dir, write_text
+from .templates import get_env
+
+
+def slugify(text: str) -> str:
+    s = text.lower().strip()
+    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+    return s or "item"
+
+
+@dataclass(frozen=True)
+class LessonNavItem:
+    module_id: str
+    module_title: str
+    lesson_id: str
+    lesson_title: str
+    href: str  # path relative to project root, e.g. lessons/m1-l1-title.qmd
+
+
+@dataclass(frozen=True)
+class CourseNav:
+    """
+    Canonical navigation model (v0.2).
+
+    This is the single source of truth for:
+    - sidebar/navbar generation
+    - lessons index generation
+    - next/previous links
+    - future exports/manifests/plugin checks
+    """
+
+    modules: list[Module]
+    flat_lessons: list[LessonNavItem]
+    href_to_module_lesson: dict[str, tuple[Module, Lesson]]
+
+
+def build_course_nav(spec: CourseSpec) -> CourseNav:
+    flat: list[LessonNavItem] = []
+    href_map: dict[str, tuple[Module, Lesson]] = {}
+
+    for module in spec.modules:
+        for lesson in module.lessons:
+            filename = f"{module.id}-{lesson.id}-{slugify(lesson.title)}.qmd"
+            href = f"lessons/{filename}"
+
+            item = LessonNavItem(
+                module_id=module.id,
+                module_title=module.title,
+                lesson_id=lesson.id,
+                lesson_title=lesson.title,
+                href=href,
+            )
+            flat.append(item)
+            href_map[href] = (module, lesson)
+
+    return CourseNav(modules=spec.modules, flat_lessons=flat, href_to_module_lesson=href_map)
+
+
+def build_quarto_project(spec: CourseSpec, out_root: Path, templates_dir: Path) -> Path:
+    out_dir = out_root / spec.id
+    ensure_empty_dir(out_dir)
+
+    env = get_env(templates_dir)
+    nav = build_course_nav(spec)
+
+    # Core project files
+    write_text(out_dir / "_quarto.yml", env.get_template("_quarto.yml.j2").render(spec=spec, nav=nav))
+    write_text(out_dir / "index.qmd", env.get_template("index.qmd.j2").render(spec=spec, nav=nav))
+
+    # Lessons index page (so "Lessons" is a real destination)
+    # This template should create links to each lesson using item.href (already includes "lessons/...")
+    write_text(
+        out_dir / "lessons" / "index.qmd",
+        env.get_template("lessons_index.qmd.j2").render(spec=spec, nav=nav),
+    )
+
+    # Lesson pages + prev/next links
+    lesson_template = env.get_template("lesson.qmd.j2")
+
+    # Map href -> index so we can compute prev/next reliably
+    href_to_idx = {item.href: i for i, item in enumerate(nav.flat_lessons)}
+
+    for item in nav.flat_lessons:
+        i = href_to_idx[item.href]
+        prev_item = nav.flat_lessons[i - 1] if i > 0 else None
+        next_item = nav.flat_lessons[i + 1] if i < (len(nav.flat_lessons) - 1) else None
+
+        module, lesson = nav.href_to_module_lesson[item.href]
+
+        # IMPORTANT: pass both module+lesson so existing templates that expect
+        # `module` and `lesson` continue to work (avoids 'lesson is undefined').
+        write_text(
+            out_dir / item.href,
+            lesson_template.render(
+                spec=spec,
+                nav=nav,
+                module=module,
+                lesson=lesson,
+                current=item,
+                prev_item=prev_item,
+                next_item=next_item,
+            ),
+        )
+
+    return out_dir

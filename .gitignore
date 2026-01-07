@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Quarto
+.quarto/
+_site/
+*.log
+
+# Build outputs
+dist/
+
+# OS
+.DS_Store
+

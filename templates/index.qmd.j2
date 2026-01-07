@@ -1,0 +1,32 @@
+---
+title: "{{ spec.title }}"
+---
+
+{% if spec.subtitle %}
+{{ spec.subtitle }}
+{% endif %}
+
+## Start here
+
+- Go to **[Lessons](lessons/index.qmd)** to navigate the full course.
+
+## Course information
+
+- **Course ID:** `{{ spec.id }}`
+- **Version:** `{{ spec.version }}`
+- **Framework:** {{ spec.framework_name }}
+
+## Capability domains
+{% for d in spec.domains %}
+- {{ d }}
+{% endfor %}
+
+## Modules
+{% for m in nav.modules %}
+### {{ m.title }}
+
+{% for item in nav.flat_lessons if item.module_id == m.id %}
+- [{{ item.lesson_title }}]({{ item.href }})
+{% endfor %}
+
+{% endfor %}

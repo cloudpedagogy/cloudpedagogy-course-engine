@@ -1,0 +1,109 @@
+---
+title: "{{ spec.title }}"
+---
+
+{% if spec.subtitle -%}
+{{ spec.subtitle }}
+{%- endif %}
+
+## Course information
+
+- **Course ID:** `{{ spec.id }}`
+- **Version:** `{{ spec.version }}`
+- **Framework:** {{ spec.framework_name }}
+
+## Capability domains
+{% for d in spec.domains -%}
+- {{ d }}
+{% endfor %}
+
+---
+
+# Course content
+
+{% for m in nav.modules -%}
+## {{ m.title }}
+
+{% for item in nav.flat_lessons if item.module_id == m.id -%}
+{% set lesson_obj = (m.lessons | selectattr("id", "equalto", item.lesson_id) | first) -%}
+
+### {{ item.lesson_title }}
+
+{% if lesson_obj.tags -%}
+*Tags: {{ lesson_obj.tags | join(", ") }}*
+{%- endif %}
+
+#### Learning objectives
+{% if lesson_obj.learning_objectives -%}
+{% for lo in lesson_obj.learning_objectives -%}
+- {{ lo }}
+{% endfor %}
+{%- else -%}
+- (Add learning objectives)
+{%- endif %}
+
+#### Content
+
+{% for b in lesson_obj.content_blocks -%}
+{% if b.type == "markdown" -%}
+{{ b.body }}
+
+{% elif b.type == "callout" -%}
+::: {.callout-{{ b.style or "note" }}}
+{% if b.title %}## {{ b.title }}{% endif %}
+{{ b.body }}
+:::
+
+{% elif b.type == "quiz" -%}
+#### Knowledge check
+
+**{{ b.prompt }}**
+
+{% for opt in (b.options or []) -%}
+- {{ opt }}
+{% endfor %}
+
+{% if b.answer is not none or b.solution -%}
+<details>
+<summary><strong>Show answer (instructor)</strong></summary>
+
+{% if b.answer is not none -%}
+**Answer:** {{ (b.options or [])[b.answer] if (b.options and b.answer < (b.options|length)) else b.answer }}
+{%- endif %}
+
+{% if b.solution -%}
+{{ b.solution }}
+{%- endif %}
+
+</details>
+{%- endif %}
+
+{% elif b.type == "reflection" -%}
+#### Reflection
+{{ b.prompt }}
+
+{% elif b.type == "submission" -%}
+#### Submission
+{{ b.prompt }}
+
+{%- endif %}
+{% endfor %}
+
+{% if lesson_obj.readings -%}
+#### Readings
+{% for r in lesson_obj.readings -%}
+- {% if r.required %}(Required){% else %}(Optional){% endif %} {% if r.url %}[{{ r.title }}]({{ r.url }}){% else %}{{ r.title }}{% endif %}
+{% endfor %}
+{%- endif %}
+
+---
+{% endfor %}
+{% endfor %}
+
+<details>
+<summary><strong>Framework alignment</strong></summary>
+
+This course sits within: **{{ spec.framework_name }}**  
+Domains: {% for d in spec.domains %}{{ d }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+</details>

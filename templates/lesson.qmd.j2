@@ -1,0 +1,185 @@
+---
+title: "{{ current.lesson_title if current is defined else lesson.title }}"
+---
+
+{# ------------------------------------------------------------------------- #}
+{# Resolve the real lesson + module objects                                   #}
+{# ------------------------------------------------------------------------- #}
+
+{% if lesson is defined %}
+  {% set lesson_obj = lesson %}
+  {% set module_obj = module %}
+{% else %}
+  {% set module_obj = (spec.modules | selectattr("id", "equalto", current.module_id) | first) %}
+  {% set lesson_obj = (module_obj.lessons | selectattr("id", "equalto", current.lesson_id) | first) %}
+{% endif %}
+
+{# --------------------------- Lesson details -------------------------------- #}
+
+::: {.callout-note}
+## Lesson details
+{% if lesson_obj.duration is defined and lesson_obj.duration %}
+Estimated time: {{ lesson_obj.duration }} minutes  
+{% endif %}
+
+{% if lesson_obj.tags is defined and lesson_obj.tags %}
+Tags: {{ lesson_obj.tags | join(", ") }}
+{% endif %}
+:::
+
+{# ------------------------- Next / Previous --------------------------------- #}
+{# IMPORTANT: lesson pages live in /lessons/, so links must be local filenames #}
+
+{% if prev_item is defined or next_item is defined %}
+::: {.callout-tip}
+{% if prev_item %}
+{% set prev_filename = prev_item.href.split("/")[-1] %}
+← [Previous: {{ prev_item.lesson_title }}]({{ prev_filename }})
+{% endif %}
+{% if prev_item and next_item %} · {% endif %}
+{% if next_item %}
+{% set next_filename = next_item.href.split("/")[-1] %}
+[Next: {{ next_item.lesson_title }}]({{ next_filename }}) →
+{% endif %}
+:::
+{% endif %}
+
+{# ------------------------ Learning objectives ------------------------------ #}
+
+## Learning objectives
+{% if lesson_obj.learning_objectives %}
+{% for lo in lesson_obj.learning_objectives %}
+- {{ lo }}
+{% endfor %}
+{% else %}
+- (Add learning objectives)
+{% endif %}
+
+{# -------------------------------- Content --------------------------------- #}
+
+## Content
+
+{% if lesson_obj.content_blocks %}
+{% for b in lesson_obj.content_blocks %}
+  {% if b.audience == "learner" %}
+
+    {% if b.type == "markdown" %}
+{{ b.body or "" }}
+
+    {% elif b.type == "callout" %}
+::: {.callout-{{ b.style or "note" }}}
+{% if b.title %}## {{ b.title }}{% endif %}
+{{ b.body or "" }}
+:::
+
+    {% elif b.type == "quiz" %}
+### Knowledge check
+
+**{{ b.prompt }}**
+
+{% for opt in b.options %}
+- {{ opt }}
+{% endfor %}
+
+{% if b.answer is not none or b.solution %}
+<details>
+  <summary><strong>Show answer</strong></summary>
+
+  {% if b.answer is not none %}
+  **Answer:** {{ b.options[b.answer] if b.options and b.answer < (b.options|length) else b.answer }}
+  {% endif %}
+
+  {% if b.solution %}
+  {{ b.solution }}
+  {% endif %}
+</details>
+{% endif %}
+
+    {% elif b.type == "reflection" %}
+### Reflection
+{{ b.prompt or "" }}
+
+    {% elif b.type == "submission" %}
+### Submission
+{{ b.prompt or "" }}
+
+    {% endif %}
+  {% endif %}
+{% endfor %}
+{% endif %}
+
+{# ---------------------------- Instructor notes ----------------------------- #}
+
+{% set instructor_blocks = [] %}
+{% if lesson_obj.content_blocks %}
+  {% for b in lesson_obj.content_blocks %}
+    {% if b.audience == "instructor" %}
+      {% set _ = instructor_blocks.append(b) %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if instructor_blocks %}
+::: {.callout-important}
+## Instructor notes
+{% for b in instructor_blocks %}
+
+{% if b.type == "markdown" %}
+{{ b.body or "" }}
+
+{% elif b.type == "callout" %}
+::: {.callout-{{ b.style or "note" }}}
+{% if b.title %}## {{ b.title }}{% endif %}
+{{ b.body or "" }}
+:::
+
+{% elif b.type == "quiz" %}
+**Knowledge check (answer key):** {{ b.prompt }}
+
+{% if b.options %}
+Options:
+{% for opt in b.options %}
+- {{ opt }}
+{% endfor %}
+{% endif %}
+
+{% if b.answer is not none %}
+**Answer:** {{ b.answer + 1 }}
+{% endif %}
+
+{% if b.solution %}
+{{ b.solution }}
+{% endif %}
+
+{% elif b.type == "reflection" %}
+**Reflection prompt (facilitation):** {{ b.prompt or "" }}
+
+{% elif b.type == "submission" %}
+**Submission guidance:** {{ b.prompt or "" }}
+
+{% endif %}
+
+{% endfor %}
+:::
+{% endif %}
+
+{# -------------------------------- Readings -------------------------------- #}
+
+{% if lesson_obj.readings is defined and lesson_obj.readings %}
+## Readings
+
+{% for r in lesson_obj.readings %}
+- {% if r.required %}(Required){% else %}(Optional){% endif %}
+  {% if r.url %}
+  [{{ r.title }}]({{ r.url }})
+  {% else %}
+  {{ r.title }}
+  {% endif %}
+{% endfor %}
+{% endif %}
+
+---
+
+### Framework alignment
+This lesson sits within: **{{ spec.framework_name }}**  
+Domains: {% for d in spec.domains %}{{ d }}{% if not loop.last %}, {% endif %}{% endfor %}
