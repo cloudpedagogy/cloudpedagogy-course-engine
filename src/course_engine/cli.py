@@ -16,10 +16,22 @@ from .generator.html_single import build_html_single_project
 from .plugins import BuildContext, load_plugins
 from .utils.fileops import write_text
 from .utils.preflight import PrereqError, has_quarto, require_pdf_toolchain
+from .utils.manifest import write_manifest
 
 app = typer.Typer(no_args_is_help=True)
 
 DEFAULT_TEMPLATES_DIR = Path(__file__).resolve().parents[2] / "templates"
+
+
+def _emit_manifest(spec, out_dir: Path, output_format: str, source_course_yml: Path) -> None:
+    mp = write_manifest(
+        spec=spec,
+        out_dir=out_dir,
+        output_format=output_format,
+        source_course_yml=source_course_yml,
+        include_hashes=True,
+    )
+    typer.echo(f"Wrote manifest: {mp}")
 
 
 @app.command()
@@ -136,7 +148,7 @@ def _write_handout_pdf_quarto_config(out_dir: Path, templates_dir: Path) -> None
     Expects a template file:
       templates/_handout_pdf_quarto.yml.j2
 
-    For v0.6/v0.7 we intentionally keep this template static (no variables required).
+    For v0.6/v0.7/v0.8 we intentionally keep this template static (no variables required).
     """
     tpl_path = templates_dir / "_handout_pdf_quarto.yml.j2"
     if not tpl_path.exists():
@@ -186,6 +198,7 @@ def build(
             plg.post_build(spec, ctx, out_dir)
 
         typer.echo(f"Built Quarto project: {out_dir}")
+        _emit_manifest(spec, out_dir, "quarto", course_path)
         return
 
     if format == "markdown":
@@ -206,34 +219,31 @@ def build(
 
         out_dir = build_markdown_package(spec, out_root=out_root)
         typer.echo(f"Built Markdown package: {out_dir}")
+        _emit_manifest(spec, out_dir, "markdown", course_path)
         return
 
     if format == "html-single":
         out_dir = build_html_single_project(spec, out_root=out_root, templates_dir=templates_dir)
         typer.echo(f"Built single-page HTML Quarto project: {out_dir}")
+        _emit_manifest(spec, out_dir, "html-single", course_path)
         typer.echo("Next: course-engine render " + str(out_dir))
         return
 
     if format == "pdf":
-        # v0.7: fail fast with a friendly message if PDF prerequisites are missing
+        # Fail fast with a friendly message if PDF prerequisites are missing
         try:
             require_pdf_toolchain()
         except PrereqError as e:
             raise typer.BadParameter(str(e)) from e
 
-        # v0.7: build to a clearer folder name
+        # Build to a clearer folder name
         out_dir = out_root / f"{spec.id}-pdf"
-        # Build using the existing handout generator, but target our chosen folder.
-        # Easiest approach: generate into the default handout folder then copy/rename is avoided here;
-        # instead we call build_html_single_project then rename after.
+
+        # Build using the existing handout generator then rename to <id>-pdf
         tmp_dir = build_html_single_project(spec, out_root=out_root, templates_dir=templates_dir)
 
-        # If the handout generator already uses a consistent name (e.g. <id>-handout),
-        # we rename it to <id>-pdf for clarity.
         if tmp_dir != out_dir:
             if out_dir.exists():
-                # ensure_empty_dir is not imported here; keep it simple
-                # and avoid destructive deletes unexpectedly.
                 raise typer.BadParameter(
                     f"Target output folder already exists: {out_dir}\n"
                     "Delete it or choose a different --out directory."
@@ -244,6 +254,7 @@ def build(
         _write_handout_pdf_quarto_config(out_dir, templates_dir)
 
         typer.echo(f"Built single-page PDF Quarto project: {out_dir}")
+        _emit_manifest(spec, out_dir, "pdf", course_path)
         typer.echo("Next: course-engine render " + str(out_dir))
         return
 
