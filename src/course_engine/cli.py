@@ -5,6 +5,7 @@ from typing import Optional
 
 import typer
 import yaml
+from jinja2 import Template
 
 from .schema import validate_course_dict
 from .generator.build import build_quarto_project
@@ -95,12 +96,38 @@ structure:
     typer.echo(f"Created {p / 'course.yml'}")
 
 
+def _write_handout_pdf_quarto_config(out_dir: Path, templates_dir: Path) -> None:
+    """
+    Replace the generated _quarto.yml in a handout project with a PDF-specific config.
+
+    Expects a template file:
+      templates/_handout_pdf_quarto.yml.j2
+
+    For v0.6 we intentionally keep this template static (no variables required).
+    """
+    tpl_path = templates_dir / "_handout_pdf_quarto.yml.j2"
+    if not tpl_path.exists():
+        raise typer.BadParameter(
+            f"Missing PDF Quarto config template: {tpl_path}\n"
+            "Create templates/_handout_pdf_quarto.yml.j2 to enable --format pdf."
+        )
+
+    raw = tpl_path.read_text(encoding="utf-8")
+    rendered = Template(raw).render()
+    write_text(out_dir / "_quarto.yml", rendered)
+
+
 @app.command()
 def build(
     course_yml: str,
     out: str = "dist",
     templates: Optional[str] = None,
-    format: str = typer.Option("quarto", "--format", "-f", help="quarto | markdown | html-single"),
+    format: str = typer.Option(
+        "quarto",
+        "--format",
+        "-f",
+        help="quarto | markdown | html-single | pdf",
+    ),
 ):
     """Build outputs from course.yml."""
     course_path = Path(course_yml)
@@ -109,6 +136,10 @@ def build(
 
     data = yaml.safe_load(course_path.read_text(encoding="utf-8"))
     spec = validate_course_dict(data)
+
+    allowed = {"quarto", "markdown", "html-single", "pdf"}
+    if format not in allowed:
+        raise typer.BadParameter("Unknown --format. Use: quarto | markdown | html-single | pdf")
 
     if format == "quarto":
         ctx = BuildContext()
@@ -126,11 +157,9 @@ def build(
 
     if format == "markdown":
         # Lazy import so the CLI doesn't break if the module name changes.
-        # If your markdown builder is in a different file, update the import below.
         try:
             from .generator.markdown import build_markdown_package  # type: ignore
         except ModuleNotFoundError:
-            # Fallback: try common alternative names (no harm if they don't exist)
             try:
                 from .generator.md import build_markdown_package  # type: ignore
             except ModuleNotFoundError:
@@ -152,12 +181,28 @@ def build(
         typer.echo("Next: course-engine render " + str(out_dir))
         return
 
-    raise typer.BadParameter("Unknown --format. Use: quarto | markdown | html-single")
+    if format == "pdf":
+        # Build the same single-page handout project...
+        out_dir = build_html_single_project(spec, out_root=out_root, templates_dir=templates_dir)
+        # ...then swap in a PDF-specific _quarto.yml config.
+        _write_handout_pdf_quarto_config(out_dir, templates_dir)
+
+        typer.echo(f"Built single-page PDF Quarto project: {out_dir}")
+        typer.echo("Next: course-engine render " + str(out_dir) + " --to pdf")
+        return
 
 
 @app.command()
-def render(project_dir: str):
+def render(
+    project_dir: str,
+    to: Optional[str] = typer.Option(
+        None, "--to", help="Optional Quarto output format override (e.g., pdf, html)."
+    ),
+    input: Optional[str] = typer.Option(
+        None, "--input", help='Optional input file to render (e.g., "index.qmd").'
+    ),
+):
     """Render an existing Quarto project directory (calls `quarto render`)."""
     p = Path(project_dir)
-    render_quarto(p)
+    render_quarto(p, input_file=input, to=to)
     typer.echo("Render complete.")

@@ -3,10 +3,89 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 import re
+import shutil
+import subprocess
+import tempfile
+from typing import Optional
 
 from ..model import CourseSpec, Module, Lesson
 from ..utils.fileops import ensure_empty_dir, write_text
 from .templates import get_env
+
+
+# Cache PDF preflight per process
+_PDF_PREFLIGHT_OK: Optional[bool] = None
+
+
+def _require_quarto() -> None:
+    """Fail fast if Quarto is not installed."""
+    if shutil.which("quarto") is None:
+        raise RuntimeError(
+            "Quarto not found.\n\n"
+            "Install Quarto and ensure `quarto` is on PATH.\n"
+            "Quarto: https://quarto.org/"
+        )
+
+
+def _require_pdf_toolchain() -> None:
+    """
+    Fail fast if PDF rendering is not available.
+
+    Uses a minimal Quarto->PDF smoke test rather than parsing `quarto check`
+    output (which can vary).
+    """
+    global _PDF_PREFLIGHT_OK
+
+    if _PDF_PREFLIGHT_OK is True:
+        return
+
+    _require_quarto()
+
+    with tempfile.TemporaryDirectory(prefix="course-engine-pdf-check-") as td:
+        tdir = Path(td)
+
+        (tdir / "index.qmd").write_text(
+            "# PDF preflight\n\nIf you can read this, PDF rendering works.\n",
+            encoding="utf-8",
+        )
+
+        (tdir / "_quarto.yml").write_text(
+            "project:\n"
+            "  type: default\n"
+            "\n"
+            "format:\n"
+            "  pdf:\n"
+            "    toc: false\n"
+            "execute:\n"
+            "  echo: false\n",
+            encoding="utf-8",
+        )
+
+        cmd = ["quarto", "render", str(tdir)]
+        completed = subprocess.run(cmd, capture_output=True, text=True)
+
+        if completed.returncode != 0:
+            _PDF_PREFLIGHT_OK = False
+
+            stderr = (completed.stderr or "").strip()
+            stdout = (completed.stdout or "").strip()
+            details = stderr if stderr else stdout
+
+            msg = (
+                "PDF output requires a LaTeX toolchain.\n\n"
+                "Recommended fix (one-time):\n"
+                "  quarto install tinytex\n\n"
+                "Then retry your command.\n"
+            )
+
+            # Add short diagnostic tail for debugging
+            if details:
+                tail = "\n".join(details.splitlines()[-25:])
+                msg += "\n---\nQuarto/LaTeX details (tail):\n" + tail + "\n"
+
+            raise RuntimeError(msg)
+
+    _PDF_PREFLIGHT_OK = True
 
 
 def slugify(text: str) -> str:
@@ -63,7 +142,31 @@ def build_course_nav(spec: CourseSpec) -> CourseNav:
     return CourseNav(modules=spec.modules, flat_lessons=flat, href_to_module_lesson=href_map)
 
 
-def build_quarto_project(spec: CourseSpec, out_root: Path, templates_dir: Path) -> Path:
+def build_quarto_project(
+    spec: CourseSpec,
+    out_root: Path,
+    templates_dir: Path,
+    *,
+    preflight_pdf: bool = False,
+) -> Path:
+    """
+    Build a multi-page Quarto website project for a course.
+
+    Args:
+        spec: Validated course spec.
+        out_root: Root output directory.
+        templates_dir: Directory containing Jinja templates.
+        preflight_pdf: If True, run a PDF toolchain preflight check and fail fast
+                       with a friendly TinyTeX instruction if PDF is unavailable.
+
+    Returns:
+        Path to the built Quarto project directory.
+    """
+    if preflight_pdf:
+        _require_pdf_toolchain()
+    else:
+        _require_quarto()
+
     out_dir = out_root / spec.id
     ensure_empty_dir(out_dir)
 

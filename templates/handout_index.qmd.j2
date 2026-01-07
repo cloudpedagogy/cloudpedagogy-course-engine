@@ -22,6 +22,11 @@ title: "{{ spec.title }}"
 # Course content
 
 {% for m in nav.modules -%}
+{# Page break before each module except the first (PDF only; harmless in HTML) #}
+{% if not loop.first -%}
+\newpage
+{%- endif %}
+
 ## {{ m.title }}
 
 {% for item in nav.flat_lessons if item.module_id == m.id -%}
@@ -100,10 +105,15 @@ title: "{{ spec.title }}"
 {% endfor %}
 {% endfor %}
 
-<details>
-<summary><strong>Framework alignment</strong></summary>
+## Framework alignment
 
 This course sits within: **{{ spec.framework_name }}**  
 Domains: {% for d in spec.domains %}{{ d }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{# Optional: keep collapsible behaviour for HTML; in PDF it will simply show content #}
+<details>
+<summary><strong>Show/hide framework alignment notes</strong></summary>
+
+You can expand this section in HTML output to review alignment notes or mapping commentary.
 
 </details>
