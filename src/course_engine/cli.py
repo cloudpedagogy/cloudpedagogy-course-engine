@@ -3,20 +3,22 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-import sys
 import platform
+import shutil
+import sys
+
 import typer
 import yaml
 from jinja2 import Template
 
-from .schema import validate_course_dict
 from .generator.build import build_quarto_project
-from .generator.render import render_quarto
 from .generator.html_single import build_html_single_project
+from .generator.render import render_quarto
 from .plugins import BuildContext, load_plugins
+from .schema import validate_course_dict
 from .utils.fileops import write_text
+from .utils.manifest import load_manifest, update_manifest_after_render, write_manifest
 from .utils.preflight import PrereqError, has_quarto, require_pdf_toolchain
-from .utils.manifest import write_manifest, load_manifest, update_manifest_after_render
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -143,9 +145,7 @@ def check() -> None:
 
 @app.command()
 def inspect(project_dir: str) -> None:
-    """
-    Inspect an output folder's manifest.json in a human-readable way.
-    """
+    """Inspect an output folder's manifest.json in a human-readable way."""
     out_dir = Path(project_dir)
     try:
         m = load_manifest(out_dir)
@@ -184,12 +184,98 @@ def inspect(project_dir: str) -> None:
     typer.echo(f"  Count: {len(files)}")
     typer.echo(f"  Total bytes: {total_bytes}")
 
-    # Show a short sample of file paths
     sample = files[:12]
     if sample:
         typer.echo("  Sample:")
         for f in sample:
             typer.echo(f"   - {f.get('path')}")
+
+
+def _is_dangerous_delete_target(p: Path) -> bool:
+    """Conservative safety checks to avoid catastrophic deletes."""
+    rp = p.resolve()
+
+    if rp == Path("/"):
+        return True
+
+    home = Path.home().resolve()
+    if rp == home:
+        return True
+
+    cwd = Path.cwd().resolve()
+    if rp == cwd or rp == cwd.parent:
+        return True
+
+    # Intentionally conservative: avoid shallow paths like /Users, /Users/<name>, /Volumes, etc.
+    if len(rp.parts) <= 3:
+        return True
+
+    return False
+
+
+def _maybe_overwrite_dir(target: Path, *, overwrite: bool) -> None:
+    """
+    If target exists and overwrite=True, delete it safely. Otherwise error.
+    """
+    if not target.exists():
+        return
+
+    if not target.is_dir():
+        raise typer.BadParameter(f"Output path exists but is not a directory: {target}")
+
+    if not overwrite:
+        raise typer.BadParameter(
+            f"Target output folder already exists: {target}\n"
+            "Delete it, choose a different --out directory, or pass --overwrite."
+        )
+
+    if _is_dangerous_delete_target(target):
+        raise typer.BadParameter(
+            f"Refusing to delete dangerous path: {target.resolve()}\n"
+            "Choose a specific output folder (e.g., dist/<course-id>-pdf)."
+        )
+
+    shutil.rmtree(target.resolve())
+    typer.echo(f"Overwrote existing output: {target.resolve()}")
+
+
+@app.command()
+def clean(
+    path: str,
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt."),
+) -> None:
+    """
+    Delete a generated output directory safely.
+
+    Example:
+      course-engine clean dist/ai-capability-foundations-pdf
+    """
+    p = Path(path)
+
+    if not p.exists():
+        typer.echo(f"Nothing to clean: {p} (does not exist)")
+        raise typer.Exit(code=1)
+
+    if not p.is_dir():
+        raise typer.BadParameter(f"Refusing to clean: {p} (not a directory)")
+
+    if _is_dangerous_delete_target(p):
+        raise typer.BadParameter(
+            f"Refusing to delete dangerous path: {p.resolve()}\n"
+            "Pick a specific output folder (e.g., dist/<course-id>-pdf)."
+        )
+
+    resolved = p.resolve()
+
+    if not yes:
+        typer.echo(f"About to delete: {resolved}")
+        ok = typer.confirm("Proceed?", default=False)
+        if not ok:
+            typer.echo("Cancelled.")
+            raise typer.Exit(code=0)
+
+    shutil.rmtree(resolved)
+    typer.echo(f"Deleted: {resolved}")
 
 
 def _write_handout_pdf_quarto_config(out_dir: Path, templates_dir: Path) -> None:
@@ -210,11 +296,11 @@ def build(
     course_yml: str,
     out: str = "dist",
     templates: Optional[str] = None,
-    format: str = typer.Option(
-        "quarto",
-        "--format",
-        "-f",
-        help="quarto | markdown | html-single | pdf",
+    format: str = typer.Option("quarto", "--format", "-f", help="quarto | markdown | html-single | pdf"),
+    overwrite: bool = typer.Option(
+        False,
+        "--overwrite",
+        help="If the output directory exists, delete it first and rebuild (safe, opt-in).",
     ),
 ):
     """Build outputs from course.yml."""
@@ -230,6 +316,9 @@ def build(
         raise typer.BadParameter("Unknown --format. Use: quarto | markdown | html-single | pdf")
 
     if format == "quarto":
+        out_dir = out_root / spec.id
+        _maybe_overwrite_dir(out_dir, overwrite=overwrite)
+
         ctx = BuildContext()
         plugins = load_plugins()
         for plg in plugins:
@@ -278,13 +367,17 @@ def build(
             raise typer.BadParameter(str(e)) from e
 
         out_dir = out_root / f"{spec.id}-pdf"
+        _maybe_overwrite_dir(out_dir, overwrite=overwrite)
+
         tmp_dir = build_html_single_project(spec, out_root=out_root, templates_dir=templates_dir)
 
         if tmp_dir != out_dir:
             if out_dir.exists():
+                # If tmp_dir already exists, it may be the one we are renaming from.
+                # But if out_dir exists here, it's an actual conflict.
                 raise typer.BadParameter(
                     f"Target output folder already exists: {out_dir}\n"
-                    "Delete it or choose a different --out directory."
+                    "Delete it, choose a different --out directory, or pass --overwrite."
                 )
             tmp_dir.rename(out_dir)
 
@@ -299,12 +392,8 @@ def build(
 @app.command()
 def render(
     project_dir: str,
-    to: Optional[str] = typer.Option(
-        None, "--to", help="Optional Quarto output format override (e.g., pdf, html)."
-    ),
-    input: Optional[str] = typer.Option(
-        None, "--input", help='Optional input file to render (e.g., "index.qmd").'
-    ),
+    to: Optional[str] = typer.Option(None, "--to", help="Optional Quarto output format override (e.g., pdf, html)."),
+    input: Optional[str] = typer.Option(None, "--input", help='Optional input file to render (e.g., "index.qmd").'),
 ):
     """Render an existing Quarto project directory (calls `quarto render`)."""
     p = Path(project_dir)
