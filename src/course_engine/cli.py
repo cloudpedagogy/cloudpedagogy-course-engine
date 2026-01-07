@@ -16,7 +16,7 @@ from .generator.html_single import build_html_single_project
 from .plugins import BuildContext, load_plugins
 from .utils.fileops import write_text
 from .utils.preflight import PrereqError, has_quarto, require_pdf_toolchain
-from .utils.manifest import write_manifest
+from .utils.manifest import write_manifest, load_manifest, update_manifest_after_render
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -141,15 +141,58 @@ def check() -> None:
     typer.echo("\nSystem ready.")
 
 
+@app.command()
+def inspect(project_dir: str) -> None:
+    """
+    Inspect an output folder's manifest.json in a human-readable way.
+    """
+    out_dir = Path(project_dir)
+    try:
+        m = load_manifest(out_dir)
+    except FileNotFoundError as e:
+        raise typer.BadParameter(str(e)) from e
+
+    course = m.get("course", {})
+    output = m.get("output", {})
+    builder = m.get("builder", {})
+    files = m.get("files", []) or []
+    render = m.get("render")
+
+    typer.echo(f"Course: {course.get('title')} ({course.get('id')})")
+    typer.echo(f"Course version: {course.get('version')}")
+    typer.echo(f"Output: {output.get('format')}  |  Dir: {output.get('out_dir')}")
+    typer.echo(f"Built at (UTC): {m.get('built_at_utc')}")
+    if m.get("refreshed_at_utc"):
+        typer.echo(f"Refreshed at (UTC): {m.get('refreshed_at_utc')}")
+    typer.echo(f"Builder: {builder.get('name')} {builder.get('version')}  |  Python {builder.get('python')}")
+    if m.get("input", {}).get("course_yml"):
+        typer.echo(f"Source: {m['input']['course_yml']}")
+
+    if render:
+        typer.echo("\nRender:")
+        typer.echo(f"  Rendered at (UTC): {render.get('rendered_at_utc')}")
+        typer.echo(f"  To: {render.get('to')}")
+        typer.echo(f"  Input file: {render.get('input_file')}")
+
+    total_bytes = 0
+    for f in files:
+        b = f.get("bytes")
+        if isinstance(b, int):
+            total_bytes += b
+
+    typer.echo("\nFiles:")
+    typer.echo(f"  Count: {len(files)}")
+    typer.echo(f"  Total bytes: {total_bytes}")
+
+    # Show a short sample of file paths
+    sample = files[:12]
+    if sample:
+        typer.echo("  Sample:")
+        for f in sample:
+            typer.echo(f"   - {f.get('path')}")
+
+
 def _write_handout_pdf_quarto_config(out_dir: Path, templates_dir: Path) -> None:
-    """
-    Replace the generated _quarto.yml in a handout project with a PDF-specific config.
-
-    Expects a template file:
-      templates/_handout_pdf_quarto.yml.j2
-
-    For v0.6/v0.7/v0.8 we intentionally keep this template static (no variables required).
-    """
     tpl_path = templates_dir / "_handout_pdf_quarto.yml.j2"
     if not tpl_path.exists():
         raise typer.BadParameter(
@@ -202,7 +245,6 @@ def build(
         return
 
     if format == "markdown":
-        # Lazy import so the CLI doesn't break if the module name changes.
         try:
             from .generator.markdown import build_markdown_package  # type: ignore
         except ModuleNotFoundError:
@@ -230,16 +272,12 @@ def build(
         return
 
     if format == "pdf":
-        # Fail fast with a friendly message if PDF prerequisites are missing
         try:
             require_pdf_toolchain()
         except PrereqError as e:
             raise typer.BadParameter(str(e)) from e
 
-        # Build to a clearer folder name
         out_dir = out_root / f"{spec.id}-pdf"
-
-        # Build using the existing handout generator then rename to <id>-pdf
         tmp_dir = build_html_single_project(spec, out_root=out_root, templates_dir=templates_dir)
 
         if tmp_dir != out_dir:
@@ -250,7 +288,6 @@ def build(
                 )
             tmp_dir.rename(out_dir)
 
-        # Swap in a PDF-specific _quarto.yml config.
         _write_handout_pdf_quarto_config(out_dir, templates_dir)
 
         typer.echo(f"Built single-page PDF Quarto project: {out_dir}")
@@ -271,5 +308,14 @@ def render(
 ):
     """Render an existing Quarto project directory (calls `quarto render`)."""
     p = Path(project_dir)
+
     render_quarto(p, input_file=input, to=to)
     typer.echo("Render complete.")
+
+    # v0.9: if a manifest exists, update it to capture rendered outputs
+    try:
+        mp = update_manifest_after_render(p, to=to, input_file=input, include_hashes=True)
+        typer.echo(f"Updated manifest: {mp}")
+    except FileNotFoundError:
+        # Not fatal: render can be used on arbitrary Quarto projects
+        pass
