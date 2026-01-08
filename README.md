@@ -9,8 +9,9 @@ This tool is designed for **reproducible course production** in educator, learni
 - Treats `course.yml` as the **single source of truth**
 - Validates course structure and metadata
 - Generates publishable artefacts via templates
-- Produces **auditable, reproducible outputs** with a machine-readable (`manifest.json`)
+- Produces **auditable, reproducible outputs** with a machine-readable `manifest.json`
 - Defaults to **non-destructive builds** (explicit `--overwrite` required)
+- Supports optional **capability mapping metadata** for governance and audit (v1.1)
 
 ## Outputs
 
@@ -18,7 +19,7 @@ This tool is designed for **reproducible course production** in educator, learni
 - Single-page HTML handout
 - Print-ready PDF (via Quarto + TinyTeX/LaTeX)
 - Markdown export package
-
+  
 ## Install (dev)
 
 ```bash
