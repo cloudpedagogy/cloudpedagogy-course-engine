@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -19,6 +20,7 @@ from .schema import validate_course_dict
 from .utils.fileops import write_text
 from .utils.manifest import load_manifest, update_manifest_after_render, write_manifest
 from .utils.preflight import PrereqError, has_quarto, require_pdf_toolchain
+from .utils.reporting import build_capability_report, report_to_json, report_to_text
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -203,6 +205,46 @@ def inspect(project_dir: str) -> None:
         typer.echo("  Sample:")
         for f in sample:
             typer.echo(f"   - {f.get('path')}")
+
+
+@app.command()
+def report(
+    project_dir: str,
+    json_out: bool = typer.Option(False, "--json", help="Print report as JSON."),
+    verbose: bool = typer.Option(False, "--verbose", help="Include full coverage/evidence lists."),
+    fail_on_gaps: bool = typer.Option(
+        False,
+        "--fail-on-gaps",
+        help="Exit with code 2 if any domain has zero coverage and zero evidence (signal-only QA gate).",
+    ),
+) -> None:
+    """
+    Produce a capability coverage report from an output folder's manifest.json.
+
+    Reads capability mapping metadata recorded in manifest.json (v1.1+) and prints a summary.
+    This is informational and does not enforce mapping correctness unless --fail-on-gaps is used.
+    """
+    out_dir = Path(project_dir)
+
+    try:
+        m = load_manifest(out_dir)
+    except FileNotFoundError as e:
+        raise typer.BadParameter(str(e)) from e
+
+    if "capability_mapping" not in m or not m.get("capability_mapping"):
+        typer.echo("No capability_mapping found in manifest.json (nothing to report).")
+        raise typer.Exit(code=1)
+
+    rep = build_capability_report(m)
+
+    if json_out:
+        typer.echo(report_to_json(rep), nl=False)
+    else:
+        typer.echo(report_to_text(rep, verbose=verbose), nl=False)
+
+    gaps = int((rep.get("summary") or {}).get("gaps") or 0)
+    if fail_on_gaps and gaps > 0:
+        raise typer.Exit(code=2)
 
 
 def _is_dangerous_delete_target(p: Path) -> bool:
