@@ -1,16 +1,43 @@
-# Python
+# =========================
+# Python / Virtual Envs
+# =========================
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Quarto
+# Packaging / install artefacts
+*.egg-info/
+pip-wheel-metadata/
+
+# =========================
+# Quarto / LaTeX
+# =========================
 .quarto/
 _site/
 *.log
+*.aux
+*.out
+*.toc
 
+# =========================
 # Build outputs
+# =========================
 dist/
+build/
 
-# OS
+# =========================
+# Test / coverage
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# =========================
+# OS / Editor
+# =========================
 .DS_Store
-
+Thumbs.db
+.vscode/
+.idea/
