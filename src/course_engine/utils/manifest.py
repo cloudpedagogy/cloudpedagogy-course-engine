@@ -13,7 +13,7 @@ except Exception:  # pragma: no cover
     pkg_version = None  # type: ignore
 
 
-MANIFEST_VERSION = "0.9.0"
+MANIFEST_VERSION = "1.1.0"
 
 
 def _utc_now_iso() -> str:
@@ -118,6 +118,35 @@ def build_file_inventory(
     return files
 
 
+def _capability_mapping_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
+    """
+    v1.1: Optional, informational capability mapping metadata.
+
+    This is NOT enforced in v1.1. We simply record it for auditability and rendering.
+    """
+    cap = getattr(spec, "capability_mapping", None)
+    if cap is None:
+        return None
+
+    domains_out: Dict[str, Any] = {}
+    domains = getattr(cap, "domains", None) or {}
+    for key, d in domains.items():
+        domains_out[str(key)] = {
+            "label": getattr(d, "label", None),
+            "intent": getattr(d, "intent", None),
+            "coverage": list(getattr(d, "coverage", []) or []),
+            "evidence": list(getattr(d, "evidence", []) or []),
+        }
+
+    return {
+        "framework": getattr(cap, "framework", None),
+        "version": getattr(cap, "version", None),
+        "domains": domains_out,
+        "domains_declared": len(domains_out),
+        "status": "informational (not enforced)",
+    }
+
+
 def build_manifest(
     *,
     spec: Any,
@@ -158,6 +187,10 @@ def build_manifest(
         },
         "files": build_file_inventory(out_dir, include_hashes=include_hashes, include_sizes=include_sizes),
     }
+
+    cap_map = _capability_mapping_for_manifest(spec)
+    if cap_map is not None:
+        manifest["capability_mapping"] = cap_map
 
     return manifest
 
