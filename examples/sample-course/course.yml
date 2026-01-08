@@ -15,6 +15,27 @@ framework_alignment:
     - Decision-Making & Governance
     - Reflection, Learning & Renewal
 
+# v1.1 (informational): capability mapping metadata
+capability_mapping:
+  framework: "CloudPedagogy AI Capability Framework (2026 Edition)"
+  version: "2026"
+  domains:
+    awareness:
+      label: "AI Awareness & Orientation"
+      intent: "Introduce foundational concepts and a shared vocabulary for safe, responsible use."
+      coverage: ["m1"]
+      evidence: ["lesson:l1", "learning_objectives", "content_blocks:markdown,callout"]
+    decision_governance:
+      label: "Decision-Making & Governance"
+      intent: "Support defensible decisions, clear accountability, and governance-aware design choices."
+      coverage: ["m1"]
+      evidence: ["lesson:l1", "content_blocks:quiz,reflection,instructor_notes"]
+    reflection_renewal:
+      label: "Reflection, Learning & Renewal"
+      intent: "Encourage reflective judgement and iterative capability growth."
+      coverage: ["m1"]
+      evidence: ["lesson:l1", "content_blocks:reflection"]
+
 outputs:
   formats: ["html"]
   theme: "cosmo"
@@ -27,8 +48,7 @@ structure:
       lessons:
         - id: l1
           title: "Welcome and how this course works"
-
-          duration_minutes: 15
+          duration: 15
           tags: ["orientation", "foundations"]
           prerequisites: []
 
@@ -51,18 +71,21 @@ structure:
               title: "Tip"
               body: "Keep this course practical and defensible."
 
-          knowledge_check:
-            question: "Which domain focuses most directly on governance?"
-            options:
-              - "Awareness"
-              - "Decision-Making & Governance"
-              - "Reflection, Learning & Renewal"
-            answer: "Decision-Making & Governance"
-            rationale: |
-              Governance sits most directly in Decision-Making & Governance, even though other domains contribute.
+            - type: "quiz"
+              prompt: "Which domain focuses most directly on governance?"
+              options:
+                - "Awareness"
+                - "Decision-Making & Governance"
+                - "Reflection, Learning & Renewal"
+              answer: 1
+              solution: |
+                Governance sits most directly in Decision-Making & Governance, even though other domains contribute.
 
-          reflection_prompt: |
-            Where in your current work would a capability lens reduce risk or improve clarity?
+            - type: "reflection"
+              prompt: |
+                Where in your current work would a capability lens reduce risk or improve clarity?
 
-          instructor_notes: |
-            Emphasise that governance is not a 'policy afterthought' — it shapes design choices from the start.
+            - type: "markdown"
+              audience: "instructor"
+              body: |
+                Emphasise that governance is not a 'policy afterthought' — it shapes design choices from the start.
