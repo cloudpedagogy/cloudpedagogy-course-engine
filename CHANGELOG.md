@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 This project follows semantic versioning.
 
+
+## v1.1.0
+
+- Added optional top-level `capability_mapping` metadata in `course.yml`
+- Capability mapping is recorded in `manifest.json` (informational, not enforced)
+- `course-engine inspect` shows a capability mapping summary
+- Added tests covering parsing and manifest inclusion
+- Repo hygiene: ignore packaging/build artefacts (e.g., `*.egg-info/`)
+
+
 ## v1.0.0
 
 - Initial stable release
