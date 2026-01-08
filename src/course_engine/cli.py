@@ -168,6 +168,20 @@ def inspect(project_dir: str) -> None:
     if m.get("input", {}).get("course_yml"):
         typer.echo(f"Source: {m['input']['course_yml']}")
 
+    # v1.1: capability mapping summary (informational)
+    if m.get("capability_mapping") is None:
+        typer.echo("Capability mapping: none")
+    else:
+        cap = m["capability_mapping"] or {}
+        typer.echo("Capability mapping:")
+        typer.echo(f"  Framework: {cap.get('framework') or '—'}")
+        typer.echo(f"  Version: {cap.get('version') or '—'}")
+        typer.echo(f"  Domains declared: {cap.get('domains_declared') or 0}")
+        domains = cap.get("domains") or {}
+        if domains:
+            typer.echo(f"  Domains: {', '.join(domains.keys())}")
+        typer.echo(f"  Status: {cap.get('status') or 'informational'}")
+
     if render:
         typer.echo("\nRender:")
         typer.echo(f"  Rendered at (UTC): {render.get('rendered_at_utc')}")
