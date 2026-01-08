@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.0**
+**course-engine v1.1**
 
 ---
 
@@ -13,6 +13,8 @@
 - Markdown export packages
 
 It is designed for **educators, learning designers, and curriculum developers** who want reproducible, auditable course outputs without manually editing documents.
+
+From v1.1 onwards, course-engine also supports optional capability mapping metadata for governance, audit, and curriculum review contexts.
 
 ---
 
@@ -151,11 +153,9 @@ This shows:
 - Course metadata
 - Build time
 - Render time
-
-
-Output format
-
-File inventory and sizes
+- Output format
+- Capability mapping summary (if declared)
+- File inventory and sizes
 
 ### 6.4 Clean Outputs
 
@@ -229,9 +229,12 @@ Human-auditable: outputs and metadata are inspectable without tools
 
 ## 10. Versioning Notes
 
-v1.0 focuses on stability, reproducibility, and clarity
+v1.0–v1.1 focus on stability, reproducibility, and clarity
 
-Capability-Driven Development metadata is conceptual context, not yet required
+From v1.1, optional capability mapping metadata can be declared in course.yml.
+This metadata is informational and not enforced.
+
+Capability-Driven Development (CDD) concepts provide design context but are not mandatory.
 
 Future versions may add:
 
