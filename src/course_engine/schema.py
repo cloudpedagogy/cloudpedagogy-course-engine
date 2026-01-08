@@ -4,7 +4,15 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, ValidationError
 
-from .model import CourseSpec, Module, Lesson, ContentBlock, ReadingItem
+from .model import (
+    CapabilityDomainMapping,
+    CapabilityMapping,
+    ContentBlock,
+    CourseSpec,
+    Lesson,
+    Module,
+    ReadingItem,
+)
 
 
 Audience = Literal["learner", "instructor"]
@@ -86,6 +94,24 @@ class FrameworkAlignmentModel(BaseModel):
     domains: list[str] = Field(min_length=1)
 
 
+class CapabilityDomainMappingModel(BaseModel):
+    label: Optional[str] = None
+    intent: Optional[str] = None
+    coverage: list[str] = Field(default_factory=list)
+    evidence: list[str] = Field(default_factory=list)
+
+
+class CapabilityMappingModel(BaseModel):
+    """Top-level, optional capability mapping metadata (v1.1).
+
+    This is intentionally non-enforced in v1.1. We validate basic shapes only.
+    """
+
+    framework: Optional[str] = None
+    version: Optional[str] = None
+    domains: dict[str, CapabilityDomainMappingModel] = Field(default_factory=dict)
+
+
 class CourseMetaModel(BaseModel):
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9\-]*$")
     title: str = Field(min_length=1)
@@ -97,6 +123,7 @@ class CourseMetaModel(BaseModel):
 class RootModel(BaseModel):
     course: CourseMetaModel
     framework_alignment: FrameworkAlignmentModel
+    capability_mapping: Optional[CapabilityMappingModel] = None
     outputs: OutputsModel = Field(default_factory=OutputsModel)
     structure: dict = Field(default_factory=dict)
 
@@ -147,6 +174,22 @@ class RootModel(BaseModel):
 
             modules.append(Module(id=mm.id, title=mm.title, lessons=lessons))
 
+        capability_mapping = None
+        if self.capability_mapping is not None:
+            capability_mapping = CapabilityMapping(
+                framework=self.capability_mapping.framework,
+                version=self.capability_mapping.version,
+                domains={
+                    k: CapabilityDomainMapping(
+                        label=v.label,
+                        intent=v.intent,
+                        coverage=list(v.coverage),
+                        evidence=list(v.evidence),
+                    )
+                    for k, v in self.capability_mapping.domains.items()
+                },
+            )
+
         return CourseSpec(
             id=self.course.id,
             title=self.course.title,
@@ -158,6 +201,7 @@ class RootModel(BaseModel):
             formats=self.outputs.formats,
             theme=self.outputs.theme,
             toc=self.outputs.toc,
+            capability_mapping=capability_mapping,
             modules=modules,
         )
 

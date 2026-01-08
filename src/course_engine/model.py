@@ -56,6 +56,25 @@ class Module:
 
 
 @dataclass(frozen=True)
+class CapabilityDomainMapping:
+    """Informational mapping for a single capability domain (v1.1)."""
+
+    label: Optional[str] = None
+    intent: Optional[str] = None
+    coverage: list[str] = field(default_factory=list)
+    evidence: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class CapabilityMapping:
+    """Top-level, non-enforced capability mapping metadata (v1.1)."""
+
+    framework: Optional[str] = None
+    version: Optional[str] = None
+    domains: dict[str, CapabilityDomainMapping] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class CourseSpec:
     id: str
     title: str
@@ -67,4 +86,5 @@ class CourseSpec:
     formats: list[str]
     theme: str | None
     toc: bool
+    capability_mapping: CapabilityMapping | None = None
     modules: list[Module] = field(default_factory=list)
