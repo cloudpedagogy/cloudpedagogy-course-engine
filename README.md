@@ -13,6 +13,33 @@ This tool is designed for **reproducible course production** in educator, learni
 - Defaults to **non-destructive builds** (explicit `--overwrite` required)
 - Supports optional **capability mapping metadata** for governance and audit (v1.1)
 
+## Capability Mapping (v1.1)
+
+Course Engine supports optional, **informational capability mapping metadata**.
+
+This allows a course to declare how its content aligns to capability domains
+(e.g. an AI capability framework) without enforcing compliance at build time.
+
+In v1.1, capability mapping is:
+
+- optional
+- non-enforced (informational only)
+- intended for governance, QA, and audit contexts
+
+### Example
+
+```yaml
+capability_mapping:
+  framework: "CloudPedagogy AI Capability Framework (2026 Edition)"
+  version: "2026"
+  domains:
+    awareness:
+      label: "AI Awareness & Orientation"
+      intent: "Introduce foundational concepts and shared vocabulary."
+      coverage: ["m1"]
+      evidence: ["lesson:l1", "learning_objectives"]
+```
+
 ## Outputs
 
 - Multi-page Quarto website
