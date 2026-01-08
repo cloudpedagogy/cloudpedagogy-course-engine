@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+## v1.2.0
+
+### Added
+- Capability coverage report command (`course-engine report`)
+- Text, verbose, and JSON report outputs
+- Optional `--fail-on-gaps` exit code for QA / CI use
+
+### Notes
+- Capability mapping remains informational (not enforced)
+
+
+
 ## v1.1.0
 
 - Added optional top-level `capability_mapping` metadata in `course.yml`
