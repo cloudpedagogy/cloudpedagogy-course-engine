@@ -72,6 +72,9 @@ supporting assurance, audit, and governance workflows.
 
 Validation operates on the generated `manifest.json` and does **not modify builds**.
 
+Validation rules focus on presence, traceability, and consistency, not pedagogical quality or effectiveness.
+
+
 ### Validation modes
 
 - **Non-strict (default)**  
