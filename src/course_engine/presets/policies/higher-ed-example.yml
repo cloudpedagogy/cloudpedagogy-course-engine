@@ -1,0 +1,44 @@
+policy_version: 1
+policy_id: "preset:higher-ed-example"
+policy_name: "Higher Education Validation Policy (Example Preset)"
+owner: "Course Engine (preset)"
+last_updated: "2026-01-09"
+notes: >
+  Example preset intended for higher education QA / governance workflows.
+  This is not a compliance standard and does not encode any framework semantics.
+  It provides sensible structural thresholds that institutions should adapt.
+
+default_profile: "qa-lite"
+
+profiles:
+  baseline:
+    description: "Minimal baseline for comparison (structural only)."
+    rules:
+      require_coverage:
+        min_domains: 1
+      require_evidence:
+        min_items_per_domain: 0
+      min_coverage_items_per_domain: 0
+      forbid_empty_domains: false
+
+  qa-lite:
+    description: "Routine publishing / QA review thresholds (non-judgemental)."
+    extends: "baseline"
+    rules:
+      require_coverage:
+        min_domains: 4
+      require_evidence:
+        min_items_per_domain: 1
+      min_coverage_items_per_domain: 1
+      forbid_empty_domains: false
+
+  strict-ci:
+    description: "CI gate thresholds for releases (still structural, not quality scoring)."
+    extends: "qa-lite"
+    rules:
+      require_coverage:
+        min_domains: 6
+      require_evidence:
+        min_items_per_domain: 2
+      min_coverage_items_per_domain: 2
+      forbid_empty_domains: true

@@ -1,0 +1,32 @@
+policy_version: 1
+policy_id: "preset:strict-ci"
+policy_name: "Strict CI Validation Policy (Example Preset)"
+owner: "Course Engine (preset)"
+last_updated: "2026-01-09"
+notes: >
+  Example preset intended for automated QA gates (CI).
+  This remains structural and framework-agnostic. Passing does not imply quality or compliance.
+
+default_profile: "strict-ci"
+
+profiles:
+  baseline:
+    description: "Minimal baseline for comparison."
+    rules:
+      require_coverage:
+        min_domains: 1
+      require_evidence:
+        min_items_per_domain: 0
+      min_coverage_items_per_domain: 0
+      forbid_empty_domains: false
+
+  strict-ci:
+    description: "High defensibility thresholds suitable for CI gating."
+    extends: "baseline"
+    rules:
+      require_coverage:
+        min_domains: 6
+      require_evidence:
+        min_items_per_domain: 2
+      min_coverage_items_per_domain: 2
+      forbid_empty_domains: true

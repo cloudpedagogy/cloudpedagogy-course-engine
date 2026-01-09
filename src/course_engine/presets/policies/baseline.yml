@@ -1,0 +1,21 @@
+policy_version: 1
+policy_id: "preset:baseline"
+policy_name: "Baseline Validation Policy (Example Preset)"
+owner: "Course Engine (preset)"
+last_updated: "2026-01-09"
+notes: >
+  Example preset shipped with the engine. These thresholds are structural defensibility checks only.
+  Passing does not imply quality, completeness, or compliance.
+
+default_profile: "baseline"
+
+profiles:
+  baseline:
+    description: "Minimal, backwards-compatible defaults mirroring v1.3 behavior."
+    rules:
+      require_coverage:
+        min_domains: 1
+      require_evidence:
+        min_items_per_domain: 0
+      min_coverage_items_per_domain: 0
+      forbid_empty_domains: false

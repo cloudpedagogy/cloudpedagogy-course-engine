@@ -1,0 +1,44 @@
+policy_version: 1
+policy_id: "example:institution-policy"
+policy_name: "Institution Validation Policy (Example)"
+owner: "Example Institution"
+last_updated: "2026-01-09"
+notes: >
+  Example institutional policy file showing how to define local validation profiles.
+  This file is intended to be copied and edited. It is not a compliance framework.
+  Validation checks structural defensibility only (coverage/evidence presence and traceability).
+
+default_profile: "qa-lite"
+
+profiles:
+  baseline:
+    description: "Lowest common denominator; close to engine defaults."
+    rules:
+      require_coverage:
+        min_domains: 1
+      require_evidence:
+        min_items_per_domain: 0
+      min_coverage_items_per_domain: 0
+      forbid_empty_domains: false
+
+  qa-lite:
+    description: "Routine QA thresholds for review and publishing workflows."
+    extends: "baseline"
+    rules:
+      require_coverage:
+        min_domains: 4
+      require_evidence:
+        min_items_per_domain: 1
+      min_coverage_items_per_domain: 1
+      forbid_empty_domains: false
+
+  strict-ci:
+    description: "Automated QA gate thresholds (CI)."
+    extends: "qa-lite"
+    rules:
+      require_coverage:
+        min_domains: 6
+      require_evidence:
+        min_items_per_domain: 2
+      min_coverage_items_per_domain: 2
+      forbid_empty_domains: true
