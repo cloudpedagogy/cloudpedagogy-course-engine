@@ -40,6 +40,9 @@ The reporting system:
 - flags domains with no declared coverage or evidence
 - produces **human-readable**, **verbose**, or **JSON** output
 
+Coverage reporting supports review and assurance workflows but does not infer quality or completeness.
+
+
 ### Reporting examples (CLI)
 
 ```bash
@@ -108,8 +111,10 @@ course-engine inspect dist/ai-capability-foundations-pdf
 - **`build`** – Compile `course.yml` into an output package
 - **`render`** – Run Quarto to render the built package
 - **`inspect`** – Show build metadata (manifest summary)
+- **`report`** – Generate a capability coverage report from build outputs (v1.2)
 - **`clean`** – Remove generated artefacts safely
 - **`check`** – Run dependency preflight checks (Quarto / TinyTeX where relevant)
+
 
 ## Alignment
 
@@ -120,4 +125,13 @@ This project is intended to be:
 
 Reports are informational by default and do not block builds or enforce compliance.
 
+## Licensing & Scope
 
+The CloudPedagogy Course Engine is open-source infrastructure released under the
+MIT License.
+
+CloudPedagogy frameworks, capability models, profiles, taxonomies, and training
+materials are separate works and may be licensed differently.
+
+This repository focuses on providing transparent, auditable tooling for course
+production and review, without embedding or enforcing any specific framework.
