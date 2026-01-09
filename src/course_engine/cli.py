@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Optional
 
@@ -21,6 +20,12 @@ from .utils.fileops import write_text
 from .utils.manifest import load_manifest, update_manifest_after_render, write_manifest
 from .utils.preflight import PrereqError, has_quarto, require_pdf_toolchain
 from .utils.reporting import build_capability_report, report_to_json, report_to_text
+from .utils.validation import (
+    load_profile,
+    validate_manifest,
+    validation_to_json,
+    validation_to_text,
+)
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -245,6 +250,46 @@ def report(
     gaps = int((rep.get("summary") or {}).get("gaps") or 0)
     if fail_on_gaps and gaps > 0:
         raise typer.Exit(code=2)
+
+
+@app.command()
+def validate(
+    project_dir: str,
+    strict: bool = typer.Option(False, "--strict", help="Fail (non-zero exit) if rules are violated."),
+    profile: Optional[str] = typer.Option(None, "--profile", help="Path to a YAML validation profile."),
+    json_out: bool = typer.Option(False, "--json", help="Output machine-readable JSON."),
+):
+    """
+    Validate capability mapping defensibility against rules.
+
+    Reads manifest.json from a built output directory. Framework-agnostic.
+    """
+    out_dir = Path(project_dir)
+
+    try:
+        manifest = load_manifest(out_dir)
+    except FileNotFoundError as e:
+        raise typer.BadParameter(str(e)) from e
+
+    # Build the v1.2 report view (domain counts + gaps)
+    rep = build_capability_report(manifest)
+
+    # Load rules
+    try:
+        prof = load_profile(profile)
+    except FileNotFoundError as e:
+        raise typer.BadParameter(str(e)) from e
+
+    result = validate_manifest(manifest=manifest, report=rep, profile=prof, strict=strict)
+
+    if json_out:
+        typer.echo(validation_to_json(result), nl=False)
+    else:
+        typer.echo(validation_to_text(result), nl=False)
+
+    # Exit code: strict mode only
+    if strict and not result.ok:
+        raise typer.Exit(code=3)
 
 
 def _is_dangerous_delete_target(p: Path) -> bool:
