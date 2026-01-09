@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import yaml
 
@@ -49,6 +49,9 @@ class ValidationResult:
 def load_profile(profile_path: Optional[str]) -> Dict[str, Any]:
     """
     Load a rule profile YAML. If none provided, returns DEFAULT_PROFILE.
+
+    The profile is a simple ruleset used to validate the *defensibility* of
+    declared capability mapping metadata, without assuming any specific framework.
     """
     if not profile_path:
         return DEFAULT_PROFILE
@@ -58,6 +61,7 @@ def load_profile(profile_path: Optional[str]) -> Dict[str, Any]:
         raise FileNotFoundError(f"Profile not found: {p}")
 
     data = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+
     # Shallow merge: user profile overrides defaults
     merged = dict(DEFAULT_PROFILE)
     merged_rules = dict(DEFAULT_PROFILE.get("rules", {}))
@@ -84,9 +88,9 @@ def validate_manifest(
     Validate manifest/report using a profile ruleset.
 
     Philosophy:
-    - Strict mode = violations are errors (non-zero exit)
-    - Non-strict mode = violations are warnings (zero exit)
     - Framework-agnostic: rules never assume semantics of domains.
+    - Non-strict mode: surfaces issues as warnings (does not fail the command).
+    - Strict mode: treats issues as errors (non-zero exit via CLI).
     """
     issues: List[ValidationIssue] = []
     rules = profile.get("rules", {}) or {}
@@ -99,19 +103,25 @@ def validate_manifest(
 
     # If no capability mapping is present at all:
     if manifest.get("capability_mapping") is None:
-        # In v1.3: treat as pass unless strict rules require mapping
+        # Treat as pass unless the profile explicitly requires mapping
         min_domains = _as_int((rules.get("require_coverage") or {}).get("min_domains", 0), 0)
         if min_domains > 0:
             issues.append(
                 ValidationIssue(
                     rule="require_coverage",
                     severity="error" if strict else "warning",
-                    message="No capability_mapping present in manifest, but coverage rules require it.",
+                    message="No capability_mapping present in manifest, but the profile requires declared domains.",
                     suggested_action="Add capability_mapping to course.yml and rebuild.",
                 )
             )
-        ok = (len([i for i in issues if i.severity == "error"]) == 0)
-        return ValidationResult(ok=ok or (not strict), strict=strict, issues=issues)
+
+        # Make the ok logic explicit:
+        if strict:
+            ok_final = len([i for i in issues if i.severity == "error"]) == 0
+        else:
+            ok_final = True
+
+        return ValidationResult(ok=ok_final, strict=strict, issues=issues)
 
     # --- Rule: require_coverage (min_domains) ---
     min_domains = _as_int((rules.get("require_coverage") or {}).get("min_domains", 1), 1)
@@ -121,7 +131,7 @@ def validate_manifest(
                 rule="require_coverage",
                 severity="error" if strict else "warning",
                 message=f"Only {declared} domains declared; minimum required is {min_domains}.",
-                suggested_action="Declare additional domains in capability_mapping.domains or lower min_domains in profile.",
+                suggested_action="Declare additional domains in capability_mapping.domains, or lower min_domains in the profile.",
             )
         )
 
@@ -136,8 +146,8 @@ def validate_manifest(
                         rule="require_evidence",
                         severity="error" if strict else "warning",
                         domain=key,
-                        message=f"Domain '{key}' has {ev_count} evidence items; minimum required is {min_evidence}.",
-                        suggested_action="Add evidence references for this domain (or lower the threshold in the profile).",
+                        message=f"Evidence items declared: {ev_count}; minimum required: {min_evidence}.",
+                        suggested_action="Add evidence references for this domain, or lower the threshold in the profile.",
                     )
                 )
 
@@ -152,8 +162,8 @@ def validate_manifest(
                         rule="min_coverage_items_per_domain",
                         severity="error" if strict else "warning",
                         domain=key,
-                        message=f"Domain '{key}' has {cov_count} coverage items; minimum required is {min_cov}.",
-                        suggested_action="Add coverage references for this domain (or lower the threshold in the profile).",
+                        message=f"Coverage items declared: {cov_count}; minimum required: {min_cov}.",
+                        suggested_action="Add coverage references for this domain, or lower the threshold in the profile.",
                     )
                 )
 
@@ -167,8 +177,8 @@ def validate_manifest(
                         rule="forbid_empty_domains",
                         severity="error" if strict else "warning",
                         domain=key,
-                        message=f"Domain '{key}' is declared but has no coverage and no evidence (gap).",
-                        suggested_action="Either add coverage/evidence for this domain or remove it from the mapping.",
+                        message="Domain is declared but has no coverage and no evidence (gap).",
+                        suggested_action="Either add coverage/evidence for this domain, or remove it from the mapping.",
                     )
                 )
 
@@ -204,27 +214,41 @@ def validation_to_json(result: ValidationResult) -> str:
 
 
 def validation_to_text(result: ValidationResult) -> str:
-    lines: List[str] = []
-    if result.ok:
-        lines.append("✔ Validation passed")
-    else:
-        lines.append("✖ Validation failed")
+    """
+    Human-readable validation output intended for QA / governance workflows.
 
-    lines.append(f"Mode: {'STRICT' if result.strict else 'non-strict'}")
-    lines.append(f"Errors: {len(result.errors)}  |  Warnings: {len(result.warnings)}")
+    Notes:
+    - "Passed" means "no rule violations in strict mode" OR "non-strict reporting completed".
+    - This does not grade quality; it checks whether declared mapping meets the profile's
+      minimum defensibility rules (coverage/evidence completeness signals).
+    """
+    lines: List[str] = []
+
+    if result.ok:
+        if result.strict:
+            lines.append("✔ Capability mapping validation passed")
+        else:
+            lines.append("✔ Capability mapping validation completed (non-strict)")
+    else:
+        lines.append("✖ Capability mapping validation failed")
+
+    lines.append(f"Mode: {'STRICT' if result.strict else 'Non-strict'}")
+    lines.append(f"Summary: {len(result.errors)} error(s) | {len(result.warnings)} warning(s)")
     lines.append("")
 
     if not result.issues:
         lines.append("No issues found.")
         return "\n".join(lines) + "\n"
 
-    for issue in result.issues:
-        prefix = "ERROR" if issue.severity == "error" else "WARN"
-        if issue.domain:
-            lines.append(f"- {prefix} [{issue.rule}] ({issue.domain}): {issue.message}")
-        else:
-            lines.append(f"- {prefix} [{issue.rule}]: {issue.message}")
+    # Present errors first, then warnings (stable + easier to scan)
+    def _sort_key(i: ValidationIssue) -> tuple[int, str, str]:
+        sev_rank = 0 if i.severity == "error" else 1
+        return (sev_rank, i.rule, i.domain or "")
 
+    for issue in sorted(result.issues, key=_sort_key):
+        tag = "ERROR" if issue.severity == "error" else "WARN"
+        loc = f" ({issue.domain})" if issue.domain else ""
+        lines.append(f"- {tag} [{issue.rule}]{loc}: {issue.message}")
         if issue.suggested_action:
             lines.append(f"  Suggested action: {issue.suggested_action}")
 
