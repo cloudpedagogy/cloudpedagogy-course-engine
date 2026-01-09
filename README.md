@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.3)
+# CloudPedagogy Course Engine (v1.4)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
