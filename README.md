@@ -26,6 +26,28 @@ In v1.1, capability mapping is:
 - non-enforced (informational only)
 - intended for governance, QA, and audit contexts
 
+## Capability Coverage Reporting (v1.2)
+
+In v1.2, Course Engine adds **capability coverage reporting**.
+
+This moves capability mapping from *declared metadata* to a
+**defensible, auditable view of coverage and gaps**.
+
+The reporting system:
+
+- reads capability mapping data from `manifest.json`
+- summarises coverage and evidence per domain
+- flags domains with no declared coverage or evidence
+- produces **human-readable**, **verbose**, or **JSON** output
+
+### Example
+
+```bash
+course-engine report dist/ai-capability-foundations
+course-engine report dist/ai-capability-foundations --verbose
+course-engine report dist/ai-capability-foundations --json
+```
+
 ### Example
 
 ```yaml
