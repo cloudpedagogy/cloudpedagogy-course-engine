@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.2)
+# CloudPedagogy Course Engine (v1.3)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -40,9 +40,6 @@ The reporting system:
 - flags domains with no declared coverage or evidence
 - produces **human-readable**, **verbose**, or **JSON** output
 
-Coverage reporting supports review and assurance workflows but does not infer quality or completeness.
-
-
 ### Reporting examples (CLI)
 
 ```bash
@@ -64,6 +61,41 @@ capability_mapping:
       coverage: ["m1"]
       evidence: ["lesson:l1", "learning_objectives"]
 ```
+Coverage reporting supports review and assurance workflows but does not infer quality or completeness.
+
+## Capability Validation (v1.3)
+
+In v1.3, Course Engine introduces **capability mapping defensibility validation**.
+
+This allows declared capability mappings to be checked against explicit rules,
+supporting assurance, audit, and governance workflows.
+
+Validation operates on the generated `manifest.json` and does **not modify builds**.
+
+### Validation modes
+
+- **Non-strict (default)**  
+  Reports warnings and informational issues without failing.
+  Suitable for review, QA, and iterative design.
+
+- **Strict mode**  
+  Treats unmet rules as errors and exits with a non-zero status.
+  Suitable for automated QA, compliance checks, or CI pipelines.
+
+### Validation examples (CLI)
+
+```bash
+course-engine validate dist/ai-capability-foundations
+```
+Strict validation:
+
+```bash
+course-engine validate dist/ai-capability-foundations --strict
+```
+
+Validation results are human-readable by default and designed to support
+transparent, defensible review rather than automated grading or scoring.
+
 
 ## Outputs
 
@@ -112,6 +144,7 @@ course-engine inspect dist/ai-capability-foundations-pdf
 - **`render`** – Run Quarto to render the built package
 - **`inspect`** – Show build metadata (manifest summary)
 - **`report`** – Generate a capability coverage report from build outputs (v1.2)
+- **`validate`** – Validate capability mapping defensibility (non-strict or strict) (v1.3)
 - **`clean`** – Remove generated artefacts safely
 - **`check`** – Run dependency preflight checks (Quarto / TinyTeX where relevant)
 
@@ -123,7 +156,7 @@ This project is intended to be:
 - **Framework-aligned** – Courses can declare framework and capability-domain alignment
 - **Capability-Driven Development (CDD)-aligned** – Intent-first specifications, auditability, and non-destructive builds
 
-Reports are informational by default and do not block builds or enforce compliance.
+Reports and validation are informational by default and do not block builds unless strict validation is explicitly enabled.
 
 ## Licensing & Scope
 
