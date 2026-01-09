@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.1)
+# CloudPedagogy Course Engine (v1.2)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -40,7 +40,7 @@ The reporting system:
 - flags domains with no declared coverage or evidence
 - produces **human-readable**, **verbose**, or **JSON** output
 
-### Example
+### Reporting examples (CLI)
 
 ```bash
 course-engine report dist/ai-capability-foundations
@@ -48,7 +48,7 @@ course-engine report dist/ai-capability-foundations --verbose
 course-engine report dist/ai-capability-foundations --json
 ```
 
-### Example
+### Capability mapping example (course.yml)
 
 ```yaml
 capability_mapping:
@@ -117,5 +117,7 @@ This project is intended to be:
 
 - **Framework-aligned** – Courses can declare framework and capability-domain alignment
 - **Capability-Driven Development (CDD)-aligned** – Intent-first specifications, auditability, and non-destructive builds
+
+Reports are informational by default and do not block builds or enforce compliance.
 
 
