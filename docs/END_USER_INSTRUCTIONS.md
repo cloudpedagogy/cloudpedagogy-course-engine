@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.2**
+**course-engine v1.3**
 
 ---
 
@@ -195,6 +195,39 @@ Machine-readable JSON output (for QA, audit, or pipelines):
 course-engine report dist/my-course --json
 ```
 
+### 6.6 Capability Validation (v1.3)
+
+From v1.3, course-engine can also **validate the defensibility** of declared
+capability mappings using explicit rules.
+
+Validation operates on the generated `manifest.json` and does **not modify
+course outputs**.
+
+It is intended to support governance, QA, and audit workflows — not to score
+or judge pedagogical quality.
+
+#### Validation modes
+
+- **Non-strict (default)**  
+  Reports warnings and informational issues without failing.
+  Suitable for review, QA, and iterative design.
+
+- **Strict mode**  
+  Treats unmet rules as errors and exits with a non-zero status.
+  Suitable for automated QA, compliance checks, or CI pipelines.
+
+#### Examples
+
+Run validation in non-strict mode:
+```bash
+course-engine validate dist/my-course
+```
+
+Run validation in strict mode:
+
+```bash
+course-engine validate dist/my-course --strict
+```
 
 ---
 
