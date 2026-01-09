@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.1**
+**course-engine v1.2**
 
 ---
 
@@ -164,11 +164,39 @@ Safely delete generated output directories:
 course-engine clean dist/my-course-pdf
  ```
 
-
 With confirmation disabled:
  ```bash
 course-engine clean dist/my-course-pdf -y
  ```
+
+### 6.5 Capability Coverage Reporting (v1.2)
+
+If a course declares capability mapping metadata, course-engine can generate
+a **capability coverage report** from an existing build.
+
+This report summarises:
+
+- Which capability domains are declared
+- What coverage has been claimed per domain
+- What evidence has been provided
+- Whether any domains have gaps (no coverage or evidence)
+
+Generate a report from a built output directory:
+```bash
+course-engine report dist/my-course
+```
+
+Verbose mode (shows declared coverage and evidence):
+```bash
+course-engine report dist/my-course --verbose
+```
+
+Machine-readable JSON output (for QA, audit, or pipelines):
+```bash
+course-engine report dist/my-course --json
+```
+
+
 ---
 
 ## 7. Output Structure
