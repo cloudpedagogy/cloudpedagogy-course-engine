@@ -290,8 +290,16 @@ def validate(
             "If --policy is omitted and this looks like a file path, treated as v1.3 legacy profile path."
         ),
     ),
-    list_profiles: bool = typer.Option(False, "--list-profiles", help="List available profiles for the selected policy and exit."),
-    explain: bool = typer.Option(False, "--explain", help="Explain resolved policy/profile/rules and exit (no validation)."),
+    list_profiles: bool = typer.Option(
+        False,
+        "--list-profiles",
+        help="List available profiles for the selected policy and exit.",
+    ),
+    explain: bool = typer.Option(
+        False,
+        "--explain",
+        help="Explain resolved policy/profile/rules and exit (no validation).",
+    ),
     json_out: bool = typer.Option(False, "--json", help="Output machine-readable JSON."),
 ):
     """
@@ -353,18 +361,36 @@ def validate(
     # Build the v1.2 report view (domain counts + gaps)
     rep = build_capability_report(manifest)
 
-    # v1.4 policy integration is not applied yet.
-    # For now, keep v1.3 behaviour:
-    # - If --policy is provided, we will later use it to derive rules.
-    # - Until then, we keep legacy profiles working.
-    if policy is None and profile and _looks_like_profile_path(profile):
-        # v1.3 legacy profile file path behaviour
+    # -------------------------
+    # v1.4: apply policy thresholds when --policy is provided
+    # -------------------------
+    if policy is not None:
+        try:
+            pol = load_policy_source(policy)
+        except ValueError as e:
+            raise typer.BadParameter(str(e)) from e
+
+        try:
+            resolved = policy_resolve_profile(pol, profile=profile)
+        except ValueError as e:
+            raise typer.BadParameter(str(e)) from e
+
+        # Adapt v1.4 resolved rules into the v1.3 profile shape expected by validate_manifest()
+        prof = {
+            "name": resolved.get("profile"),
+            "rules": resolved.get("rules") or {},
+            "source": policy,
+        }
+
+    # v1.3 compatibility: legacy profile file path behaviour
+    elif profile and _looks_like_profile_path(profile):
         try:
             prof = load_profile(profile)
         except FileNotFoundError as e:
             raise typer.BadParameter(str(e)) from e
+
+    # v1.3 default behaviour (built-in profile)
     else:
-        # v1.3 default profile behaviour (built-in)
         prof = load_profile(None)
 
     result = validate_manifest(manifest=manifest, report=rep, profile=prof, strict=strict)
