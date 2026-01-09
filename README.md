@@ -99,6 +99,8 @@ course-engine validate dist/ai-capability-foundations --strict
 Validation results are human-readable by default and designed to support
 transparent, defensible review rather than automated grading or scoring.
 
+For guidance on configuring validation thresholds using policy files and profiles,
+see [`docs/POLICY_FILES.md`](docs/POLICY_FILES.md).
 
 ## Outputs
 
