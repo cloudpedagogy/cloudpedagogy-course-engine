@@ -38,8 +38,7 @@ You **do not** need to know Python beyond basic command-line usage.
 - Verify:
   ```bash
   python --version
-```
-
+  ```
 ---
 
 ## 3.2 Quarto (Required for all builds)
