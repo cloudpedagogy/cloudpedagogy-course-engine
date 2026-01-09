@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+## v1.3.1
+
+### Changed
+- Improved `course-engine validate` output wording for clarity (non-strict vs strict)
+
+
 ## v1.3.0
 
 ### Added
