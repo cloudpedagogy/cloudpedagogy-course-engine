@@ -21,10 +21,17 @@ from .utils.manifest import load_manifest, update_manifest_after_render, write_m
 from .utils.preflight import PrereqError, has_quarto, require_pdf_toolchain
 from .utils.reporting import build_capability_report, report_to_json, report_to_text
 from .utils.validation import (
-    load_profile,
+    load_profile,  # v1.3 legacy profile file loader
     validate_manifest,
     validation_to_json,
     validation_to_text,
+)
+
+# v1.4 policy support (profiles, presets, external policy files)
+from .utils.policy import (
+    load_policy_source,
+    list_profiles as policy_list_profiles,
+    resolve_profile as policy_resolve_profile,
 )
 
 app = typer.Typer(no_args_is_help=True)
@@ -252,20 +259,92 @@ def report(
         raise typer.Exit(code=2)
 
 
+def _looks_like_profile_path(value: str) -> bool:
+    """
+    v1.3 compatibility shim:
+    If --profile looks like a file path (exists, or ends with .yml/.yaml/.json),
+    treat it as a legacy v1.3 profile file path.
+    """
+    v = (value or "").strip()
+    if not v:
+        return False
+
+    p = Path(v)
+    if p.exists():
+        return True
+
+    return p.suffix.lower() in {".yml", ".yaml", ".json"}
+
+
 @app.command()
 def validate(
     project_dir: str,
     strict: bool = typer.Option(False, "--strict", help="Fail (non-zero exit) if rules are violated."),
-    profile: Optional[str] = typer.Option(None, "--profile", help="Path to a YAML validation profile."),
+    # v1.4:
+    policy: Optional[str] = typer.Option(None, "--policy", help="Policy source: path or preset:<name>."),
+    profile: Optional[str] = typer.Option(
+        None,
+        "--profile",
+        help=(
+            "Profile name within selected policy (v1.4). "
+            "If --policy is omitted and this looks like a file path, treated as v1.3 legacy profile path."
+        ),
+    ),
+    list_profiles: bool = typer.Option(False, "--list-profiles", help="List available profiles for the selected policy and exit."),
+    explain: bool = typer.Option(False, "--explain", help="Explain resolved policy/profile/rules and exit (no validation)."),
     json_out: bool = typer.Option(False, "--json", help="Output machine-readable JSON."),
 ):
     """
     Validate capability mapping defensibility against rules.
 
     Reads manifest.json from a built output directory. Framework-agnostic.
+
+    v1.4 adds policy/profile selection:
+      --policy <path | preset:name>
+      --profile <name>
+      --list-profiles
+      --explain
+
+    Backward compatibility:
+      If --policy is omitted and --profile looks like a file path, it is treated as a v1.3 profile file path.
     """
     out_dir = Path(project_dir)
 
+    # -------------------------
+    # v1.4: policy-only modes
+    # -------------------------
+    if list_profiles or explain:
+        try:
+            pol = load_policy_source(policy)
+        except ValueError as e:
+            raise typer.BadParameter(str(e)) from e
+
+        if list_profiles:
+            names = policy_list_profiles(pol)
+            for n in names:
+                typer.echo(n)
+            raise typer.Exit(code=0)
+
+        # explain
+        try:
+            resolved = policy_resolve_profile(pol, profile=profile)
+        except ValueError as e:
+            raise typer.BadParameter(str(e)) from e
+
+        # Minimal explain output (tests expect "policy" and "profile" terms)
+        source_label = policy or "preset:baseline"
+        typer.echo(f"Policy: {source_label}")
+        typer.echo(f"Profile: {resolved.get('profile')}")
+        typer.echo(f"Strict: {'ON' if strict else 'OFF'}")
+        chain = resolved.get("chain") or []
+        typer.echo(f"Chain: {' -> '.join(chain) if chain else '—'}")
+        typer.echo("Resolved rules:")
+        typer.echo(str(resolved.get("rules") or {}))
+        raise typer.Exit(code=0)
+
+    # -------------------------
+    # Normal validation path
+    # -------------------------
     try:
         manifest = load_manifest(out_dir)
     except FileNotFoundError as e:
@@ -274,11 +353,19 @@ def validate(
     # Build the v1.2 report view (domain counts + gaps)
     rep = build_capability_report(manifest)
 
-    # Load rules
-    try:
-        prof = load_profile(profile)
-    except FileNotFoundError as e:
-        raise typer.BadParameter(str(e)) from e
+    # v1.4 policy integration is not applied yet.
+    # For now, keep v1.3 behaviour:
+    # - If --policy is provided, we will later use it to derive rules.
+    # - Until then, we keep legacy profiles working.
+    if policy is None and profile and _looks_like_profile_path(profile):
+        # v1.3 legacy profile file path behaviour
+        try:
+            prof = load_profile(profile)
+        except FileNotFoundError as e:
+            raise typer.BadParameter(str(e)) from e
+    else:
+        # v1.3 default profile behaviour (built-in)
+        prof = load_profile(None)
 
     result = validate_manifest(manifest=manifest, report=rep, profile=prof, strict=strict)
 
