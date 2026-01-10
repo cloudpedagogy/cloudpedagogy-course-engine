@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional
-
+import json
 import platform
 import shutil
 import sys
+from pathlib import Path
+from typing import Optional
 
 import typer
 import yaml
@@ -319,7 +319,7 @@ def validate(
     out_dir = Path(project_dir)
 
     # -------------------------
-    # v1.4: policy-only modes
+    # v1.4/v1.5: policy-only modes
     # -------------------------
     if list_profiles or explain:
         try:
@@ -339,8 +339,33 @@ def validate(
         except ValueError as e:
             raise typer.BadParameter(str(e)) from e
 
-        # Minimal explain output (tests expect "policy" and "profile" terms)
         source_label = policy or "preset:baseline"
+
+        # v1.5: JSON explain output (explain-only; does not require manifest.json)
+        if json_out:
+            payload = {
+                "policy": {
+                    "source": source_label,
+                    # IMPORTANT: provenance comes from TOP-LEVEL keys in the policy file/preset
+                    "policy_id": (pol or {}).get("policy_id"),
+                    "policy_name": (pol or {}).get("policy_name"),
+                    "owner": (pol or {}).get("owner"),
+                    "last_updated": (pol or {}).get("last_updated"),
+                    "policy_version": (pol or {}).get("policy_version"),
+                },
+                "profile": {
+                    "name": resolved.get("profile"),
+                    # resolve_profile() currently doesn't return description; keep for forwards-compat
+                    "description": resolved.get("description"),
+                },
+                "chain": resolved.get("chain") or [],
+                "rules": resolved.get("rules") or {},
+                "strict": bool(strict),
+            }
+            typer.echo(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", nl=False)
+            raise typer.Exit(code=0)
+
+        # human-readable explain output
         typer.echo(f"Policy: {source_label}")
         typer.echo(f"Profile: {resolved.get('profile')}")
         typer.echo(f"Strict: {'ON' if strict else 'OFF'}")
@@ -358,7 +383,6 @@ def validate(
     except FileNotFoundError as e:
         raise typer.BadParameter(str(e)) from e
 
-    # Build the v1.2 report view (domain counts + gaps)
     rep = build_capability_report(manifest)
 
     # -------------------------
@@ -375,7 +399,7 @@ def validate(
         except ValueError as e:
             raise typer.BadParameter(str(e)) from e
 
-        # Adapt v1.4 resolved rules into the v1.3 profile shape expected by validate_manifest()
+        # Adapt resolved rules into the v1.3 profile shape expected by validate_manifest()
         prof = {
             "name": resolved.get("profile"),
             "rules": resolved.get("rules") or {},
@@ -400,7 +424,6 @@ def validate(
     else:
         typer.echo(validation_to_text(result), nl=False)
 
-    # Exit code: strict mode only
     if strict and not result.ok:
         raise typer.Exit(code=3)
 
@@ -428,9 +451,7 @@ def _is_dangerous_delete_target(p: Path) -> bool:
 
 
 def _maybe_overwrite_dir(target: Path, *, overwrite: bool) -> None:
-    """
-    If target exists and overwrite=True, delete it safely. Otherwise error.
-    """
+    """If target exists and overwrite=True, delete it safely. Otherwise error."""
     if not target.exists():
         return
 
@@ -587,8 +608,6 @@ def build(
 
         if tmp_dir != out_dir:
             if out_dir.exists():
-                # If tmp_dir already exists, it may be the one we are renaming from.
-                # But if out_dir exists here, it's an actual conflict.
                 raise typer.BadParameter(
                     f"Target output folder already exists: {out_dir}\n"
                     "Delete it, choose a different --out directory, or pass --overwrite."

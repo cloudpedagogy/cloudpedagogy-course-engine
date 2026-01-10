@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 # YAML is optional at import time, but required for .yml/.yaml policies.
 try:
@@ -19,9 +19,8 @@ except Exception:  # pragma: no cover
 
 PolicyDict = Dict[str, Any]
 
-
 # ----------------------------
-# Supported rule keys (v1.4)
+# Supported rule keys (v1.4+)
 # ----------------------------
 
 _ALLOWED_TOP_LEVEL_RULE_KEYS = {
@@ -45,7 +44,12 @@ def load_policy_source(source: Optional[str]) -> PolicyDict:
       - None -> default (preset:baseline)
       - 'preset:<name>' -> bundled preset policy
       - filesystem path -> YAML/JSON policy file
+
     Returns a validated policy dict.
+
+    IMPORTANT:
+      - We intentionally allow arbitrary top-level metadata keys (e.g., notes, owner).
+      - We validate only the rule schema and required structural keys.
     """
     if source is None or str(source).strip() == "":
         return _load_preset_policy("baseline")
@@ -58,18 +62,20 @@ def load_policy_source(source: Optional[str]) -> PolicyDict:
         return _load_preset_policy(name)
 
     # Treat as filesystem path
-    path = Path(source)
-    return load_policy_file(path)
+    return load_policy_file(Path(source))
 
 
 def load_policy_file(path: Union[str, Path]) -> PolicyDict:
     """
     Load and validate a policy file (.yml/.yaml/.json).
+
     Enforces:
       - policy_version == 1
       - profiles exists and is a mapping
       - profiles[*].rules exists
       - only supported rule keys (including nested keys) are allowed
+
+    Does NOT enforce a strict top-level schema: arbitrary metadata keys are allowed.
     """
     p = Path(path)
     if not p.exists():
@@ -78,9 +84,7 @@ def load_policy_file(path: Union[str, Path]) -> PolicyDict:
     suffix = p.suffix.lower()
     if suffix in {".yml", ".yaml"}:
         if yaml is None:
-            raise ValueError(
-                "YAML policy files require PyYAML. Install with: pip install pyyaml"
-            )
+            raise ValueError("YAML policy files require PyYAML. Install with: pip install pyyaml")
         data = yaml.safe_load(p.read_text(encoding="utf-8"))
     elif suffix == ".json":
         data = json.loads(p.read_text(encoding="utf-8"))
@@ -95,9 +99,7 @@ def load_policy_file(path: Union[str, Path]) -> PolicyDict:
 
 
 def list_presets() -> List[str]:
-    """
-    List available bundled preset policy names (without extension).
-    """
+    """List available bundled preset policy names (without extension)."""
     policies_dir = _preset_policies_dir()
     names: List[str] = []
 
@@ -113,9 +115,7 @@ def list_presets() -> List[str]:
 
 
 def list_profiles(policy: PolicyDict) -> List[str]:
-    """
-    Return profile names available in a policy.
-    """
+    """Return profile names available in a policy."""
     profiles = policy.get("profiles", {})
     if not isinstance(profiles, dict):
         return []
@@ -132,18 +132,6 @@ def resolve_profile(policy: PolicyDict, profile: Optional[str] = None) -> Policy
       - profile: selected profile name
       - chain: inheritance chain from base -> selected
       - rules: resolved rule dict
-
-    Rules:
-      - profile selection:
-          * explicit 'profile' arg wins
-          * else policy.default_profile (if present)
-          * else 'baseline'
-      - missing profile -> error listing available profiles
-      - inheritance:
-          * one parent max via 'extends'
-          * max depth = 5
-          * cycles forbidden
-          * child rules override parent rules
     """
     profiles = policy.get("profiles")
     if not isinstance(profiles, dict):
@@ -167,7 +155,6 @@ def resolve_profile(policy: PolicyDict, profile: Optional[str] = None) -> Policy
             raise ValueError(f"Profile '{name}' rules must be a mapping.")
         resolved_rules = _merge_rules(resolved_rules, rules)
 
-    # Return a stable structure for tests / callers
     return {
         "profile": selected,
         "chain": chain,
@@ -186,14 +173,12 @@ def _preset_policies_dir() -> Path:
     Expected layout:
       course_engine/presets/policies/*.yml
     """
-    # This works in editable installs and normal installs.
     base = importlib_resources.files("course_engine")
     return Path(base.joinpath("presets").joinpath("policies"))
 
 
 def _load_preset_policy(name: str) -> PolicyDict:
     policies_dir = _preset_policies_dir()
-    # Prefer .yml; allow .yaml
     yml = policies_dir / f"{name}.yml"
     yaml_path = policies_dir / f"{name}.yaml"
 
@@ -207,7 +192,12 @@ def _load_preset_policy(name: str) -> PolicyDict:
 
 
 def _validate_policy_dict(policy: PolicyDict) -> None:
-    # policy_version
+    """
+    Validate required structure + rule schema.
+
+    We *intentionally allow* arbitrary top-level metadata keys:
+      - policy_id, policy_name, owner, last_updated, notes, etc.
+    """
     pv = policy.get("policy_version")
     if pv != 1:
         raise ValueError(f"Unsupported policy_version: {pv!r}. Expected 1.")
@@ -243,7 +233,6 @@ def _validate_rules(rules: Dict[str, Any]) -> None:
         if key not in _ALLOWED_TOP_LEVEL_RULE_KEYS:
             raise ValueError(f"Unknown/unsupported rule key: {key}")
 
-    # require_coverage nested keys
     if "require_coverage" in rules:
         rc = rules["require_coverage"]
         if not isinstance(rc, dict):
@@ -252,7 +241,6 @@ def _validate_rules(rules: Dict[str, Any]) -> None:
             if k not in _ALLOWED_REQUIRE_COVERAGE_KEYS:
                 raise ValueError(f"Unknown/unsupported rule key: require_coverage.{k}")
 
-    # require_evidence nested keys
     if "require_evidence" in rules:
         re = rules["require_evidence"]
         if not isinstance(re, dict):
@@ -267,11 +255,7 @@ def _compute_inheritance_chain(
     selected: str,
     max_depth: int = 5,
 ) -> List[str]:
-    """
-    Return inheritance chain from base -> selected.
-
-    Raises on cycles and depth > max_depth.
-    """
+    """Return inheritance chain from base -> selected."""
     chain: List[str] = []
     seen: set[str] = set()
 
@@ -316,8 +300,6 @@ def _merge_rules(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, An
     for k, v in override.items():
         if k in {"require_coverage", "require_evidence"}:
             prev = merged.get(k, {})
-            if prev is None:
-                prev = {}
             if not isinstance(prev, dict):
                 prev = {}
             if v is None:
