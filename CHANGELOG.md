@@ -5,6 +5,42 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+## v1.5.0
+
+### Added
+- Explain-only policy resolution mode (`course-engine validate --explain`)
+- Machine-readable JSON output for policy resolution (`--explain --json`)
+- Policy provenance surfaced in explain output:
+  - policy_id
+  - policy_name
+  - owner
+  - last_updated
+- Support for explain mode without requiring `manifest.json`
+- Preset and file-based policy support in explain mode
+
+### Behaviour guarantees
+- Explain mode does not execute validation
+- No build artefacts are required
+- Backwards-compatible with v1.4 validation behaviour
+
+### Notes
+- This release enables safe integration with CI pipelines, dashboards, and external governance tooling
+- Explain JSON output is considered a contract-stable interface
+
+
+## v1.4.0
+
+### Added
+- Policy-based validation framework
+- Support for preset and file-based policy definitions
+- Profile inheritance and resolution logic
+
+### Notes
+- This release primarily introduced internal policy infrastructure
+- User-facing explain and JSON interfaces were finalised in v1.5.0
+
+
+
 ## v1.3.1
 
 ### Changed

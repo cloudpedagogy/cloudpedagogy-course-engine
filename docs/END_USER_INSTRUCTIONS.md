@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.3**
+**course-engine v1.5**
 
 ---
 
@@ -228,6 +228,57 @@ Run validation in strict mode:
 ```bash
 course-engine validate dist/my-course --strict
 ```
+
+
+### 6.7 Policy Explanation & Inspection (v1.5)
+
+From v1.5, `course-engine` supports an **explain-only mode** for policy resolution.
+
+This allows you to inspect:
+
+- which policy is being used
+- which profile is selected
+- how profile inheritance is resolved
+- what validation rules are applied
+- whether strict mode is enabled
+
+This mode:
+
+- does **not** require `manifest.json`
+- does **not** execute validation
+- is safe for CI pipelines, dashboards, and tooling
+- produces **machine-readable JSON**
+
+#### Example: explain a preset policy
+
+```bash
+course-engine validate /tmp \
+  --policy preset:baseline \
+  --profile baseline \
+  --explain \
+  --json
+```
+
+
+The output includes:
+
+- **Policy provenance**
+  - `policy_id`
+  - `policy_name`
+  - `owner`
+  - `last_updated`
+- **Resolved profile**
+- **Inheritance chain**
+- **Resolved rules**
+- **Strict flag state**
+
+This command is intended for:
+
+- Governance transparency
+- CI configuration checks
+- External tooling and dashboards
+- Debugging policy and profile behaviour
+
 
 ---
 

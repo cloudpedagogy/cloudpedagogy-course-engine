@@ -1,3 +1,6 @@
+> **Applies to course-engine v1.4+ (policy-based validation), including v1.5 explain-only JSON mode.**
+
+
 # Policy Files Guide
 
 This document explains how **policy files** are used with the CloudPedagogy Course Engine to configure capability-mapping validation in a transparent, defensible way.
@@ -262,7 +265,56 @@ This outputs:
 - inheritance chain
 - resolved rules
 
-Validation is **not** executed.
+Validation is **not** executed. No files are read or written in this mode.
+
+## Explain-only JSON output (v1.5)
+
+This output is intended as a stable interface for CI pipelines, dashboards, and external tooling.
+
+From v1.5, Course Engine supports **machine-readable explanation** of policy
+resolution without executing validation.
+
+This mode is enabled with:
+
+```bash
+course-engine validate dist/course \
+  --policy policies/my-policy.yml \
+  --profile strict-ci \
+  --explain \
+  --json
+```
+
+### What this does
+
+- Resolves the selected **policy** and **profile**
+- Applies profile **inheritance**
+- Outputs the **final resolved rule set**
+- Does **not** read or require `manifest.json`
+- Does **not** execute validation
+
+No files are read or written in this mode.
+
+### JSON output includes
+
+- **Policy provenance**
+  - `policy_id`
+  - `policy_name`
+  - `owner`
+  - `last_updated`
+- **Resolved profile**
+- **Inheritance chain**
+- **Resolved rules**
+- **Strict flag state**
+
+### Intended uses
+
+- Governance transparency
+- CI configuration checks
+- External tooling and dashboards
+- Debugging policy and profile behaviour
+
+> This mode is **read-only** and **contract-stable**.
+
 
 ---
 
