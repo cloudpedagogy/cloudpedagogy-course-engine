@@ -199,3 +199,13 @@ materials are separate works and may be licensed differently.
 
 This repository focuses on providing transparent, auditable tooling for course
 production and review, without embedding or enforcing any specific framework.
+
+---
+
+## About CloudPedagogy
+
+CloudPedagogy develops open, governance-credible resources for building confident, responsible AI capability across education, research, and public service.
+
+- Website: https://www.cloudpedagogy.com/
+- Framework: https://github.com/cloudpedagogy/cloudpedagogy-ai-capability-framework
+
