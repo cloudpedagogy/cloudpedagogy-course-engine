@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.4)
+# CloudPedagogy Course Engine (v1.5)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -73,6 +73,32 @@ supporting assurance, audit, and governance workflows.
 Validation operates on the generated `manifest.json` and does **not modify builds**.
 
 Validation rules focus on presence, traceability, and consistency, not pedagogical quality or effectiveness.
+
+## Policy Explain Mode (v1.5)
+
+In v1.5, Course Engine introduces an **explain-only policy resolution mode**.
+
+This allows policies and profiles to be resolved, inspected, and consumed by
+external tools **without requiring a built course or `manifest.json`**.
+
+Explain mode is:
+
+- explain-only (no validation executed)
+- safe for CI, dashboards, and automation
+- machine-readable via JSON output
+- compatible with preset and file-based policies
+
+### Explain examples (CLI)
+
+Explain a preset policy and profile:
+
+```bash
+course-engine validate /tmp \
+  --policy preset:baseline \
+  --profile baseline \
+  --explain \
+  --json
+
 
 
 ### Validation modes
@@ -149,7 +175,7 @@ course-engine inspect dist/ai-capability-foundations-pdf
 - **`render`** – Run Quarto to render the built package
 - **`inspect`** – Show build metadata (manifest summary)
 - **`report`** – Generate a capability coverage report from build outputs (v1.2)
-- **`validate`** – Validate capability mapping defensibility (non-strict or strict) (v1.3)
+- **`validate`** – Validate or explain capability policy resolution (v1.3 / v1.5)
 - **`clean`** – Remove generated artefacts safely
 - **`check`** – Run dependency preflight checks (Quarto / TinyTeX where relevant)
 
