@@ -189,6 +189,27 @@ This project is intended to be:
 
 Reports and validation are informational by default and do not block builds unless strict validation is explicitly enabled.
 
+---
+
+## Disclaimer
+
+The CloudPedagogy Course Engine is a technical tool for compiling, inspecting,
+and reviewing course artefacts in a transparent and reproducible manner.
+
+It does not evaluate pedagogical quality, academic merit, or educational
+effectiveness, and it does not replace institutional governance processes,
+academic judgement, or professional review.
+
+Capability mapping, reporting, and validation features are informational by
+default and are intended to support reflection, assurance, and audit workflows,
+not to enforce compliance or determine approval outcomes.
+
+All outputs should be interpreted in context and alongside appropriate academic,
+professional, and institutional judgement.
+
+
+---
+
 ## Licensing & Scope
 
 The CloudPedagogy Course Engine is open-source infrastructure released under the
