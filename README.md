@@ -225,6 +225,17 @@ The handbook is intended for educators, learning designers, technologists, and i
 
 ---
 
+## Course Builder Design & Rationale
+
+A separate design record documenting the principles, architectural decisions, and deliberate trade-offs behind the Course Engine is available in:
+
+`docs/course-builder-design-rationale.md`
+
+This document explains how the AI Capability Framework and Capability-Driven Development informed the system’s design, and is intended for reviewers, contributors, and institutions assessing the Course Engine at a governance or system level.
+
+
+---
+
 ## Disclaimer
 
 The CloudPedagogy Course Engine is a technical tool for compiling, inspecting,
