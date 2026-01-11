@@ -214,14 +214,11 @@ A detailed, governance-aware guide to the intent, design principles, capabilitie
 
 This Markdown file is the **canonical source** of the handbook.
 
-Derived versions for distribution and reference are also available in:
+Readable, derived versions for distribution and reference are also available:
 
-`docs/handbook/`
-
-These include Word and PDF formats generated from the Markdown source.
+- 📕 **PDF**: https://github.com/cloudpedagogy/cloudpedagogy-course-engine/blob/master/docs/handbook/course-builder-handbook.pdf
 
 The handbook is intended for educators, learning designers, technologists, and institutions who are accountable for AI-supported course and curriculum design decisions.
-
 
 ---
 
@@ -231,7 +228,12 @@ A separate design record documenting the principles, architectural decisions, an
 
 `docs/course-builder-design-rationale.md`
 
+A readable PDF version is also provided:
+
+- 📘 **PDF**: https://github.com/cloudpedagogy/cloudpedagogy-course-engine/blob/master/docs/handbook/course-builder-design-rationale.pdf
+
 This document explains how the AI Capability Framework and Capability-Driven Development informed the system’s design, and is intended for reviewers, contributors, and institutions assessing the Course Engine at a governance or system level.
+
 
 
 ---
