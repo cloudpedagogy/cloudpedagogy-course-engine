@@ -98,7 +98,7 @@ course-engine validate /tmp \
   --profile baseline \
   --explain \
   --json
-
+```
 
 
 ### Validation modes
@@ -188,6 +188,40 @@ This project is intended to be:
 - **Capability-Driven Development (CDD)-aligned** – Intent-first specifications, auditability, and non-destructive builds
 
 Reports and validation are informational by default and do not block builds unless strict validation is explicitly enabled.
+
+---
+
+## Versioning and Evolution
+
+The Course Engine evolves incrementally through minor and patch releases.
+
+New capabilities are added conservatively, with an emphasis on:
+- backward compatibility
+- non-destructive defaults
+- preserving human judgement and governance boundaries
+
+Versioned features are documented inline (e.g. v1.1, v1.2, v1.5), while detailed change history is maintained in `CHANGELOG.md`.
+
+The design principles described in this README are intended to remain stable, even as capabilities expand.
+
+---
+
+## Course Builder Handbook
+
+A detailed, governance-aware guide to the intent, design principles, capabilities, boundaries, and responsible use of the Course Engine is available in:
+
+`docs/course-builder-handbook.md`
+
+This Markdown file is the **canonical source** of the handbook.
+
+Derived versions for distribution and reference are also available in:
+
+`docs/handbook/`
+
+These include Word and PDF formats generated from the Markdown source.
+
+The handbook is intended for educators, learning designers, technologists, and institutions who are accountable for AI-supported course and curriculum design decisions.
+
 
 ---
 
