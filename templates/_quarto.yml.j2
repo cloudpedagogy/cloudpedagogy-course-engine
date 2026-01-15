@@ -13,15 +13,20 @@ website:
   sidebar:
     style: "docked"
     search: true
+{% if nav.flat_lessons and (nav.flat_lessons|length > 0) %}
     contents:
-      {% for m in nav.modules %}
+{% for m in nav.modules %}
+{% set lessons = (nav.flat_lessons | selectattr("module_id", "equalto", m.id) | list) %}
+{% if lessons|length > 0 %}
       - section: "{{ m.title }}"
         contents:
-          {% for item in nav.flat_lessons if item.module_id == m.id %}
+{% for item in lessons %}
           - href: "{{ item.href }}"
             text: "{{ item.lesson_title }}"
-          {% endfor %}
-      {% endfor %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
 
 format:
   html:

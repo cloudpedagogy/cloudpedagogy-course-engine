@@ -47,6 +47,11 @@ class Lesson:
     prerequisites: list[str] = field(default_factory=list)  # lesson ids
     readings: list[ReadingItem] = field(default_factory=list)  # reading list
 
+    # v1.6: optional external source provenance (informational)
+    source: Optional[str] = None  # as declared in course.yml (relative or absolute)
+    source_sha256: Optional[str] = None  # hash of the source markdown content
+    source_resolved_path: Optional[str] = None  # resolved absolute path used at build time
+
 
 @dataclass(frozen=True)
 class Module:
@@ -75,16 +80,40 @@ class CapabilityMapping:
 
 
 @dataclass(frozen=True)
+class FrameworkAlignment:
+    """
+    Declared framework alignment metadata (v1.6).
+
+    This is declared intent (not lesson-level coverage evidence).
+    Stored for auditability and manifest persistence.
+    """
+    framework_name: str
+    domains: list[str] = field(default_factory=list)
+
+    # Optional future extensions (safe defaults; can be populated later)
+    mapping_mode: Optional[str] = None  # e.g., "informational"
+    notes: Optional[str] = None
+
+
+@dataclass(frozen=True)
 class CourseSpec:
     id: str
     title: str
     subtitle: str | None
     version: str
     language: str
+
+    # Existing flat fields (keep for backward compatibility)
     framework_name: str
     domains: list[str]
+
+    # Non-default fields MUST come before any default fields (dataclasses rule)
     formats: list[str]
     theme: str | None
     toc: bool
+
+    # NEW in v1.6: preserve the declared framework_alignment block as-is
+    framework_alignment: FrameworkAlignment | None = None
+
     capability_mapping: CapabilityMapping | None = None
     modules: list[Module] = field(default_factory=list)

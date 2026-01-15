@@ -3,8 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from ..model import CourseSpec, Lesson, ContentBlock, ReadingItem
 from ..generator.build import build_course_nav  # reuse the canonical nav model
+from ..model import ContentBlock, CourseSpec, Lesson, ReadingItem
 from ..utils.fileops import ensure_empty_dir, write_text
 
 
@@ -18,9 +18,9 @@ def _render_readings(readings: list[ReadingItem]) -> str:
     if not readings:
         return ""
     lines = ["## Readings", ""]
-    for r in readings:
-        prefix = "(Required)" if r.required else "(Optional)"
-        lines.append(f"- {prefix} {_md_link(r.title, r.url)}")
+    for reading in readings:
+        prefix = "(Required)" if reading.required else "(Optional)"
+        lines.append(f"- {prefix} {_md_link(reading.title, reading.url)}")
     lines.append("")
     return "\n".join(lines)
 
@@ -90,7 +90,7 @@ def _render_block(block: ContentBlock) -> str:
         options = block.options or []
         if not prompt or not options:
             return ""
-        lines = []
+        lines: list[str] = []
         if instructor_prefix:
             lines.append(instructor_prefix.rstrip())
         lines.append("## Knowledge check")
@@ -107,7 +107,7 @@ def _render_block(block: ContentBlock) -> str:
         prompt = (block.prompt or "").strip()
         if not prompt:
             return ""
-        lines = []
+        lines: list[str] = []
         if instructor_prefix:
             lines.append(instructor_prefix.rstrip())
         lines.append("## Reflection")
@@ -120,7 +120,7 @@ def _render_block(block: ContentBlock) -> str:
         prompt = (block.prompt or "").strip()
         if not prompt:
             return ""
-        lines = []
+        lines: list[str] = []
         if instructor_prefix:
             lines.append(instructor_prefix.rstrip())
         lines.append("## Submission")
@@ -144,8 +144,8 @@ def render_lesson_md(spec: CourseSpec, lesson: Lesson) -> str:
 
     parts.append("## Content\n")
     if lesson.content_blocks:
-        for b in lesson.content_blocks:
-            chunk = _render_block(b)
+        for block in lesson.content_blocks:
+            chunk = _render_block(block)
             if chunk:
                 parts.append(chunk)
     parts.append("")
@@ -177,15 +177,15 @@ def render_course_overview_md(spec: CourseSpec) -> str:
     lines.append("")
 
     lines.append("## Capability domains\n")
-    for d in spec.domains:
-        lines.append(f"- {d}")
+    for domain in spec.domains:
+        lines.append(f"- {domain}")
     lines.append("")
 
     lines.append("## Modules\n")
-    for m in spec.modules:
-        lines.append(f"### {m.title}")
-        for l in m.lessons:
-            lines.append(f"- {l.title}")
+    for module in spec.modules:
+        lines.append(f"### {module.title}")
+        for lesson in module.lessons:
+            lines.append(f"- {lesson.title}")
         lines.append("")
     return "\n".join(lines).strip() + "\n"
 
@@ -216,15 +216,17 @@ def build_markdown_package(spec: CourseSpec, out_root: Path) -> Path:
     modules_dir.mkdir(parents=True, exist_ok=True)
     lessons_dir.mkdir(parents=True, exist_ok=True)
 
-    for m in spec.modules:
-        mod_lines = [f"# {m.title}\n", "## Lessons\n"]
+    for module in spec.modules:
+        mod_lines = [f"# {module.title}\n", "## Lessons\n"]
         for item in nav.flat_lessons:
-            if item.module_id == m.id:
+            if item.module_id == module.id:
                 # link to lesson md file (same filename, but .md)
                 lesson_filename = item.href.split("/")[-1].replace(".qmd", ".md")
                 mod_lines.append(f"- [{item.lesson_title}](../lessons/{lesson_filename})")
         mod_lines.append("")
-        module_filename = f"{m.id}-{item.module_title.lower().replace(' ', '-')}.md"
+
+        module_slug = module.title.lower().replace(" ", "-")
+        module_filename = f"{module.id}-{module_slug}.md"
         write_text(modules_dir / module_filename, "\n".join(mod_lines))
 
     # Lessons
@@ -232,7 +234,11 @@ def build_markdown_package(spec: CourseSpec, out_root: Path) -> Path:
         module_obj = next((m for m in spec.modules if m.id == item.module_id), None)
         if not module_obj:
             continue
-        lesson_obj = next((l for l in module_obj.lessons if l.id == item.lesson_id), None)
+
+        lesson_obj = next(
+            (lesson for lesson in module_obj.lessons if lesson.id == item.lesson_id),
+            None,
+        )
         if not lesson_obj:
             continue
 

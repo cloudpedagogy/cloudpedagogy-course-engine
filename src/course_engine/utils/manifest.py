@@ -13,7 +13,7 @@ except Exception:  # pragma: no cover
     pkg_version = None  # type: ignore
 
 
-MANIFEST_VERSION = "1.1.0"
+MANIFEST_VERSION = "1.2.0"
 
 
 def _utc_now_iso() -> str:
@@ -118,15 +118,109 @@ def build_file_inventory(
     return files
 
 
+def _to_plain_dict(obj: Any) -> Optional[Dict[str, Any]]:
+    """
+    Convert common model/dict-like objects into a plain JSON-serializable dict.
+    """
+    if obj is None:
+        return None
+
+    # Pydantic v2
+    if hasattr(obj, "model_dump"):
+        out = obj.model_dump()
+        return out if out else None
+
+    # dict already
+    if isinstance(obj, dict):
+        return obj if obj else None
+
+    # mapping-like
+    try:
+        out = dict(obj)
+        return out if out else None
+    except Exception:
+        return None
+
+
+def _framework_alignment_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
+    """
+    v1.6: Declared framework alignment metadata.
+
+    This is the author's declared alignment intent (not coverage evidence).
+    It should be recorded in the manifest for auditability, even when no
+    lesson-level capability mapping exists.
+
+    IMPORTANT: Depending on the CourseSpec model shape, framework_alignment may live at:
+      - spec.framework_alignment
+      - spec.course.framework_alignment
+      - (dict forms) spec["framework_alignment"] / spec["course"]["framework_alignment"]
+    """
+    # 1) Try top-level attribute
+    fa = getattr(spec, "framework_alignment", None)
+
+    # 2) Try nested under spec.course
+    if fa is None:
+        course_obj = getattr(spec, "course", None)
+        if course_obj is not None:
+            fa = getattr(course_obj, "framework_alignment", None)
+
+    # 3) Try dict-shaped spec
+    if fa is None and isinstance(spec, dict):
+        fa = spec.get("framework_alignment")
+        if fa is None:
+            course_dict = spec.get("course")
+            if isinstance(course_dict, dict):
+                fa = course_dict.get("framework_alignment")
+
+    if fa is None:
+        return None
+
+    out = _to_plain_dict(fa)
+
+    # Last resort: pick known common attributes if present
+    if out is None:
+        out = {
+            "framework_name": getattr(fa, "framework_name", None),
+            "domains": getattr(fa, "domains", None),
+            "mapping_mode": getattr(fa, "mapping_mode", None),
+            "notes": getattr(fa, "notes", None),
+        }
+
+    # Avoid writing empty/noisy blocks
+    if not out:
+        return None
+
+    # Optional: normalize domains to plain list if it came back as a custom type
+    if "domains" in out and out["domains"] is not None and not isinstance(out["domains"], (list, dict)):
+        try:
+            out["domains"] = list(out["domains"])
+        except Exception:
+            pass
+
+    return out
+
+
 def _capability_mapping_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
     """
     v1.1: Optional, informational capability mapping metadata.
 
-    This is NOT enforced in v1.1. We simply record it for auditability and rendering.
+    This is NOT enforced. We simply record it for auditability and reporting.
     """
     cap = getattr(spec, "capability_mapping", None)
+
+    # dict-shaped spec fallback
+    if cap is None and isinstance(spec, dict):
+        cap = spec.get("capability_mapping")
+
     if cap is None:
         return None
+
+    # If someone provided capability_mapping as a plain dict, pass it through
+    cap_dict = _to_plain_dict(cap)
+    if isinstance(cap, dict) and cap_dict is not None:
+        # keep status consistent with existing behaviour if missing
+        cap_dict.setdefault("status", "informational (not enforced)")
+        return cap_dict
 
     domains_out: Dict[str, Any] = {}
     domains = getattr(cap, "domains", None) or {}
@@ -143,6 +237,70 @@ def _capability_mapping_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
         "version": getattr(cap, "version", None),
         "domains": domains_out,
         "domains_declared": len(domains_out),
+        "status": "informational (not enforced)",
+    }
+
+
+def _lesson_sources_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
+    """
+    v1.6 / manifest v1.2.0:
+    Record lesson-level source provenance when lessons are authored via lesson.source.
+
+    This is informational: it supports auditability and reproducible builds.
+    """
+    modules = getattr(spec, "modules", None) or []
+
+    # dict-shaped spec fallback
+    if not modules and isinstance(spec, dict):
+        modules = spec.get("modules", []) or []
+
+    lessons_out: list[dict[str, Any]] = []
+
+    for module_item in modules:
+        module_id = getattr(module_item, "id", None) if not isinstance(module_item, dict) else module_item.get("id")
+        module_title = (
+            getattr(module_item, "title", None) if not isinstance(module_item, dict) else module_item.get("title")
+        )
+
+        lessons = getattr(module_item, "lessons", None) or []
+        if isinstance(module_item, dict):
+            lessons = module_item.get("lessons", []) or []
+
+        for lesson_item in lessons:
+            src = (
+                getattr(lesson_item, "source", None)
+                if not isinstance(lesson_item, dict)
+                else lesson_item.get("source")
+            )
+            if not src:
+                continue
+
+            lessons_out.append(
+                {
+                    "module_id": module_id,
+                    "module_title": module_title,
+                    "lesson_id": getattr(lesson_item, "id", None)
+                    if not isinstance(lesson_item, dict)
+                    else lesson_item.get("id"),
+                    "lesson_title": getattr(lesson_item, "title", None)
+                    if not isinstance(lesson_item, dict)
+                    else lesson_item.get("title"),
+                    "source": src,
+                    "resolved_path": getattr(lesson_item, "source_resolved_path", None)
+                    if not isinstance(lesson_item, dict)
+                    else lesson_item.get("source_resolved_path"),
+                    "sha256": getattr(lesson_item, "source_sha256", None)
+                    if not isinstance(lesson_item, dict)
+                    else lesson_item.get("source_sha256"),
+                }
+            )
+
+    if not lessons_out:
+        return None
+
+    return {
+        "count": len(lessons_out),
+        "lessons": lessons_out,
         "status": "informational (not enforced)",
     }
 
@@ -188,9 +346,18 @@ def build_manifest(
         "files": build_file_inventory(out_dir, include_hashes=include_hashes, include_sizes=include_sizes),
     }
 
+    # Persist declared framework alignment (metadata, not coverage evidence)
+    fw_align = _framework_alignment_for_manifest(spec)
+    if fw_align is not None:
+        manifest["framework_alignment"] = fw_align
+
     cap_map = _capability_mapping_for_manifest(spec)
     if cap_map is not None:
         manifest["capability_mapping"] = cap_map
+
+    lesson_sources = _lesson_sources_for_manifest(spec)
+    if lesson_sources is not None:
+        manifest["lesson_sources"] = lesson_sources
 
     return manifest
 

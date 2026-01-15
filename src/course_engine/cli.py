@@ -182,6 +182,23 @@ def inspect(project_dir: str) -> None:
     if m.get("input", {}).get("course_yml"):
         typer.echo(f"Source: {m['input']['course_yml']}")
 
+    # v1.6: declared framework alignment (metadata, not coverage evidence)
+    fw = m.get("framework_alignment")
+    if not fw:
+        typer.echo("Framework alignment: none")
+    else:
+        typer.echo("Framework alignment:")
+        typer.echo(f"  Framework: {fw.get('framework_name') or '—'}")
+        domains = fw.get("domains") or []
+        if domains:
+            typer.echo(f"  Domains: {', '.join(domains)}")
+        else:
+            typer.echo("  Domains: —")
+        if fw.get("mapping_mode"):
+            typer.echo(f"  Mapping mode: {fw.get('mapping_mode')}")
+        if fw.get("notes") not in (None, ""):
+            typer.echo(f"  Notes: {fw.get('notes')}")
+
     # v1.1: capability mapping summary (informational)
     if m.get("capability_mapping") is None:
         typer.echo("Capability mapping: none")
@@ -195,6 +212,13 @@ def inspect(project_dir: str) -> None:
         if domains:
             typer.echo(f"  Domains: {', '.join(domains.keys())}")
         typer.echo(f"  Status: {cap.get('status') or 'informational'}")
+
+    # v1.6: lesson source provenance (informational)
+    ls = m.get("lesson_sources")
+    if ls:
+        typer.echo("Lesson sources:")
+        typer.echo(f"  Count: {ls.get('count') or 0}")
+        typer.echo(f"  Status: {ls.get('status') or 'informational (not enforced)'}")
 
     if render:
         typer.echo("\nRender:")
@@ -235,6 +259,8 @@ def report(
 
     Reads capability mapping metadata recorded in manifest.json (v1.1+) and prints a summary.
     This is informational and does not enforce mapping correctness unless --fail-on-gaps is used.
+
+    v1.6+: If no capability_mapping exists but framework_alignment exists, print a declared alignment summary.
     """
     out_dir = Path(project_dir)
 
@@ -243,20 +269,46 @@ def report(
     except FileNotFoundError as e:
         raise typer.BadParameter(str(e)) from e
 
-    if "capability_mapping" not in m or not m.get("capability_mapping"):
-        typer.echo("No capability_mapping found in manifest.json (nothing to report).")
-        raise typer.Exit(code=1)
+    cap = m.get("capability_mapping")
+    if cap:
+        rep = build_capability_report(m)
 
-    rep = build_capability_report(m)
+        if json_out:
+            typer.echo(report_to_json(rep), nl=False)
+        else:
+            typer.echo(report_to_text(rep, verbose=verbose), nl=False)
 
-    if json_out:
-        typer.echo(report_to_json(rep), nl=False)
-    else:
-        typer.echo(report_to_text(rep, verbose=verbose), nl=False)
+        gaps = int((rep.get("summary") or {}).get("gaps") or 0)
+        if fail_on_gaps and gaps > 0:
+            raise typer.Exit(code=2)
+        return
 
-    gaps = int((rep.get("summary") or {}).get("gaps") or 0)
-    if fail_on_gaps and gaps > 0:
-        raise typer.Exit(code=2)
+    fw = m.get("framework_alignment")
+    if fw:
+        if json_out:
+            payload = {
+                "kind": "framework_alignment_only",
+                "framework_alignment": fw,
+                "note": "No capability_mapping present; coverage report not available.",
+            }
+            typer.echo(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", nl=False)
+        else:
+            typer.echo("Declared framework alignment (no capability mapping coverage data):")
+            typer.echo(f"  Framework: {fw.get('framework_name') or '—'}")
+            domains = fw.get("domains") or []
+            if domains:
+                typer.echo(f"  Domains: {', '.join(domains)}")
+            else:
+                typer.echo("  Domains: —")
+            if fw.get("mapping_mode"):
+                typer.echo(f"  Mapping mode: {fw.get('mapping_mode')}")
+            if fw.get("notes") not in (None, ""):
+                typer.echo(f"  Notes: {fw.get('notes')}")
+        return
+
+    # Nothing to report
+    typer.echo("No capability_mapping found in manifest.json (nothing to report).")
+    raise typer.Exit(code=1)
 
 
 def _looks_like_profile_path(value: str) -> bool:
@@ -341,12 +393,10 @@ def validate(
 
         source_label = policy or "preset:baseline"
 
-        # v1.5: JSON explain output (explain-only; does not require manifest.json)
         if json_out:
             payload = {
                 "policy": {
                     "source": source_label,
-                    # IMPORTANT: provenance comes from TOP-LEVEL keys in the policy file/preset
                     "policy_id": (pol or {}).get("policy_id"),
                     "policy_name": (pol or {}).get("policy_name"),
                     "owner": (pol or {}).get("owner"),
@@ -355,7 +405,6 @@ def validate(
                 },
                 "profile": {
                     "name": resolved.get("profile"),
-                    # resolve_profile() currently doesn't return description; keep for forwards-compat
                     "description": resolved.get("description"),
                 },
                 "chain": resolved.get("chain") or [],
@@ -365,7 +414,6 @@ def validate(
             typer.echo(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", nl=False)
             raise typer.Exit(code=0)
 
-        # human-readable explain output
         typer.echo(f"Policy: {source_label}")
         typer.echo(f"Profile: {resolved.get('profile')}")
         typer.echo(f"Strict: {'ON' if strict else 'OFF'}")
@@ -383,6 +431,15 @@ def validate(
     except FileNotFoundError as e:
         raise typer.BadParameter(str(e)) from e
 
+    # v1.6: validation requires capability_mapping coverage/evidence data
+    if not manifest.get("capability_mapping"):
+        typer.echo(
+            "No capability_mapping present in manifest.json.\n"
+            "Validation requires capability_mapping coverage/evidence data.\n"
+            "Tip: use 'course-engine report' for declared framework_alignment, or add capability_mapping to course.yml."
+        )
+        raise typer.Exit(code=1)
+
     rep = build_capability_report(manifest)
 
     # -------------------------
@@ -399,21 +456,18 @@ def validate(
         except ValueError as e:
             raise typer.BadParameter(str(e)) from e
 
-        # Adapt resolved rules into the v1.3 profile shape expected by validate_manifest()
         prof = {
             "name": resolved.get("profile"),
             "rules": resolved.get("rules") or {},
             "source": policy,
         }
 
-    # v1.3 compatibility: legacy profile file path behaviour
     elif profile and _looks_like_profile_path(profile):
         try:
             prof = load_profile(profile)
         except FileNotFoundError as e:
             raise typer.BadParameter(str(e)) from e
 
-    # v1.3 default behaviour (built-in profile)
     else:
         prof = load_profile(None)
 
@@ -443,7 +497,6 @@ def _is_dangerous_delete_target(p: Path) -> bool:
     if rp == cwd or rp == cwd.parent:
         return True
 
-    # Intentionally conservative: avoid shallow paths like /Users, /Users/<name>, /Volumes, etc.
     if len(rp.parts) <= 3:
         return True
 
@@ -544,7 +597,11 @@ def build(
     templates_dir = Path(templates) if templates else DEFAULT_TEMPLATES_DIR
 
     data = yaml.safe_load(course_path.read_text(encoding="utf-8"))
-    spec = validate_course_dict(data)
+
+    try:
+        spec = validate_course_dict(data, source_course_yml=course_path)
+    except ValueError as e:
+        raise typer.BadParameter(f"Invalid course.yml: {e}") from e
 
     allowed = {"quarto", "markdown", "html-single", "pdf"}
     if format not in allowed:
@@ -634,10 +691,8 @@ def render(
     render_quarto(p, input_file=input, to=to)
     typer.echo("Render complete.")
 
-    # v0.9: if a manifest exists, update it to capture rendered outputs
     try:
         mp = update_manifest_after_render(p, to=to, input_file=input, include_hashes=True)
         typer.echo(f"Updated manifest: {mp}")
     except FileNotFoundError:
-        # Not fatal: render can be used on arbitrary Quarto projects
         pass

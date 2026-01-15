@@ -1,7 +1,5 @@
-> **Applies to course-engine v1.4+ (policy-based validation), including v1.5 explain-only JSON mode.**
-
-
 # Policy Files Guide
+> **Applies to course-engine v1.4+ (policy-based validation), including v1.5 explain-only JSON mode and v1.6 external lesson source support.**
 
 This document explains how **policy files** are used with the CloudPedagogy Course Engine to configure capability-mapping validation in a transparent, defensible way.
 
@@ -44,7 +42,6 @@ Preset policies are shipped with the engine and selected via:
 --policy preset:<name>
 ```
 
-
 **Examples:**
 
 - `preset:baseline`
@@ -62,16 +59,15 @@ You should not modify preset files directly.
 
 ---
 
-**Institutional policy files (recommended)**
+### Institutional policy files (recommended)
 
 Institutional policy files are external files owned by you or your organisation.
 
-**They:**
+They:
 
 - live in your own repository or project
 - reflect local assurance expectations
 - can be reviewed, versioned, and audited independently
-
 
 **Example:**
 
@@ -85,11 +81,9 @@ This is the preferred pattern for sustained use.
 
 ---
 
-
 ## Basic policy file structure
 
 All policy files follow the same high-level structure.
-
 
 ```yaml
 policy_version: 1
@@ -180,7 +174,6 @@ profiles:
 - child rules override parent rules
 - metadata is not merged
 
-
 ---
 
 ## Validation rules
@@ -198,6 +191,27 @@ Unknown rule keys are treated as **errors**.
 
 This is intentional: silent or permissive parsing can lead to false confidence.
 
+### No capability mapping present (v1.6+)
+
+If a course declares **no `capability_mapping`**, validation fails with a clear message indicating that there is nothing to validate.
+
+This prevents false assumptions that framework alignment alone is sufficient for validation.
+
+---
+
+## Interaction with lesson authoring (v1.6)
+
+Policy validation operates exclusively on declared capability mapping and manifest metadata.
+
+The introduction of **external lesson source files** in v1.6:
+
+- does not change validation rules
+- does not introduce new policy keys
+- does not affect thresholds or enforcement logic
+
+Lesson source provenance is recorded for **audit and inspection purposes only** and is not evaluated by policy rules.
+
+---
 
 ## Using policy files with the CLI
 
@@ -211,13 +225,15 @@ Uses the engine default behaviour. No policy file required.
 
 ---
 
-## Using a preset policy
+### Using a preset policy
 
 ```bash
 course-engine validate dist/course --policy preset:higher-ed-example
 ```
+
 ---
-## Using an institutional policy file
+
+### Using an institutional policy file
 
 ```bash
 course-engine validate dist/course \
@@ -257,7 +273,6 @@ course-engine validate dist/course \
   --explain
 ```
 
-
 This outputs:
 
 - policy source
@@ -267,14 +282,11 @@ This outputs:
 
 Validation is **not** executed. No files are read or written in this mode.
 
-## Explain-only JSON output (v1.5)
+---
+
+## Explain-only JSON output (v1.5+)
 
 This output is intended as a stable interface for CI pipelines, dashboards, and external tooling.
-
-From v1.5, Course Engine supports **machine-readable explanation** of policy
-resolution without executing validation.
-
-This mode is enabled with:
 
 ```bash
 course-engine validate dist/course \
@@ -284,37 +296,15 @@ course-engine validate dist/course \
   --json
 ```
 
-### What this does
-
-- Resolves the selected **policy** and **profile**
-- Applies profile **inheritance**
-- Outputs the **final resolved rule set**
-- Does **not** read or require `manifest.json`
-- Does **not** execute validation
-
-No files are read or written in this mode.
-
 ### JSON output includes
 
-- **Policy provenance**
-  - `policy_id`
-  - `policy_name`
-  - `owner`
-  - `last_updated`
-- **Resolved profile**
-- **Inheritance chain**
-- **Resolved rules**
-- **Strict flag state**
+- policy provenance
+- resolved profile
+- inheritance chain
+- resolved rules
+- strict flag state
 
-### Intended uses
-
-- Governance transparency
-- CI configuration checks
-- External tooling and dashboards
-- Debugging policy and profile behaviour
-
-> This mode is **read-only** and **contract-stable**.
-
+This mode is **read-only** and contract-stable.
 
 ---
 
@@ -333,28 +323,6 @@ The engine evaluates declared structure and traceability — nothing more.
 
 ---
 
-## Common mistakes to avoid
-
-- Treating preset policies as standards
-- Editing preset files instead of copying them
-- Assuming “pass” means “approved”
-- Using validation as a grading mechanism
-- Adding custom rule keys not supported by the engine
-
----
-
-## Recommended practice
-
-- Start with a preset policy as a reference
-- Copy it into your own repository
-- Adjust thresholds gradually
-- Review policies alongside human judgement
-- Use strict mode only when appropriate
-
-Policy files work best when they support reflection and assurance, not enforcement.
-
----
-
 ## Final note
 
 Policy files exist to make validation **transparent, adaptable, and defensible**.
@@ -363,6 +331,3 @@ They are a tool for structured review — not an authority on meaning.
 
 The engine evaluates structure.  
 You decide what matters.
-
-
-
