@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+## v1.8.1
+
+### Fixed
+- Explain now resolves lesson-level `source:` files and reports full provenance under `sources.files` and `sources.resolution`.
+- File existence, byte size, and SHA-256 hashes are surfaced for governance and audit workflows.
+
+### Notes
+- This is an explain-only change.
+- No impact on build, render, or UI output.
+- Includes a demo regression fixture to validate provenance resolution.
+
+---
+
 ## v1.8.0
 
 ### Fixed
