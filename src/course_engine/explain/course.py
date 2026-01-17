@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import yaml
 
 from ..schema import validate_course_dict
+from ..utils.lesson_sources import load_lesson_source
 
 
 EXPLAIN_SCHEMA_VERSION = "1.0"
@@ -53,7 +54,6 @@ def _utc_now_iso() -> str:
 
 
 def _norm_path(p: str) -> str:
-    # Deterministic normalisation: POSIX slashes, no leading "./"
     pp = Path(p)
     s = pp.as_posix()
     while s.startswith("./"):
@@ -106,15 +106,13 @@ def _block_source_summary(block: Any) -> Dict[str, Any]:
 
     v1.0:
       - inline bodies -> hash + bytes
-      - file sources -> declared path only (resolved provenance comes later)
+      - file sources -> declared path only (resolved provenance recorded in sources.*)
       - empty -> nulls
     """
-    # Spec content blocks in your schema typically have .type and may have .body or .source
     body = getattr(block, "body", None)
     src = getattr(block, "source", None)
 
     if isinstance(src, str) and src.strip():
-        # file-based source (declared)
         return {"kind": "file", "path": src, "hash_sha256": None, "bytes": None}
 
     if isinstance(body, str) and body != "":
@@ -122,6 +120,75 @@ def _block_source_summary(block: Any) -> Dict[str, Any]:
         return {"kind": "inline", "path": None, "hash_sha256": _sha256_bytes(b), "bytes": len(b)}
 
     return {"kind": "empty", "path": None, "hash_sha256": None, "bytes": None}
+
+
+def _record_source_provenance(
+    *,
+    course_yml_path: Path,
+    declared_path: str,
+    lesson_id: Optional[str],
+    content_block_index: int,
+    source_kind: str,
+    file_index: Dict[str, Dict[str, Any]],
+    resolution_rows: List[Dict[str, Any]],
+    warnings: List[ExplainWarning],
+) -> int:
+    """
+    Record provenance for a declared source path into:
+      - file_index (unique resolved files)
+      - resolution_rows (mapping lesson/block -> resolved file)
+    Returns: missing_increment (0 or 1)
+    """
+    res = load_lesson_source(course_yml_path, declared_path)
+
+    resolution_rows.append(
+        {
+            "lesson_id": lesson_id,
+            "content_block_index": int(content_block_index),
+            "source_kind": source_kind,  # "lesson" | "content_block"
+            "declared_path": res.declared_path,
+            "resolved_path": res.resolved_path,
+            "path_normalised": res.resolved_path_normalised,
+            "exists": bool(res.exists),
+            "resolved_bytes": res.bytes,
+            "resolved_hash_sha256": res.hash_sha256,
+            "error": res.error,
+        }
+    )
+
+    if res.resolved_path_normalised not in file_index:
+        file_index[res.resolved_path_normalised] = {
+            "declared_path": res.declared_path,
+            "resolved_path": res.resolved_path,
+            "path_normalised": res.resolved_path_normalised,
+            "exists": bool(res.exists),
+            "bytes": res.bytes,
+            "hash_sha256": res.hash_sha256,
+            "error": res.error,
+        }
+
+    if not res.exists:
+        warnings.append(
+            ExplainWarning(
+                code="SOURCE_MISSING",
+                message=f"source file not found: {declared_path}",
+                lesson_id=lesson_id,
+                path=declared_path,
+            )
+        )
+        return 1
+
+    if res.error is not None:
+        warnings.append(
+            ExplainWarning(
+                code="SOURCE_READ_ERROR",
+                message=f"could not read source file: {declared_path} ({res.error})",
+                lesson_id=lesson_id,
+                path=declared_path,
+            )
+        )
+
+    return 0
 
 
 def explain_course_yml(
@@ -139,7 +206,6 @@ def explain_course_yml(
     warnings: List[ExplainWarning] = []
     errors: List[ExplainError] = []
 
-    # Input block
     input_obj: Dict[str, Any] = {
         "type": "course_yml",
         "path": path_arg,
@@ -149,7 +215,6 @@ def explain_course_yml(
         "bytes": None,
     }
 
-    # Defaults required by schema
     course_obj: Dict[str, Any] = {
         "id": None,
         "version": None,
@@ -186,13 +251,11 @@ def explain_course_yml(
             "resolved": "default",
             "resolution_reason": "no profile specified; default applied",
         },
-        # v1.0: always present with defaults
         "quarto": {"toc": True, "toc_depth": 2},
     }
 
     capability_mapping_obj: Dict[str, Any] = {"present": False, "summary": {}, "details": None}
 
-    # Missing file: minimal explain with errors
     if not p.exists():
         errors.append(ExplainError(code="COURSE_YML_MISSING", message="course.yml not found", path=path_arg))
         return _finalise_explain(
@@ -235,7 +298,6 @@ def explain_course_yml(
     input_obj["bytes"] = len(data_bytes)
     input_obj["hash_sha256"] = _sha256_bytes(data_bytes)
 
-    # Parse YAML -> validate -> spec (canonical path)
     try:
         raw = yaml.safe_load(data_bytes.decode("utf-8"))
     except Exception as e:
@@ -273,7 +335,7 @@ def explain_course_yml(
         )
 
     # -------------------------
-    # Extract course block (from validated spec)
+    # Course block
     # -------------------------
     course_obj.update(
         {
@@ -292,7 +354,7 @@ def explain_course_yml(
     course_obj["tags"] = _sorted_tags(course_obj.get("tags", []) or [])
 
     # -------------------------
-    # Extract structure (author order)
+    # Structure + provenance
     # -------------------------
     modules_out: List[Dict[str, Any]] = []
     modules = getattr(spec, "modules", None)
@@ -300,26 +362,62 @@ def explain_course_yml(
     lessons_count = 0
     blocks_count = 0
 
+    # Unique sources by resolved_path_normalised
+    file_index: Dict[str, Dict[str, Any]] = {}
+    resolution_rows: List[Dict[str, Any]] = []
+    missing_count = 0
+
     if modules:
         for m in modules:
             lessons_out: List[Dict[str, Any]] = []
             lessons = getattr(m, "lessons", []) or []
             for lesson in lessons:
+                lesson_id = getattr(lesson, "id", None)
+
+                # v1.6+ lesson-level source
+                lesson_src = getattr(lesson, "source", None)
+                if isinstance(lesson_src, str) and lesson_src.strip():
+                    missing_count += _record_source_provenance(
+                        course_yml_path=p,
+                        declared_path=lesson_src,
+                        lesson_id=lesson_id,
+                        content_block_index=0,
+                        source_kind="lesson",
+                        file_index=file_index,
+                        resolution_rows=resolution_rows,
+                        warnings=warnings,
+                    )
+
                 cb = getattr(lesson, "content_blocks", []) or []
                 content_blocks_out: List[Dict[str, Any]] = []
+
                 for i, block in enumerate(cb):
                     blocks_count += 1
+                    src_summary = _block_source_summary(block)
                     content_blocks_out.append(
                         {
                             "index": i,
                             "type": getattr(block, "type", None),
-                            "source": _block_source_summary(block),
+                            "source": src_summary,
                         }
                     )
 
+                    # content-block level source (if used)
+                    if src_summary.get("kind") == "file" and isinstance(src_summary.get("path"), str):
+                        missing_count += _record_source_provenance(
+                            course_yml_path=p,
+                            declared_path=str(src_summary["path"]),
+                            lesson_id=lesson_id,
+                            content_block_index=i,
+                            source_kind="content_block",
+                            file_index=file_index,
+                            resolution_rows=resolution_rows,
+                            warnings=warnings,
+                        )
+
                 lessons_out.append(
                     {
-                        "id": getattr(lesson, "id", None),
+                        "id": lesson_id,
                         "title": getattr(lesson, "title", None),
                         "nav_title": getattr(lesson, "lesson_nav_title", None),
                         "display_label": getattr(lesson, "display_label", None),
@@ -347,12 +445,10 @@ def explain_course_yml(
     }
 
     # -------------------------
-    # Rendering defaults (v1.0 always present)
-    # Optionally override from spec outputs if present
+    # Rendering defaults (override if present)
     # -------------------------
     outputs = getattr(spec, "outputs", None)
     if outputs:
-        # toc/toc_depth may exist depending on your outputs model
         toc_val = getattr(outputs, "toc", None)
         if isinstance(toc_val, bool):
             rendering_obj["quarto"]["toc"] = toc_val
@@ -361,16 +457,32 @@ def explain_course_yml(
             rendering_obj["quarto"]["toc_depth"] = toc_depth_val
 
     # -------------------------
-    # Sources (v1.8 MVP)
-    # Keep present but minimal; wire lesson_sources provenance next increment.
+    # Sources (now populated)
+    # Deterministic ordering
     # -------------------------
+    sources_obj["files"] = sorted(
+        file_index.values(),
+        key=lambda f: (f.get("path_normalised") or "", f.get("resolved_path") or ""),
+    )
+
+    sources_obj["resolution"] = sorted(
+        resolution_rows,
+        key=lambda r: (
+            r.get("lesson_id") or "",
+            int(r.get("content_block_index") or 0),
+            r.get("source_kind") or "",
+        ),
+    )
+
+    sources_obj["counts"] = {
+        "files": len(sources_obj["files"]),
+        "missing": int(missing_count),
+    }
 
     # capability mapping presence (informational)
     cap = getattr(spec, "capability_mapping", None)
     if cap is not None:
         capability_mapping_obj["present"] = True
-        # If your model exposes summary-like fields, add them here deterministically.
-        # Keep details null for now to avoid locking a premature format.
 
     return _finalise_explain(
         engine_version=engine_version,
@@ -401,7 +513,6 @@ def _finalise_explain(
     errors: List[ExplainError],
 ) -> Dict[str, Any]:
     out = {
-        # Ordered top-level keys (for human diffs)
         "explain_schema_version": EXPLAIN_SCHEMA_VERSION,
         "engine": {
             "name": "cloudpedagogy-course-engine",
