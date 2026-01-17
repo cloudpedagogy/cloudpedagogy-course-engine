@@ -7,6 +7,20 @@ from typer.testing import CliRunner
 
 runner = CliRunner()
 
+TOP_LEVEL_KEYS_V18_EXPLAIN = [
+    "explain_schema_version",
+    "engine",
+    "input",
+    "course",
+    "structure",
+    "sources",
+    "policies",
+    "rendering",
+    "capability_mapping",
+    "warnings",
+    "errors",
+]
+
 
 def _write_policy(path: Path) -> None:
     """
@@ -33,6 +47,10 @@ profiles:
 """
     path.write_text(policy_text, encoding="utf-8")
 
+
+# ---------------------------------------------------------------------
+# v1.5: validate --explain --json (policy/profile explain-only)
+# ---------------------------------------------------------------------
 
 def test_explain_json_with_preset_does_not_require_manifest(tmp_path: Path):
     """
@@ -145,3 +163,93 @@ def test_explain_json_respects_strict_flag(tmp_path: Path):
 
     data = json.loads(r.output)
     assert data["strict"] is True, data
+
+
+# ---------------------------------------------------------------------
+# v1.8: course-engine explain <course.yml> --json (course.yml explainability)
+# ---------------------------------------------------------------------
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+
+def _sample_course_yml() -> Path:
+    """
+    Prefer the canonical example path in this repo.
+    Adjust here if you relocate the sample.
+    """
+    p = _repo_root() / "examples" / "sample-course" / "course.yml"
+    if not p.exists():
+        # fallback to demo sample if examples not present in some contexts
+        alt = _repo_root() / "demo" / "scenario-planning-environmental-scanning" / "course.yml"
+        if alt.exists():
+            return alt
+    return p
+
+
+def test_course_explain_json_schema_keys():
+    """
+    v1.8 requirement:
+      - `course-engine explain <course.yml> --json` outputs valid JSON
+      - includes required top-level keys
+      - includes rendering defaults (toc/toc_depth)
+    """
+    from course_engine.cli import app
+
+    course_yml = _sample_course_yml()
+    assert course_yml.exists(), f"Expected sample course.yml to exist at: {course_yml}"
+
+    r = runner.invoke(app, ["explain", str(course_yml), "--json"])
+    assert r.exit_code == 0, r.output
+
+    payload = json.loads(r.output)
+
+    assert payload.get("explain_schema_version") == "1.0", payload
+
+    for k in TOP_LEVEL_KEYS_V18_EXPLAIN:
+        assert k in payload, f"Missing top-level key: {k}"
+
+    # engine provenance
+    assert payload["engine"]["name"] == "cloudpedagogy-course-engine"
+    assert isinstance(payload["engine"].get("version"), str)
+    assert isinstance(payload["engine"].get("built_at_utc"), str)
+
+    # input details
+    assert payload["input"]["type"] == "course_yml"
+    assert payload["input"]["exists"] is True
+    assert isinstance(payload["input"]["hash_sha256"], str)
+    assert isinstance(payload["input"]["bytes"], int)
+
+    # rendering defaults
+    assert payload["rendering"]["quarto"]["toc"] is True
+    assert payload["rendering"]["quarto"]["toc_depth"] == 2
+
+    # warnings/errors arrays
+    assert isinstance(payload["warnings"], list)
+    assert isinstance(payload["errors"], list)
+
+
+def test_course_explain_json_only_runtime_metadata_varies():
+    """
+    v1.8 determinism policy:
+      - output is deterministic given identical inputs
+      - exception: engine.built_at_utc may vary
+    """
+    from course_engine.cli import app
+
+    course_yml = _sample_course_yml()
+    assert course_yml.exists(), f"Expected sample course.yml to exist at: {course_yml}"
+
+    r1 = runner.invoke(app, ["explain", str(course_yml), "--json"])
+    assert r1.exit_code == 0, r1.output
+    p1 = json.loads(r1.output)
+
+    r2 = runner.invoke(app, ["explain", str(course_yml), "--json"])
+    assert r2.exit_code == 0, r2.output
+    p2 = json.loads(r2.output)
+
+    # redact allowed non-deterministic field
+    p1["engine"]["built_at_utc"] = "<redacted>"
+    p2["engine"]["built_at_utc"] = "<redacted>"
+
+    assert p1 == p2
