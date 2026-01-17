@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import yaml
 from pathlib import Path
+
+import yaml
 
 from course_engine.explain.artefact import explain_dist_dir
 from course_engine.generator.build import build_quarto_project
@@ -13,12 +14,16 @@ def test_explain_dist_dir_manifest_backed(tmp_path: Path) -> None:
     """
     v1.9: explain() should support dist/<course> directories by reading manifest.json,
     producing stable explain JSON (deterministic except engine.built_at_utc).
+
+    This test is self-contained and relies only on committed repo fixtures under examples/.
     """
     repo_root = Path(__file__).resolve().parents[1]
     templates_dir = repo_root / "templates"
 
-    course_yml = repo_root / "demo" / "scenario-planning-environmental-scanning" / "course.yml"
-    assert course_yml.exists(), "Demo course.yml missing (repo fixture expected)"
+    # Use committed fixture (available in CI)
+    course_yml = repo_root / "examples" / "sample-course" / "course.yml"
+    assert course_yml.exists(), "examples/sample-course/course.yml missing (repo fixture expected)"
+    assert templates_dir.exists(), "templates/ missing (repo fixture expected)"
 
     data = yaml.safe_load(course_yml.read_text(encoding="utf-8"))
     spec = validate_course_dict(data, source_course_yml=course_yml)
