@@ -13,6 +13,7 @@ from jinja2 import Template
 
 from . import __version__
 from .explain import explain_course_yml
+from .explain.artefact import explain_dist_dir
 from .generator.build import build_quarto_project
 from .generator.html_single import build_html_single_project
 from .generator.render import render_quarto
@@ -247,31 +248,45 @@ def inspect(project_dir: str) -> None:
 
 @app.command()
 def explain(
-    course_yml: str = typer.Argument(..., help="Path to course.yml to explain."),
+    path: str = typer.Argument(..., help="Path to course.yml OR dist/<course> folder to explain."),
     json_out: bool = typer.Option(True, "--json", help="Output machine-readable JSON (default)."),
     out: Optional[str] = typer.Option(None, "--out", help="Write JSON to a file instead of stdout."),
 ) -> None:
     """
-    Explain a course.yml into a governance-friendly JSON artefact (explain-only).
+    Explain an input into a governance-friendly JSON artefact (explain-only).
+
+    Supported inputs:
+      - course.yml (source explain)
+      - dist/<course> directory containing manifest.json (artefact explain)  [v1.9]
 
     This command does not build outputs and does not enforce policies.
     It surfaces structure, provenance, and rendering-relevant defaults in a stable JSON format.
 
-    Determinism policy (v1.8):
+    Determinism policy (v1.8+):
       - Deterministic except for engine.built_at_utc (runtime metadata)
     """
     if not json_out:
-        raise typer.BadParameter("Only JSON output is supported for explain in v1.8 (use --json).")
+        raise typer.BadParameter("Only JSON output is supported for explain (use --json).")
 
     # Keep command provenance as close as possible to the user's actual invocation.
-    # (This field is allowed to vary and is informational.)
     command_str = "course-engine " + " ".join(sys.argv[1:])
 
-    payload = explain_course_yml(
-        course_yml_path=course_yml,
-        engine_version=__version__,
-        command=command_str,
-    )
+    p = Path(path)
+
+    # v1.9: Dist/artefact explain (manifest-backed)
+    if p.exists() and p.is_dir():
+        payload = explain_dist_dir(
+            dist_dir=p,
+            engine_version=__version__,
+            command=command_str,
+        )
+    else:
+        # v1.8: course.yml explain
+        payload = explain_course_yml(
+            course_yml_path=path,
+            engine_version=__version__,
+            command=command_str,
+        )
 
     text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
 
