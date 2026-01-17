@@ -37,7 +37,28 @@ from .utils.policy import (
     resolve_profile as policy_resolve_profile,
 )
 
-app = typer.Typer(no_args_is_help=True, add_version_option=True)
+app = typer.Typer(no_args_is_help=True)
+
+
+@app.callback(invoke_without_command=True)
+def _main(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        help="Show the installed course-engine version and exit.",
+        is_eager=True,
+    )
+) -> None:
+    """
+    Global options.
+
+    Typer versions vary in built-in version support, so implement --version
+    via a callback (Click-compatible) to stay CI-safe.
+    """
+    if version:
+        typer.echo(__version__)
+        raise typer.Exit(code=0)
+
 
 DEFAULT_TEMPLATES_DIR = Path(__file__).resolve().parents[2] / "templates"
 
