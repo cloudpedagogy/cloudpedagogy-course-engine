@@ -37,7 +37,7 @@ from .utils.policy import (
     resolve_profile as policy_resolve_profile,
 )
 
-app = typer.Typer(no_args_is_help=True)
+app = typer.Typer(no_args_is_help=True, add_version_option=True)
 
 DEFAULT_TEMPLATES_DIR = Path(__file__).resolve().parents[2] / "templates"
 
