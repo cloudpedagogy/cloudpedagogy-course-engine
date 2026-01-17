@@ -1,6 +1,11 @@
 ---
 title: "{{ spec.title }}"
+toc: false
+page-navigation: false
+sidebar:
+  nav: false
 ---
+
 
 {% if spec.subtitle %}
 {{ spec.subtitle }}
@@ -8,25 +13,29 @@ title: "{{ spec.title }}"
 
 ## Start here
 
-- Go to **[Lessons](lessons/index.qmd)** to navigate the full course.
+Go to **[Lessons](lessons/index.qmd)** to navigate the full course.
 
 ## Course information
 
-- **Course ID:** `{{ spec.id }}`
-- **Version:** `{{ spec.version }}`
-- **Framework:** {{ spec.framework_name }}
+Course ID: `{{ spec.id }}`  
+Version: `{{ spec.version }}`  
+Framework: {{ spec.framework_name }}
 
+{% if spec.domains %}
 ## Capability domains
 {% for d in spec.domains %}
-- {{ d }}
+{{ d }}  
 {% endfor %}
+{% endif %}
 
 ## Modules
 {% for m in nav.modules %}
 ### {{ m.title }}
 
 {% for item in nav.flat_lessons if item.module_id == m.id %}
-- [{{ item.lesson_title }}]({{ item.href }})
+{% set filename = item.href.split("/")[-1] %}
+[{{ item.lesson_nav_title if item.lesson_nav_title is defined else item.lesson_title }}](lessons/{{ filename }})  
 {% endfor %}
 
 {% endfor %}
+

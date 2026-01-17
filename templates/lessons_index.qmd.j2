@@ -1,6 +1,11 @@
 ---
 title: "Lessons"
+toc: false
+page-navigation: false
+sidebar:
+  nav: false
 ---
+
 
 ## Course lessons
 
@@ -11,16 +16,8 @@ Use the sidebar to navigate, or choose a lesson below.
 
 {% for item in nav.flat_lessons if item.module_id == m.id %}
 {% set filename = item.href.split("/")[-1] %}
-- [{{ item.lesson_title }}]({{ filename }})
+[{{ item.lesson_nav_title if item.lesson_nav_title is defined else item.lesson_title }}]({{ filename }})  
 {% endfor %}
 
 {% endfor %}
 
----
-
-## Quick links
-
-{% for item in nav.flat_lessons %}
-{% set filename = item.href.split("/")[-1] %}
-- [{{ item.module_title }} → {{ item.lesson_title }}]({{ filename }})
-{% endfor %}

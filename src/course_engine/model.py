@@ -38,6 +38,11 @@ class ContentBlock:
 class Lesson:
     id: str
     title: str
+
+    # v1.7: optional display label (e.g., "5.3.6", "Key Takeaways", "Part A")
+    # Used for navigation/UI only. Does NOT affect filenames, IDs, or slugs.
+    display_label: Optional[str] = None
+
     learning_objectives: list[str] = field(default_factory=list)
     content_blocks: list[ContentBlock] = field(default_factory=list)
 

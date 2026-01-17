@@ -22,7 +22,8 @@ website:
         contents:
 {% for item in lessons %}
           - href: "{{ item.href }}"
-            text: "{{ item.lesson_title }}"
+            {# v1.7: use label+title when available; fallback for older builds #}
+            text: "{{ item.lesson_nav_title if item.lesson_nav_title is defined else item.lesson_title }}"
 {% endfor %}
 {% endif %}
 {% endfor %}

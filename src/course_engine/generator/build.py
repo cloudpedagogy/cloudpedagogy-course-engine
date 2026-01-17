@@ -99,7 +99,16 @@ class LessonNavItem:
     module_id: str
     module_title: str
     lesson_id: str
+
+    # Canonical lesson title (what the author wrote / what we inferred)
     lesson_title: str
+
+    # v1.7: optional UI label (e.g., "5.3.6", "A", "5.3.A")
+    lesson_display_label: Optional[str]
+
+    # Convenience: what to show in nav lists by default (label + title)
+    lesson_nav_title: str
+
     href: str  # path relative to project root, e.g. lessons/m1-l1-title.qmd
 
 
@@ -129,11 +138,19 @@ def build_course_nav(spec: CourseSpec) -> CourseNav:
             filename = f"{module.id}-{lesson.id}-{slugify(lesson.title)}.qmd"
             href = f"lessons/{filename}"
 
+            # v1.7: optional display label (safe even if older Lesson instances exist)
+            label = getattr(lesson, "display_label", None)
+            label = label.strip() if isinstance(label, str) and label.strip() else None
+
+            nav_title = f"{label} {lesson.title}" if label else lesson.title
+
             item = LessonNavItem(
                 module_id=module.id,
                 module_title=module.title,
                 lesson_id=lesson.id,
                 lesson_title=lesson.title,
+                lesson_display_label=label,
+                lesson_nav_title=nav_title,
                 href=href,
             )
             flat.append(item)
@@ -197,8 +214,9 @@ def build_quarto_project(
 
         module, lesson = nav.href_to_module_lesson[item.href]
 
-        # IMPORTANT: pass both module+lesson so existing templates that expect
-        # `module` and `lesson` continue to work (avoids 'lesson is undefined').
+        # IMPORTANT:
+        # - `current` now includes lesson_display_label + lesson_nav_title
+        # - We still pass `module` and `lesson` to avoid breaking existing templates.
         write_text(
             out_dir / item.href,
             lesson_template.render(

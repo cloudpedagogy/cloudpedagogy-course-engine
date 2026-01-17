@@ -109,6 +109,10 @@ class LessonModel(BaseModel):
     # v1.6: title can be omitted if source is provided (we can infer from Markdown H1)
     title: Optional[str] = None
 
+    # v1.7: optional display label for UI/nav ("5.3.6", "A", "Key Takeaways", etc.)
+    # This does not affect IDs or filenames.
+    display_label: Optional[str] = None
+
     learning_objectives: list[str] = Field(default_factory=list)
 
     # v1.6: either inline blocks OR external source
@@ -129,6 +133,9 @@ class LessonModel(BaseModel):
           - preferred: require one of them
           - compatibility: allow "minimal lesson" with neither, as long as title exists
             (we will inject a placeholder markdown block at build time)
+
+        v1.7:
+          - display_label is optional and independent (may be present in any case)
         """
         has_source = bool(self.source)
         has_blocks = bool(self.content_blocks)
@@ -139,7 +146,9 @@ class LessonModel(BaseModel):
         # If neither source nor blocks provided, allow minimal lesson ONLY if title exists
         if not has_source and not has_blocks:
             if not self.title or not self.title.strip():
-                raise ValueError("Lesson must define either 'source' or 'content_blocks' (or at minimum a non-empty 'title')")
+                raise ValueError(
+                    "Lesson must define either 'source' or 'content_blocks' (or at minimum a non-empty 'title')"
+                )
             return self
 
         # If no source, title is required
@@ -294,6 +303,7 @@ class RootModel(BaseModel):
                     Lesson(
                         id=lm.id,
                         title=lesson_title,  # type: ignore[arg-type]
+                        display_label=(lm.display_label.strip() if lm.display_label and lm.display_label.strip() else None),
                         learning_objectives=list(lm.learning_objectives),
                         content_blocks=blocks,
                         duration=lm.duration,

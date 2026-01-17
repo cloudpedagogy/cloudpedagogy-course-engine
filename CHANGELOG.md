@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 This project follows semantic versioning.
 
+
+## v1.7.0 – Lesson Navigation & UX Polish
+
+### Changed
+- Lesson pages now use in-body table of contents (TOC) for long-form readability
+- Removed redundant “Quick links” section from lessons index
+- Standardised lesson navigation labels using `lesson_nav_title`
+- Improved previous/next lesson navigation placement for clearer progression
+
+### Notes
+- This release focuses on UI/UX improvements only
+- No changes to course schema or build logic
+
+---
+
 ## v1.6.0
 
 ### Added

@@ -1,5 +1,8 @@
 ---
-title: "{{ current.lesson_title if current is defined else lesson.title }}"
+title: "{{ current.lesson_nav_title if (current is defined and current.lesson_nav_title is defined) else (current.lesson_title if current is defined else lesson.title) }}"
+toc: true
+toc-depth: 2
+toc-location: body
 ---
 
 {# ------------------------------------------------------------------------- #}
@@ -25,23 +28,37 @@ Estimated time: {{ lesson_obj.duration }} minutes
 {% if lesson_obj.tags is defined and lesson_obj.tags %}
 Tags: {{ lesson_obj.tags | join(", ") }}
 {% endif %}
+
+{% if lesson_obj.display_label is defined and lesson_obj.display_label %}
+Label: {{ lesson_obj.display_label }}
+{% endif %}
 :::
 
 {# ------------------------- Next / Previous --------------------------------- #}
+{# Navigation should NOT be a callout (avoids the "Tip" label).                #}
 {# IMPORTANT: lesson pages live in /lessons/, so links must be local filenames #}
 
 {% if prev_item is defined or next_item is defined %}
-::: {.callout-tip}
+{% set navline = "" %}
+
 {% if prev_item %}
 {% set prev_filename = prev_item.href.split("/")[-1] %}
-← [Previous: {{ prev_item.lesson_title }}]({{ prev_filename }})
+{% set prev_title = (prev_item.lesson_nav_title if prev_item.lesson_nav_title is defined else prev_item.lesson_title) %}
+{% set navline = navline ~ "← [Previous: " ~ prev_title ~ "](" ~ prev_filename ~ ")" %}
 {% endif %}
-{% if prev_item and next_item %} · {% endif %}
+
+{% if prev_item and next_item %}
+{% set navline = navline ~ " | " %}
+{% endif %}
+
 {% if next_item %}
 {% set next_filename = next_item.href.split("/")[-1] %}
-[Next: {{ next_item.lesson_title }}]({{ next_filename }}) →
+{% set next_title = (next_item.lesson_nav_title if next_item.lesson_nav_title is defined else next_item.lesson_title) %}
+{% set navline = navline ~ "[Next: " ~ next_title ~ "](" ~ next_filename ~ ") →" %}
 {% endif %}
-:::
+
+{{ navline }}
+
 {% endif %}
 
 {# ------------------------ Learning objectives ------------------------------ #}
@@ -56,8 +73,7 @@ Tags: {{ lesson_obj.tags | join(", ") }}
 {% endif %}
 
 {# -------------------------------- Content --------------------------------- #}
-
-## Content
+{# NOTE: no "## Content" heading — avoids redundant TOC entries on the right. #}
 
 {% if lesson_obj.content_blocks %}
 {% for b in lesson_obj.content_blocks %}
@@ -183,3 +199,32 @@ Options:
 ### Framework alignment
 This lesson sits within: **{{ spec.framework_name }}**  
 Domains: {% for d in spec.domains %}{{ d }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+---
+
+{# ------------------------- Next / Previous --------------------------------- #}
+{# Navigation should NOT be a callout (avoids the "Tip" label).                #}
+{# IMPORTANT: lesson pages live in /lessons/, so links must be local filenames #}
+
+{% if prev_item is defined or next_item is defined %}
+{% set navline = "" %}
+
+{% if prev_item %}
+{% set prev_filename = prev_item.href.split("/")[-1] %}
+{% set prev_title = (prev_item.lesson_nav_title if prev_item.lesson_nav_title is defined else prev_item.lesson_title) %}
+{% set navline = navline ~ "← [Previous: " ~ prev_title ~ "](" ~ prev_filename ~ ")" %}
+{% endif %}
+
+{% if prev_item and next_item %}
+{% set navline = navline ~ " | " %}
+{% endif %}
+
+{% if next_item %}
+{% set next_filename = next_item.href.split("/")[-1] %}
+{% set next_title = (next_item.lesson_nav_title if next_item.lesson_nav_title is defined else next_item.lesson_title) %}
+{% set navline = navline ~ "[Next: " ~ next_title ~ "](" ~ next_filename ~ ") →" %}
+{% endif %}
+
+{{ navline }}
+
+{% endif %}

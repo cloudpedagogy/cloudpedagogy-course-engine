@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.6)
+# CloudPedagogy Course Engine (v1.7)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -30,6 +30,24 @@ New in v1.6:
 - Invalid course layouts fail fast with explicit, actionable errors
 
 No new build modes or CLI flags were added.
+
+---
+
+## What’s new in v1.7
+
+v1.7 is a **stability and clarity release**. It does not introduce new build modes, enforcement logic, or automation.
+
+The focus of this release is to make existing, real-world authoring workflows **explicit, predictable, and governance-safe**, based on lessons learned from v1.6.
+
+New in v1.7:
+
+- Formalised expectations for the authoring pipeline (documentation-only)
+- Explicit recognition of lesson-splitting as a supported authoring utility
+- Optional lesson display labels for academic referencing (informational only)
+- Consolidated lesson-level navigation and in-page TOC behaviour
+- Improved inspection clarity for QA and review contexts
+
+There are **no schema changes** and **no breaking changes** in this release.
 
 ---
 
