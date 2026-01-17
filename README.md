@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.7)
+# CloudPedagogy Course Engine (v1.8)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -50,6 +50,50 @@ New in v1.7:
 There are **no schema changes** and **no breaking changes** in this release.
 
 ---
+
+---
+
+## What’s new in v1.8
+
+v1.8 introduces **first-class explainability** for `course.yml`, enabling
+governance, review, and audit workflows **without executing builds**.
+
+This release focuses on **explanation, provenance, and determinism** —
+not automation, enforcement, or authoring changes.
+
+New in v1.8:
+
+- A new `explain` command that produces a **stable, machine-readable JSON explanation**
+- Deterministic explain output (except for a single runtime timestamp)
+- Structural explanation of:
+  - course metadata
+  - module and lesson layout
+  - content block structure
+- **Lesson-level source provenance**:
+  - declared paths
+  - resolved paths
+  - SHA-256 hashes
+  - byte counts
+- Explain-only behaviour (no mutation, no validation, no enforcement)
+
+Explain output is designed for:
+
+- QA and governance review
+- CI pipelines and dashboards
+- Diffing and comparison workflows
+- External audit and assurance contexts
+
+Example (CLI):
+
+```bash
+course-engine explain course.yml --json
+```
+
+The `explain` command operates directly on `course.yml` and does **not**
+require a build or `manifest.json`.
+
+---
+
 
 ## Outputs
 
@@ -106,6 +150,7 @@ course-engine inspect dist/sample-course-pdf
 - **`build`** – Compile `course.yml` into an output package
 - **`render`** – Run Quarto to render the built package
 - **`inspect`** – Show build metadata (manifest summary)
+- **`explain`** – Explain `course.yml` structure and provenance as JSON (v1.8)
 - **`report`** – Generate a capability coverage report from build outputs (v1.2)
 - **`validate`** – Validate or explain capability policy resolution (v1.3 / v1.5)
 - **`clean`** – Remove generated artefacts safely
