@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+## v1.8.0
+
+### Fixed
+- Corrected engine version reporting to derive from installed package metadata (eliminates version drift in CLI and explain JSON).
+
+---
+
 ## v1.7.0 – Lesson Navigation & UX Polish
 
 ### Changed
