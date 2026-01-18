@@ -40,6 +40,18 @@ You **do not** need to know Python beyond basic command-line usage.
 
 ---
 
+## Quick start (recommended)
+
+```bash
+course-engine init my-course
+cd my-course
+course-engine build course.yml --out dist --overwrite
+course-engine render dist/my-course
+course-engine inspect dist/my-course
+```
+
+---
+
 ## 3. System Requirements
 
 ### 3.1 Python (mandatory)
@@ -222,8 +234,8 @@ course-engine render dist/my-course
 
 Common results:
 
-- **Multi-page Quarto site:** output appears under `dist/my-course/_site/`
-- **PDF project:** output appears as `index.pdf` in the project directory (and is listed in the manifest)
+- **Multi-page Quarto site:** typically appears under `dist/my-course/_site/`
+- **PDF project:** by default appears as `index.pdf` in the project directory (and is listed in the manifest)
 
 ---
 
@@ -334,7 +346,7 @@ This allows inspection of:
 Example (explain-only, JSON):
 
 ```bash
-course-engine validate /tmp   --policy preset:baseline   --profile baseline   --explain   --json
+course-engine validate /tmp --policy preset:baseline --profile baseline --explain --json
 ```
 
 This mode:

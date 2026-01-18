@@ -1,5 +1,4 @@
-# **HANDBOOK B — COURSE BUILDER DESIGN & RATIONALE**
-
+# **HANDBOOK B — COURSE ENGINE DESIGN & RATIONALE**
 *A design record for capability-driven, governance-aware course infrastructure*
 
 > **Canonical source:** This Markdown file.  
@@ -13,15 +12,13 @@
 
 ## **1. What This Handbook Is**
 
-This handbook documents the **design rationale** of the CloudPedagogy Course Builder.
+This handbook documents the **design rationale** of the CloudPedagogy Course Engine.
 
-Its purpose is to explain *why* the Course Builder was designed the way it was, *which principles informed its architecture*, and *what trade-offs were made* in translating capability and governance requirements into a working system.
+Its purpose is to explain *why* the Course Engine was designed the way it was, *which principles informed its architecture*, and *what trade-offs were made* in translating capability and governance requirements into a working system.
 
-Where the Course Builder Handbook (Handbook A) focuses on **how to use the tool responsibly**, this handbook focuses on **how and why the tool was designed**.
+Where the Course Engine Handbook (Handbook A) focuses on **how to use the tool responsibly**, this handbook focuses on **how and why the tool was designed**.
 
 It is a design record, not a user guide.
-
-> **Naming note:** In the repository and CLI, the Course Builder is implemented as the **CloudPedagogy Course Engine** (`course-engine`). This handbook uses “Course Builder” to describe the product concept and “Course Engine” when referencing the implementation.
 
 ## **2. What This Handbook Is Not**
 
@@ -29,11 +26,11 @@ This handbook is **not**:
 
 - a technical specification or API reference
 - a replacement for code documentation or READMEs
-- a tutorial on how to operate the Course Builder
+- a tutorial on how to operate the Course Engine
 - a marketing narrative or product pitch
 
 Technical details belong in the repository documentation.  
-Operational guidance belongs in the Course Builder Handbook.
+Operational guidance belongs in the Course Engine Handbook.
 
 This document exists to capture **design intent**, **normative assumptions**, and **governance considerations** that cannot be inferred reliably from code alone.
 
@@ -54,14 +51,14 @@ By making design intent explicit, it supports:
 
 It also provides a stable reference point for explaining why certain features exist — and why others do not.
 
-## **4. Relationship to the Course Builder Handbook**
+## **4. Relationship to the Course Engine Handbook**
 
-This handbook is intended to be read **alongside**, not instead of, the Course Builder Handbook.
+This handbook is intended to be read **alongside**, not instead of, the Course Engine Handbook.
 
 The relationship between the two is intentional:
 
-- **Handbook A** explains how to use the Course Builder responsibly
-- **Handbook B** explains why the Course Builder was designed the way it was
+- **Handbook A** explains how to use the Course Engine responsibly
+- **Handbook B** explains why the Course Engine was designed the way it was
 
 Handbook A is concerned with practice.  
 Handbook B is concerned with design reasoning.
@@ -70,7 +67,7 @@ Keeping these concerns separate avoids overloading users while still preserving 
 
 ## **5. Relationship to the AI Capability Framework and CDD**
 
-The Course Builder is not a neutral technical artefact.
+The Course Engine is not a neutral technical artefact.
 
 Its design is explicitly informed by:
 
@@ -89,13 +86,13 @@ It does not restate the full Framework or the full CDD method. Instead, it docum
 
 ## **6. Intended Audience**
 
-This handbook is written for readers who need to understand the Course Builder at a **design and governance level**, including:
+This handbook is written for readers who need to understand the Course Engine at a **design and governance level**, including:
 
 - institutional reviewers and assessors
 - technical contributors and maintainers
 - researchers examining AI-enabled educational infrastructure
 - decision-makers evaluating adoption or alignment
-- future contributors to the Course Builder itself
+- future contributors to the Course Engine itself
 
 It assumes familiarity with professional, institutional, or system-level concerns, but it does not assume detailed knowledge of the codebase.
 
@@ -109,7 +106,7 @@ It is not intended to be read linearly from start to finish, and it is not expec
 
 ## **8. Stability and Evolution**
 
-The Course Builder will evolve. This handbook exists to ensure that evolution remains **intentional**.
+The Course Engine will evolve. This handbook exists to ensure that evolution remains **intentional**.
 
 The principles and design commitments described here are intended to remain stable. However, new sections may be added to document additional design decisions, extensions, or clarifications as the system develops.
 
@@ -119,19 +116,19 @@ Changes to this handbook should favour **addition and explanation**, not retrosp
 
 This stage establishes the purpose and scope of Handbook B.
 
-It clarifies that this document exists to record design intent, explain architectural and normative choices, and support responsible evolution of the Course Builder over time.
+It clarifies that this document exists to record design intent, explain architectural and normative choices, and support responsible evolution of the Course Engine over time.
 
-The next stage moves from purpose to foundations, examining the **design problem the Course Builder set out to address** and the assumptions that shaped its initial conception.
+The next stage moves from purpose to foundations, examining the **design problem the Course Engine set out to address** and the assumptions that shaped its initial conception.
 
 ---
 
-## **STAGE 2 — THE DESIGN PROBLEM THE COURSE BUILDER RESPONDS TO**
+## **STAGE 2 — THE DESIGN PROBLEM THE COURSE ENGINE RESPONDS TO**
 
 *Why existing approaches to AI-supported course design were insufficient*
 
 ## **9. The Problem Is Not Content Production**
 
-The primary design problem the Course Builder responds to is **not** a lack of tools for producing educational content.
+The primary design problem the Course Engine responds to is **not** a lack of tools for producing educational content.
 
 By the time this system was conceived, generative AI tools were already highly capable of drafting text, summarising material, and generating outlines. Speed and fluency were not the limiting factors. If anything, they were becoming a source of new risk.
 
@@ -161,7 +158,7 @@ In many systems, AI output is presented as seamless and authoritative, with litt
 
 From a governance and accountability perspective, this ambiguity is unacceptable. Responsibility cannot be meaningfully assigned if roles are unclear.
 
-The Course Builder was designed in response to this problem: to ensure that **assistance never masquerades as authority**, and that human judgement remains visible rather than implicit.
+The Course Engine was designed in response to this problem: to ensure that **assistance never masquerades as authority**, and that human judgement remains visible rather than implicit.
 
 ## **12. Post-Hoc Governance and Retrofitted Assurance**
 
@@ -171,7 +168,7 @@ Courses are designed and published first, with questions about alignment, assura
 
 The design problem here is structural. If courses are not designed from the outset to be inspected, reviewed, and explained, governance becomes reactive rather than embedded.
 
-The Course Builder responds to this by treating **reviewability and auditability as design requirements**, not optional extras.
+The Course Engine responds to this by treating **reviewability and auditability as design requirements**, not optional extras.
 
 ## **13. Loss of Coherence Over Time**
 
@@ -189,7 +186,7 @@ Another underlying issue was the tendency to frame course design problems in ter
 
 Questions such as “Which AI tool should we use?” or “What can this model generate?” often displaced more important questions about what educators and institutions needed to be able to do: explain decisions, maintain quality, support review, and adapt responsibly.
 
-The Course Builder was designed to reverse this framing. Instead of starting with tools, it starts with **capability requirements** and asks what kind of system would be needed to support them.
+The Course Engine was designed to reverse this framing. Instead of starting with tools, it starts with **capability requirements** and asks what kind of system would be needed to support them.
 
 ## **15. The Absence of a Middle Layer**
 
@@ -197,11 +194,11 @@ At a structural level, there was a missing **middle layer** between high-level f
 
 Frameworks could articulate principles and values, while tools could generate content. What was lacking was infrastructure that could translate those principles into **practical, inspectable design artefacts** without enforcing compliance or automating judgement.
 
-The Course Builder was conceived to occupy this middle layer: not a framework, not a generator, but a system that could **hold intent, structure, and evidence together**.
+The Course Engine was conceived to occupy this middle layer: not a framework, not a generator, but a system that could **hold intent, structure, and evidence together**.
 
 ## **16. Summary of the Design Problem**
 
-Taken together, the design problem the Course Builder responds to can be summarised as follows:
+Taken together, the design problem the Course Engine responds to can be summarised as follows:
 
 AI made it easy to produce content, but difficult to:
 
@@ -211,25 +208,25 @@ AI made it easy to produce content, but difficult to:
 - maintain coherence over time
 - design for capability rather than tooling
 
-The Course Builder was not designed to solve all of these problems automatically. It was designed to **make them addressable by design**.
+The Course Engine was not designed to solve all of these problems automatically. It was designed to **make them addressable by design**.
 
 ## **Stage 2 Summary**
 
-This stage has described the problem space that motivated the Course Builder’s design.
+This stage has described the problem space that motivated the Course Engine’s design.
 
 The challenge was not technical capability, but the absence of infrastructure that could support accountable, capability-aware, and governable course design in an AI-enabled environment.
 
-The next stage examines the **foundational design principles** adopted in response to this problem, and how they shaped the Course Builder’s overall architecture.
+The next stage examines the **foundational design principles** adopted in response to this problem, and how they shaped the Course Engine’s overall architecture.
 
 ---
 
 ## **STAGE 3 — FOUNDATIONAL DESIGN PRINCIPLES**
 
-*The commitments that shaped the Course Builder’s architecture*
+*The commitments that shaped the Course Engine’s architecture*
 
 ## **17. Principles as Design Constraints, Not Values Statements**
 
-The Course Builder was not designed by starting with a list of features. It was designed by committing to a small number of **foundational principles** and then treating those principles as *constraints* on what the system could and could not do.
+The Course Engine was not designed by starting with a list of features. It was designed by committing to a small number of **foundational principles** and then treating those principles as *constraints* on what the system could and could not do.
 
 These principles are not branding statements or abstract values. They function as **design tests**. When a proposed capability conflicted with a principle, the capability was revised, constrained, or rejected.
 
@@ -239,7 +236,7 @@ This stage documents those principles and explains how they were used to guide a
 
 The first and most important principle is that **human judgement must remain central**.
 
-The Course Builder assumes that decisions about educational purpose, scope, framing, and ethical appropriateness cannot be delegated to an automated system without loss of responsibility. As a result, the system is designed to assist with drafting, structuring, and inspection, but not to decide what should be taught or how it should be evaluated.
+The Course Engine assumes that decisions about educational purpose, scope, framing, and ethical appropriateness cannot be delegated to an automated system without loss of responsibility. As a result, the system is designed to assist with drafting, structuring, and inspection, but not to decide what should be taught or how it should be evaluated.
 
 This principle led directly to design choices such as:
 
@@ -253,7 +250,7 @@ Any feature that would obscure where judgement was exercised was treated as a ri
 
 A second foundational principle is that **structure should precede generation**.
 
-Rather than allowing content to drive structure implicitly, the Course Builder requires that structure be defined explicitly before substantial text is produced. This reflects the view that coherence, progression, and interpretability depend on deliberate organisation, not on post-hoc editing.
+Rather than allowing content to drive structure implicitly, the Course Engine requires that structure be defined explicitly before substantial text is produced. This reflects the view that coherence, progression, and interpretability depend on deliberate organisation, not on post-hoc editing.
 
 This principle shaped the decision to treat the course specification as a first-class artefact and to separate structural design from content elaboration. It also influenced the system’s resistance to “one-click” generation workflows that collapse design decisions into a single step.
 
@@ -261,7 +258,7 @@ This principle shaped the decision to treat the course specification as a first-
 
 Many AI-enabled systems prioritise seamlessness, hiding intermediate steps to create the impression of intelligence or autonomy.
 
-The Course Builder adopts the opposite stance: **transparency is preferred to seamlessness**, even when this introduces friction.
+The Course Engine adopts the opposite stance: **transparency is preferred to seamlessness**, even when this introduces friction.
 
 This principle led to design choices such as:
 
@@ -278,13 +275,13 @@ Another foundational principle is that **capability requirements should drive sy
 
 Rather than asking what existing AI tools could generate, the design process began by asking what educators and institutions needed to be able to do: explain decisions, demonstrate alignment, revise courses over time, and support governance without reducing judgement to compliance.
 
-This principle aligns directly with a capability-driven approach to system design and explains why the Course Builder is framed as infrastructure rather than as an authoring tool.
+This principle aligns directly with a capability-driven approach to system design and explains why the Course Engine is framed as infrastructure rather than as an authoring tool.
 
 ## **22. Governance as a Design Requirement**
 
 Governance was treated as a **design requirement**, not a downstream concern.
 
-The Course Builder was designed on the assumption that courses may need to be reviewed, audited, or explained to others who were not involved in their creation. This required that evidence, structure, and declared intent be available in a form that could support such review.
+The Course Engine was designed on the assumption that courses may need to be reviewed, audited, or explained to others who were not involved in their creation. This required that evidence, structure, and declared intent be available in a form that could support such review.
 
 As a result, features such as metadata generation, reporting, and validation were designed to support inspection rather than enforcement. Governance is supported by making information available, not by automating approval.
 
@@ -304,19 +301,19 @@ The system is designed to support cautious progress rather than rapid but brittl
 
 ## **24. Separation of Concerns**
 
-The Course Builder deliberately separates concerns that are often collapsed in other systems.
+The Course Engine deliberately separates concerns that are often collapsed in other systems.
 
 Frameworks define norms and values.  
 Methods describe how design decisions are made.  
 Tools implement infrastructure.
 
-The Course Builder positions itself strictly in the tooling layer. It supports frameworks and methods, but it does not embed them or enforce them. This separation allows each layer to evolve independently without conflating judgement with implementation.
+The Course Engine positions itself strictly in the tooling layer. It supports frameworks and methods, but it does not embed them or enforce them. This separation allows each layer to evolve independently without conflating judgement with implementation.
 
 ## **25. Explicit Non-Goals**
 
 Finally, the design principles include a set of **explicit non-goals**.
 
-The Course Builder was not designed to:
+The Course Engine was not designed to:
 
 - replace pedagogical expertise
 - automate curriculum approval
@@ -336,7 +333,7 @@ The purpose of documenting these principles is not to freeze the system, but to 
 
 ## **Stage 3 Summary**
 
-This stage has articulated the foundational design principles that shaped the Course Builder.
+This stage has articulated the foundational design principles that shaped the Course Engine.
 
 These principles explain why the system behaves as it does, why certain features exist, and why others do not. They serve as constraints on implementation and as reference points for future development.
 
@@ -350,7 +347,7 @@ The next stage examines how these principles were translated into **specific arc
 
 ## **27. Architecture as an Expression of Design Intent**
 
-The architecture of the Course Builder is not accidental, nor is it merely a technical implementation of functional requirements.
+The architecture of the Course Engine is not accidental, nor is it merely a technical implementation of functional requirements.
 
 It is an expression of the design principles outlined in the previous stage. Each major architectural choice reflects a deliberate attempt to preserve human judgement, maintain transparency, and support governance without enforcement.
 
@@ -366,7 +363,7 @@ The course specification becomes a shared object that can be reviewed, versioned
 
 ## **29. Separation Between Specification, Build, and Render Phases**
 
-The Course Builder deliberately separates the workflow into distinct phases: specification, build, and render.
+The Course Engine deliberately separates the workflow into distinct phases: specification, build, and render.
 
 This separation reflects multiple design principles simultaneously. It reinforces transparency by making intermediate artefacts visible, supports non-destructive defaults by allowing builds to exist independently of rendering, and enables inspection and reporting without forcing publication.
 
@@ -374,7 +371,7 @@ Architecturally, this avoids collapsing multiple decisions into a single opaque 
 
 ## **30. Explicit Manifest Generation for Inspection and Review**
 
-Rather than treating build metadata as an internal concern, the Course Builder generates an explicit, machine-readable manifest (`manifest.json`) as part of the build process.
+Rather than treating build metadata as an internal concern, the Course Engine generates an explicit, machine-readable manifest (`manifest.json`) as part of the build process.
 
 This manifest exists to support inspection, reporting, and validation. It allows reviewers to understand what was produced, how it was structured, and what declarations were made, without needing to infer behaviour from outputs alone.
 
@@ -382,7 +379,7 @@ This design choice follows directly from the principles of transparency and gove
 
 ## **30A. External Lesson Sources as an Architectural Extension (v1.6)**
 
-In v1.6, the Course Builder introduced support for authoring lessons as **external source files**.
+In v1.6, the Course Engine introduced support for authoring lessons as **external source files**.
 
 This change did not alter the system’s responsibility model or workflow assumptions. Instead, it represents an architectural extension that preserves existing design commitments:
 
@@ -397,11 +394,11 @@ External lesson sources were treated as an authoring affordance, not as a mechan
 - ambiguity between inline and external content is disallowed
 - provenance is recorded as evidence, not optimisation
 
-This extension demonstrates how the Course Builder can evolve authoring flexibility while preserving its foundational principles.
+This extension demonstrates how the Course Engine can evolve authoring flexibility while preserving its foundational principles.
 
 ## **30B. Fail-Fast Authoring Guardrails (v1.6)**
 
-In v1.6, the Course Builder added **fail-fast preflight checks** for common authoring mistakes and ambiguous course layouts.
+In v1.6, the Course Engine added **fail-fast preflight checks** for common authoring mistakes and ambiguous course layouts.
 
 This is a governance-relevant architectural decision: it reduces “silent correctness” (where a build succeeds but the authored intent is misrepresented), and it produces clearer, actionable errors that keep responsibility visible.
 
@@ -423,7 +420,7 @@ This reflects a deliberate refusal to collapse complex judgement into automated 
 
 ## **31A. Two Layers of Governance Signalling: Alignment vs Defensibility (v1.6)**
 
-The Course Builder supports **two distinct layers** of governance signalling:
+The Course Engine supports **two distinct layers** of governance signalling:
 
 1. **Declared alignment** (`framework_alignment`)  
    A human declaration that a course references a framework and domains. This is useful for orientation, inventory, and high-level reporting.
@@ -437,7 +434,7 @@ Validation remains intentionally dependent on `capability_mapping`, reflecting t
 
 ## **32. Validation as Explanation, Not Enforcement**
 
-Validation within the Course Builder was designed to support explanation rather than enforcement by default.
+Validation within the Course Engine was designed to support explanation rather than enforcement by default.
 
 Architectural decisions here include:
 
@@ -465,7 +462,7 @@ This approach aligns with the principle that iteration and experimentation shoul
 
 ## **35. Minimal Assumptions About Downstream Platforms**
 
-The Course Builder avoids embedding assumptions about where or how outputs will be consumed.
+The Course Engine avoids embedding assumptions about where or how outputs will be consumed.
 
 Rather than coupling the system tightly to a particular learning platform or delivery environment, it produces portable artefacts that can be rendered, hosted, or integrated elsewhere.
 
@@ -481,7 +478,7 @@ This discipline is visible in what the system does *not* include as much as in w
 
 ## **Stage 4 Summary**
 
-This stage has shown how foundational principles were translated into architectural decisions within the Course Builder.
+This stage has shown how foundational principles were translated into architectural decisions within the Course Engine.
 
 The system’s structure is not incidental. It is a direct expression of commitments to human judgement, transparency, capability awareness, and responsible evolution.
 
@@ -491,13 +488,13 @@ The next stage examines the **deliberate exclusions and trade-offs** that accomp
 
 ## **STAGE 5 — DESIGN TRADE-OFFS AND DELIBERATE EXCLUSIONS**
 
-*What the Course Builder chose not to do — and why*
+*What the Course Engine chose not to do — and why*
 
 ## **37. The Importance of Explicit Non-Features**
 
 Every system embodies trade-offs, whether or not they are acknowledged.
 
-In the design of the Course Builder, certain capabilities were consciously **excluded**, not because they were technically infeasible, but because they conflicted with foundational principles. Making these exclusions explicit is essential for governance, critique, and future development.
+In the design of the Course Engine, certain capabilities were consciously **excluded**, not because they were technically infeasible, but because they conflicted with foundational principles. Making these exclusions explicit is essential for governance, critique, and future development.
 
 This stage documents the most significant non-features and the reasoning behind them.
 
@@ -505,7 +502,7 @@ This stage documents the most significant non-features and the reasoning behind 
 
 One of the most visible exclusions is the absence of automated, end-to-end course generation.
 
-The Course Builder does not offer a workflow in which a user describes a topic and receives a completed course in response. While such functionality is common elsewhere, it was rejected because it collapses multiple layers of judgement into a single automated act.
+The Course Engine does not offer a workflow in which a user describes a topic and receives a completed course in response. While such functionality is common elsewhere, it was rejected because it collapses multiple layers of judgement into a single automated act.
 
 Automated generation risks:
 
@@ -513,7 +510,7 @@ Automated generation risks:
 - encouraging acceptance of content without review
 - undermining accountability for structure and scope
 
-The Course Builder instead supports *assisted drafting within explicit structure*, preserving human ownership of design decisions.
+The Course Engine instead supports *assisted drafting within explicit structure*, preserving human ownership of design decisions.
 
 ## **39. No Inference of Pedagogical Quality or Effectiveness**
 
@@ -521,23 +518,23 @@ The system does not attempt to evaluate whether a course is pedagogically sound,
 
 While metrics, heuristics, or models could be used to approximate such judgements, doing so would create a false sense of authority. Pedagogical quality is contextual, contested, and value-laden.
 
-By refusing to infer quality, the Course Builder avoids presenting evaluative claims that it cannot responsibly justify. Judgement remains with educators, reviewers, and institutions.
+By refusing to infer quality, the Course Engine avoids presenting evaluative claims that it cannot responsibly justify. Judgement remains with educators, reviewers, and institutions.
 
 ## **40. No Automated Approval or Compliance Decisions**
 
 Another deliberate exclusion is automated approval.
 
-The Course Builder supports inspection, reporting, and validation, but it does not approve courses, certify alignment, or determine compliance. Even in strict validation modes, the system reports unmet rules rather than declaring outcomes as acceptable or unacceptable in absolute terms.
+The Course Engine supports inspection, reporting, and validation, but it does not approve courses, certify alignment, or determine compliance. Even in strict validation modes, the system reports unmet rules rather than declaring outcomes as acceptable or unacceptable in absolute terms.
 
 This distinction is critical. Approval is an institutional and professional act, not a technical one. Automating it would misrepresent responsibility and authority.
 
 ## **41. No Implicit Enforcement of Frameworks**
 
-Although the Course Builder supports capability mapping and validation, it does not embed or enforce any specific framework by default.
+Although the Course Engine supports capability mapping and validation, it does not embed or enforce any specific framework by default.
 
 Frameworks define norms and values. Tools implement infrastructure. Collapsing these roles risks turning frameworks into rigid compliance mechanisms and tools into unaccountable authorities.
 
-By keeping frameworks external and declarative, the Course Builder allows users and institutions to apply their own interpretive judgement rather than inheriting assumptions embedded in software.
+By keeping frameworks external and declarative, the Course Engine allows users and institutions to apply their own interpretive judgement rather than inheriting assumptions embedded in software.
 
 ## **42. No Hidden Optimisation or Ranking**
 
@@ -545,11 +542,11 @@ The system does not rank courses, optimise for engagement metrics, or score alig
 
 While such features might appear attractive, they introduce competitive and instrumental logics that are poorly suited to reflective design and governance contexts. They also tend to obscure the basis on which judgements are made.
 
-The Course Builder prioritises explainability and reviewability over optimisation.
+The Course Engine prioritises explainability and reviewability over optimisation.
 
 ## **43. No Mandatory AI Usage**
 
-AI assistance is not mandatory within the Course Builder workflow.
+AI assistance is not mandatory within the Course Engine workflow.
 
 The system is designed so that courses can be specified, built, and reviewed without invoking generative AI at all. This ensures that the infrastructure remains usable in contexts where AI use is restricted, contested, or deliberately limited.
 
@@ -559,7 +556,7 @@ This exclusion reinforces the principle that AI is an assistant, not a prerequis
 
 These exclusions come with acknowledged trade-offs.
 
-The Course Builder is:
+The Course Engine is:
 
 - slower than one-click generation tools
 - less immediately impressive in demonstrations
@@ -577,38 +574,38 @@ Exclusions are not permanent prohibitions, but they are not accidental gaps eith
 
 ## **Stage 5 Summary**
 
-This stage has outlined the most significant design trade-offs and deliberate exclusions in the Course Builder.
+This stage has outlined the most significant design trade-offs and deliberate exclusions in the Course Engine.
 
 By refusing to automate judgement, enforce compliance, or infer quality, the system preserves clarity about responsibility and authority. These non-features are essential to the integrity of the overall design.
 
-The next stage examines how the Course Builder positions itself **within the broader CloudPedagogy ecosystem** and how its design relates to frameworks and methods without embedding them.
+The next stage examines how the Course Engine positions itself **within the broader CloudPedagogy ecosystem** and how its design relates to frameworks and methods without embedding them.
 
 ---
 
-## **STAGE 6 — POSITIONING THE COURSE BUILDER WITHIN THE CLOUDPEDAGOGY ECOSYSTEM**
+## **STAGE 6 — POSITIONING THE COURSE ENGINE WITHIN THE CLOUDPEDAGOGY ECOSYSTEM**
 
 *How the system relates to frameworks, methods, and other tools*
 
-## **46. The Course Builder as Infrastructure, Not Authority**
+## **46. The Course Engine as Infrastructure, Not Authority**
 
-Within the CloudPedagogy ecosystem, the Course Builder is intentionally positioned as **infrastructure**.
+Within the CloudPedagogy ecosystem, the Course Engine is intentionally positioned as **infrastructure**.
 
 It does not define norms, values, or expectations. It does not decide what responsible practice looks like. Instead, it provides a structured environment in which such decisions can be expressed, inspected, and revised.
 
-This positioning matters. By remaining infrastructural, the Course Builder avoids claiming authority that properly belongs to educators, institutions, and frameworks.
+This positioning matters. By remaining infrastructural, the Course Engine avoids claiming authority that properly belongs to educators, institutions, and frameworks.
 
 ## **47. Relationship to the AI Capability Framework**
 
 The CloudPedagogy AI Capability Framework defines **what responsible AI capability looks like** across a set of domains.
 
-The Course Builder does not reinterpret or restate the Framework. Instead, it provides mechanisms through which courses can:
+The Course Engine does not reinterpret or restate the Framework. Instead, it provides mechanisms through which courses can:
 
 - declare alignment
 - document intent
 - expose coverage and gaps (when mapping evidence exists)
 - support review and assurance
 
-The framework remains normative and interpretive. The Course Builder remains procedural and evidential.
+The framework remains normative and interpretive. The Course Engine remains procedural and evidential.
 
 This separation allows the framework to evolve conceptually without forcing changes in tooling, and allows the tooling to evolve without redefining capability norms.
 
@@ -616,7 +613,7 @@ This separation allows the framework to evolve conceptually without forcing chan
 
 Capability-Driven Development provides a method for translating capability requirements into system design decisions.
 
-The Course Builder is not an implementation of CDD as a general method. It is, however, an applied example of **CDD in practice**.
+The Course Engine is not an implementation of CDD as a general method. It is, however, an applied example of **CDD in practice**.
 
 Its architecture reflects a capability-first approach:
 
@@ -624,27 +621,27 @@ Its architecture reflects a capability-first approach:
 - human–AI boundaries are explicit
 - governance and review are designed in, not bolted on
 
-This handbook exists partly to make that application explicit, so that the Course Builder can be examined as a concrete instantiation of CDD principles without being mistaken for the method itself.
+This handbook exists partly to make that application explicit, so that the Course Engine can be examined as a concrete instantiation of CDD principles without being mistaken for the method itself.
 
 ## **49. Relationship to Other CloudPedagogy Tools**
 
-The Course Builder is one component within a broader set of CloudPedagogy resources, which may include diagnostic tools, reflective instruments, and applied learning materials.
+The Course Engine is one component within a broader set of CloudPedagogy resources, which may include diagnostic tools, reflective instruments, and applied learning materials.
 
-It is designed to interoperate conceptually with these resources, but not to depend on them. Outputs from the Course Builder can be informed by diagnostic or reflective work, and its artefacts may feed into other review or planning processes.
+It is designed to interoperate conceptually with these resources, but not to depend on them. Outputs from the Course Engine can be informed by diagnostic or reflective work, and its artefacts may feed into other review or planning processes.
 
-However, the Course Builder does not assume the presence of any particular upstream or downstream tool. This preserves modularity and reduces coupling across the ecosystem.
+However, the Course Engine does not assume the presence of any particular upstream or downstream tool. This preserves modularity and reduces coupling across the ecosystem.
 
 ## **50. Avoiding Framework Lock-In**
 
 A key design concern was avoiding **framework lock-in**.
 
-While the Course Builder was developed in close alignment with the CloudPedagogy AI Capability Framework, it was deliberately designed to support alternative or additional frameworks through declarative metadata.
+While the Course Engine was developed in close alignment with the CloudPedagogy AI Capability Framework, it was deliberately designed to support alternative or additional frameworks through declarative metadata.
 
 This ensures that institutions can adapt the tool to their own contexts without inheriting implicit commitments embedded in software. Frameworks remain choices, not dependencies.
 
 ## **51. Supporting Multiple Levels of Use**
 
-The Course Builder is designed to support use at multiple levels simultaneously:
+The Course Engine is designed to support use at multiple levels simultaneously:
 
 - individual educators drafting materials
 - teams collaborating on course design
@@ -654,9 +651,9 @@ Its positioning within the ecosystem reflects this multiplicity. It does not pri
 
 This flexibility is a design outcome, not an accident.
 
-## **52. The Course Builder as a Boundary Object**
+## **52. The Course Engine as a Boundary Object**
 
-In practice, the Course Builder functions as a **boundary object**.
+In practice, the Course Engine functions as a **boundary object**.
 
 It provides shared artefacts — specifications, manifests, outputs — that different stakeholders can engage with for different purposes. Educators, designers, reviewers, and technologists can all interact with the same artefacts without needing to agree on every underlying interpretation.
 
@@ -664,7 +661,7 @@ This role is particularly important in governance contexts, where shared referen
 
 ## **53. Positioning as an Enabler, Not a Solution**
 
-Finally, the Course Builder is positioned as an **enabler**, not a solution.
+Finally, the Course Engine is positioned as an **enabler**, not a solution.
 
 It does not claim to solve the challenges of AI-supported education. Instead, it aims to make those challenges more visible, more discussable, and more manageable through design.
 
@@ -672,9 +669,9 @@ This modest positioning is intentional. It reflects an understanding that respon
 
 ## **Stage 6 Summary**
 
-This stage has clarified how the Course Builder fits within the CloudPedagogy ecosystem.
+This stage has clarified how the Course Engine fits within the CloudPedagogy ecosystem.
 
-By positioning itself as infrastructure, not authority, and by maintaining clear boundaries between frameworks, methods, and tools, the Course Builder supports responsible practice without overreach.
+By positioning itself as infrastructure, not authority, and by maintaining clear boundaries between frameworks, methods, and tools, the Course Engine supports responsible practice without overreach.
 
 The final stage draws these threads together and reflects on how this design record should be used going forward.
 
@@ -688,13 +685,13 @@ The final stage draws these threads together and reflects on how this design rec
 
 This handbook is intended to function as a **design record**.
 
-It captures the reasoning, assumptions, and constraints that shaped the Course Builder at a particular point in its evolution. Its purpose is not to prescribe behaviour, but to make the system’s design intelligible to others.
+It captures the reasoning, assumptions, and constraints that shaped the Course Engine at a particular point in its evolution. Its purpose is not to prescribe behaviour, but to make the system’s design intelligible to others.
 
 As such, it should be read as an explanation of *why things are the way they are*, not as a guarantee that they will never change.
 
 ## **55. Supporting Responsible Evolution**
 
-The Course Builder is expected to evolve.
+The Course Engine is expected to evolve.
 
 New features, workflows, and integrations may be added over time. This handbook exists to ensure that such changes remain **intentional rather than incidental**.
 
@@ -735,7 +732,7 @@ Drift is not prevented by freezing a system, but by making change legible.
 This handbook does not replace other forms of documentation.
 
 Technical behaviour is documented in READMEs and code comments.  
-Operational guidance is provided in the Course Builder Handbook.  
+Operational guidance is provided in the Course Engine Handbook.  
 Change history is tracked through versioning and changelogs.
 
 This document sits alongside those artefacts, addressing questions they cannot easily answer: questions of intent, rationale, and responsibility.
@@ -750,7 +747,7 @@ This does not mean the design is fixed. It means that changes should be acknowle
 
 ## **60. Closing Reflection**
 
-The Course Builder was designed in response to a specific set of concerns about AI-supported course design: concerns about accountability, governance, and the erosion of judgement.
+The Course Engine was designed in response to a specific set of concerns about AI-supported course design: concerns about accountability, governance, and the erosion of judgement.
 
 This handbook records one response to those concerns. It does not claim to be the only possible response, nor the final one.
 
@@ -760,30 +757,30 @@ Its value lies in making the reasoning explicit — so that responsibility remai
 
 This design and rationale handbook has documented:
 
-- the problem space the Course Builder responds to
+- the problem space the Course Engine responds to
 - the principles that shaped its design
 - the architectural decisions that followed (including v1.6 extensions)
 - the trade-offs and exclusions that were accepted
 - the system’s positioning within a broader ecosystem
 
-Together, these sections provide a durable reference for understanding, using, and evolving the Course Builder responsibly.
+Together, these sections provide a durable reference for understanding, using, and evolving the Course Engine responsibly.
 
 ---
 
-## **Relationship to the Course Builder Handbook (Handbook A)**
+## **Relationship to the Course Engine Handbook (Handbook A)**
 
-This handbook documents the **design intent and rationale** of the CloudPedagogy Course Builder.
+This handbook documents the **design intent and rationale** of the CloudPedagogy Course Engine.
 
 It does not provide operational guidance on how to use the system in practice.
 
 For practical guidance on responsible use — including workflow expectations, human–AI boundaries, risks, and limits — see:
 
-**Handbook A — Course Builder Handbook**
+**Handbook A — Course Engine Handbook**
 
-That handbook is written for educators, learning designers, technologists, and institutions who are using the Course Builder and remain accountable for the outcomes of that use.
+That handbook is written for educators, learning designers, technologists, and institutions who are using the Course Engine and remain accountable for the outcomes of that use.
 
 The two handbooks are complementary:
 
 - this handbook explains *why the system is designed as it is*
-- the Course Builder Handbook explains *how to use it responsibly*
+- the Course Engine Handbook explains *how to use it responsibly*
 

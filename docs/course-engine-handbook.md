@@ -1,32 +1,34 @@
 # **Introduction**
 
 > **Canonical source:** This Markdown file.  
-> Word and PDF versions in `docs/handbook/` are derived artefacts and may be regenerated.
+> Word and PDF versions in `docs/handbook/` are derived artefacts and may be regenerated.  
+> They may be committed for convenience, but the Markdown source remains authoritative.
 
-The CloudPedagogy Course Builder (Course Engine) is designed for people who are making **real, accountable decisions** about AI-supported course and curriculum design.
+
+The CloudPedagogy Course Engine is designed for people who are making **real, accountable decisions** about AI-supported course and curriculum design.
 
 In recent years, generative AI tools have made it easier than ever to produce educational content quickly. At the same time, they have made it harder to see where **judgement, responsibility, and intent** actually sit. Content can now be generated at scale, but accountability often becomes blurred — particularly in institutional, educational, and governance-sensitive contexts.
 
 This handbook exists to support a different way of working.
 
-Rather than treating AI as an author or decision-maker, the Course Builder treats AI as an **assistant within a structured, human-led design process**. It is designed to help educators, learning designers, technologists, and institutions use AI **without losing control of purpose, quality, or accountability**.
+Rather than treating AI as an author or decision-maker, the Course Engine treats AI as an **assistant within a structured, human-led design process**. It is designed to help educators, learning designers, technologists, and institutions use AI **without losing control of purpose, quality, or accountability**.
 
-At a practical level, the CloudPedagogy Course Builder is a **structured course compilation system**. It turns a single, explicit course specification into **consistent, auditable learning artefacts** that can be reviewed, updated, and justified over time. This makes it particularly suitable for contexts where courses must stand up to internal review, quality assurance, governance and audit processes, and long-term maintenance and revision.
+At a practical level, the CloudPedagogy Course Engine is a **structured course compilation system**. It turns a single, explicit course specification into **consistent, auditable learning artefacts** that can be reviewed, updated, and justified over time. This makes it particularly suitable for contexts where courses must stand up to internal review, quality assurance, governance and audit processes, and long-term maintenance and revision.
 
-Rather than generating content directly, the Course Builder treats **course intent and structure as first-class design elements**. Courses are compiled from a single source of truth, produce reproducible outputs across formats such as web, PDF, and markdown, and generate machine-readable metadata to support inspection, reporting, and audit.
+Rather than generating content directly, the Course Engine treats **course intent and structure as first-class design elements**. Courses are compiled from a single source of truth, produce reproducible outputs across formats such as web, PDF, and markdown, and generate machine-readable metadata to support inspection, reporting, and audit.
 
 Where capability frameworks are used, the system supports two related but distinct mechanisms:
 
 - **Framework alignment** (v1.6): a *declaration* of which framework and domains the course intends to reference (informational, non-enforced).
 - **Capability mapping** (v1.1+): structured *coverage/evidence metadata* that can be reported on, and (optionally) validated against policy rules.
 
-The Course Builder is intentionally **non-prescriptive**. It supports reflection, review, traceability, and transparency, but it does not evaluate pedagogical quality, determine academic merit, or decide whether a course should be approved or adopted. Those responsibilities remain firmly with the human user.
+The Course Engine is intentionally **non-prescriptive**. It supports reflection, review, traceability, and transparency, but it does not evaluate pedagogical quality, determine academic merit, or decide whether a course should be approved or adopted. Those responsibilities remain firmly with the human user.
 
-This handbook explains why the Course Builder was created, how it is intended to be used, what it deliberately does *not* automate, and where responsibility remains human-owned. It does not assume prior technical expertise, but it does assume professional judgement.
+This handbook explains why the Course Engine was created, how it is intended to be used, what it deliberately does *not* automate, and where responsibility remains human-owned. It does not assume prior technical expertise, but it does assume professional judgement.
 
 The sections that follow are written to be practical rather than promotional, explicit rather than implicit, and stable over time — even as the software itself continues to evolve.
 
-In short, the CloudPedagogy Course Builder is **infrastructure for responsible course production**, not an automated teaching system.
+In short, the CloudPedagogy Course Engine is **infrastructure for responsible course production**, not an automated teaching system.
 
 ---
 
@@ -36,15 +38,15 @@ In short, the CloudPedagogy Course Builder is **infrastructure for responsible c
 
 ## **1. What This Handbook Is For**
 
-This handbook is written to support **responsible, confident use** of the CloudPedagogy Course Builder.
+This handbook is written to support **responsible, confident use** of the CloudPedagogy Course Engine.
 
-It is intended for people who are using, or considering using, the Course Builder to design courses, modules, or other structured learning materials with AI assistance — and who remain **accountable for the outcomes** of that work.
+It is intended for people who are using, or considering using, the Course Engine to design courses, modules, or other structured learning materials with AI assistance — and who remain **accountable for the outcomes** of that work.
 
 In practice, many tools explain *what they can do* but say very little about *how they should be used*, *what assumptions they make*, or *where responsibility actually sits*. This handbook exists to fill that gap.
 
 Its purpose is to help you:
 
-- understand **why** the Course Builder was created  
+- understand **why** the Course Engine was created  
 - understand **what problems** it is designed to address  
 - use the system effectively **without surrendering professional judgement**  
 - recognise **what the system deliberately does not automate**  
@@ -54,15 +56,15 @@ This is not a technical manual, and it is not a marketing document. You do not n
 
 Instead, this handbook is a **use-and-rationale guide**. It is designed to support thoughtful practice, particularly in contexts where quality, accountability, and governance matter.
 
-## **2. What the Course Builder Is (and Is Not)**
+## **2. What the Course Engine Is (and Is Not)**
 
-### **What the Course Builder *is***
+### **What the Course Engine *is***
 
-The CloudPedagogy Course Builder is a **capability-aware system for designing structured learning artefacts**.
+The CloudPedagogy Course Engine is a **capability-aware system for designing structured learning artefacts**.
 
 In practical terms, it supports the creation of materials such as short courses, modules, handbooks, guides, and curriculum documentation — particularly where coherence, traceability, and reviewability are important.
 
-The Course Builder is designed to help you:
+The Course Engine is designed to help you:
 
 - clarify and structure ideas before substantial content is generated  
 - maintain coherence across sections, themes, and learning intent  
@@ -72,9 +74,9 @@ The Course Builder is designed to help you:
 
 It supports **thinking, drafting, and iteration**. It is designed to help you work *with* AI while retaining ownership of direction, emphasis, and judgement.
 
-### **What the Course Builder *is not***
+### **What the Course Engine *is not***
 
-Just as important as what the Course Builder does is what it **deliberately does not do**.
+Just as important as what the Course Engine does is what it **deliberately does not do**.
 
 It is not an “AI writes my course” tool.  
 It is not a curriculum auto-designer.  
@@ -82,7 +84,7 @@ It is not a learning management system.
 It is not a pedagogical authority.  
 It is not a compliance or approval engine.
 
-The Course Builder does not decide:
+The Course Engine does not decide:
 
 - what is pedagogically appropriate  
 - what is ethically acceptable  
@@ -91,7 +93,7 @@ The Course Builder does not decide:
 
 Those decisions remain **human-owned**.
 
-This boundary is intentional. The Course Builder is designed to support professional work, not to replace professional responsibility. Where judgement matters, the system is designed to **surface decisions**, not make them on your behalf.
+This boundary is intentional. The Course Engine is designed to support professional work, not to replace professional responsibility. Where judgement matters, the system is designed to **surface decisions**, not make them on your behalf.
 
 ## **3. Why This Software Exists**
 
@@ -105,7 +107,7 @@ Over time, these patterns tend to produce courses that feel fragmented, contain 
 
 ### **The design response**
 
-The Course Builder exists to support a different approach.
+The Course Engine exists to support a different approach.
 
 Instead of starting with content, it starts with **intent**.  
 Instead of scaling quickly, it prioritises **structure and coherence**.  
@@ -114,9 +116,9 @@ Instead of treating publication as an endpoint, it treats it as a moment in an o
 
 In short, it is designed to make **good practice easier**, without pretending to automate expertise, responsibility, or professional judgement.
 
-## **4. Who the Course Builder Is Designed For**
+## **4. Who the Course Engine Is Designed For**
 
-The Course Builder is designed for people who design learning in **real institutional or professional contexts**.
+The Course Engine is designed for people who design learning in **real institutional or professional contexts**.
 
 This includes educators, learning designers, learning technologists, and researchers who are accountable for the quality, coherence, and impact of the materials they produce. It is particularly relevant where courses must be reviewed, updated, reused, or justified over time.
 
@@ -127,11 +129,11 @@ Typical users include those who need outputs they can:
 - explain to others  
 - maintain over multiple iterations  
 
-The Course Builder is **not optimised** for mass-content generation or consumer-grade “one-click” publishing. Its value lies in supporting careful design rather than rapid output.
+The Course Engine is **not optimised** for mass-content generation or consumer-grade “one-click” publishing. Its value lies in supporting careful design rather than rapid output.
 
 ## **5. The Core Design Philosophy**
 
-At the heart of the Course Builder are five guiding principles.
+At the heart of the Course Engine are five guiding principles.
 
 First, **humans decide; AI assists**. The system is built on the assumption that responsibility remains with the human user.
 
@@ -143,13 +145,13 @@ Fourth, **governance is a design feature**, not an afterthought. Reviewability a
 
 Finally, **courses are never finished — only published for now**. Iteration, revision, and renewal are expected parts of responsible practice.
 
-Every major design choice in the Course Builder follows from these principles.
+Every major design choice in the Course Engine follows from these principles.
 
 ## **6. How to Read and Use This Handbook**
 
 This handbook is not intended to be read once and put aside.
 
-You may find it useful to read the early sections to understand intent and boundaries, then return to later sections while actively using the Course Builder. Some sections may become more relevant when you update or expand existing work.
+You may find it useful to read the early sections to understand intent and boundaries, then return to later sections while actively using the Course Engine. Some sections may become more relevant when you update or expand existing work.
 
 You do not need to read the handbook linearly in order to use the software effectively. It is designed to support use **over time**, not just at the point of first contact.
 
@@ -157,7 +159,7 @@ You do not need to read the handbook linearly in order to use the software effec
 
 This handbook is a **living document**.
 
-As the Course Builder evolves, new sections may be added to describe additional workflows, outputs, or features. Guidance may also be extended to reflect emerging practices around governance, review, and responsible AI use.
+As the Course Engine evolves, new sections may be added to describe additional workflows, outputs, or features. Guidance may also be extended to reflect emerging practices around governance, review, and responsible AI use.
 
 These changes will appear as **additions or extensions**, not as rewrites of the core rationale.
 
@@ -167,13 +169,13 @@ For example, v1.6 introduced support for **external lesson source files**, **les
 
 ---
 
-# **STAGE 2A — HOW THE COURSE BUILDER WORKS (CONCEPTUAL)**
+# **STAGE 2A — HOW THE COURSE ENGINE WORKS (CONCEPTUAL)**
 
 *Understanding the workflow before using the software*
 
 ## **8. A Deliberate, Human-Centred Workflow**
 
-The CloudPedagogy Course Builder follows a **deliberate, human-centred workflow**.
+The CloudPedagogy Course Engine follows a **deliberate, human-centred workflow**.
 
 Unlike many AI tools, it does not begin by generating content. Instead, it begins by asking you to clarify **what you are trying to build** and **why**. This is not a technical constraint; it is a design choice intended to protect judgement, intent, and accountability.
 
@@ -183,15 +185,15 @@ The order matters. Skipping steps may be faster in the short term, but it usuall
 
 ## **9. Starting With Intent, Not Output**
 
-Many AI-enabled tools begin by asking what you want them to generate. The Course Builder begins by asking something more fundamental: **what are you trying to create, and for what purpose?**
+Many AI-enabled tools begin by asking what you want them to generate. The Course Engine begins by asking something more fundamental: **what are you trying to create, and for what purpose?**
 
 This distinction is important because courses are not simply collections of text. They are learning journeys, arguments about what matters, and structured commitments made to learners and institutions. When intent is unclear, even well-written content can become incoherent or misleading.
 
-By encouraging you to articulate intent early, the Course Builder helps prevent common failure modes such as unfocused courses, contradictory sections, or content that appears polished but lacks direction.
+By encouraging you to articulate intent early, the Course Engine helps prevent common failure modes such as unfocused courses, contradictory sections, or content that appears polished but lacks direction.
 
 ## **10. Why Structure Comes Before Writing**
 
-Once intent is clear, the Course Builder focuses on **structure**.
+Once intent is clear, the Course Engine focuses on **structure**.
 
 Structure includes decisions about sections and sub-sections, narrative flow, emphasis, progression, and boundaries between what is included and what is not. These decisions are made before substantial text is generated.
 
@@ -201,13 +203,13 @@ This ordering is intentional. Structure shapes meaning. It constrains ambiguity,
 
 Only after intent and structure are established does AI enter the process.
 
-Within the Course Builder, AI is used as an **assistant**, not an authority. It can help draft explanations, elaborate on ideas, or suggest alternative phrasing, but its output is always provisional and subject to human review.
+Within the Course Engine, AI is used as an **assistant**, not an authority. It can help draft explanations, elaborate on ideas, or suggest alternative phrasing, but its output is always provisional and subject to human review.
 
 AI does not define scope, set priorities, determine values, or decide what is pedagogically appropriate. Those decisions remain with the human user.
 
 ## **12. Iteration as a Normal Part of Design**
 
-The Course Builder assumes that first versions are incomplete and that clarity improves through revision.
+The Course Engine assumes that first versions are incomplete and that clarity improves through revision.
 
 Rather than treating iteration as an exception or a failure, the workflow is designed to support **ongoing refinement**. You are expected to revisit earlier decisions, adjust structure, refine emphasis, and expand or contract sections as your understanding develops.
 
@@ -215,29 +217,29 @@ Rather than treating iteration as an exception or a failure, the workflow is des
 
 A key part of responsible course design is pausing to reflect.
 
-Throughout the workflow, the Course Builder encourages review by keeping content transparent and editable rather than hiding decisions behind automation. This makes it easier to ask whether the material still reflects the original intent, whether anything is overstated or underspecified, and where learners might misunderstand key ideas.
+Throughout the workflow, the Course Engine encourages review by keeping content transparent and editable rather than hiding decisions behind automation. This makes it easier to ask whether the material still reflects the original intent, whether anything is overstated or underspecified, and where learners might misunderstand key ideas.
 
 ## **14. Publishing Without Lock-In**
 
-When you publish outputs from the Course Builder, you are not locking your work into a single system or format.
+When you publish outputs from the Course Engine, you are not locking your work into a single system or format.
 
-Outputs are designed to be editable, portable, and reusable. They can be shared for review, adapted collaboratively, or maintained over time without dependence on the builder itself.
+Outputs are designed to be editable, portable, and reusable. They can be shared for review, adapted collaboratively, or maintained over time without dependence on the engine itself.
 
 ## **15. What This Workflow Is Designed to Protect**
 
-The workflow used by the Course Builder is designed to protect several things at once.
+The workflow used by the Course Engine is designed to protect several things at once.
 
 It protects **intent**, by making it explicit early in the process. It protects **judgement**, by keeping humans in control of key decisions. It protects **quality**, by enforcing structure before scale. It protects **governance**, by avoiding opaque automation and preserving traceability. And it protects **longevity**, by producing outputs that can be maintained and revised over time.
 
 ## **16. What the Workflow Does Not Guarantee**
 
-It is equally important to be clear about what the Course Builder does not guarantee.
+It is equally important to be clear about what the Course Engine does not guarantee.
 
 It does not ensure that a course is pedagogically sound, that content is appropriate for a particular audience, that ethical decisions are correct, or that learning outcomes will be effective. Those judgements require context, expertise, and professional responsibility.
 
 ## **Stage 2A Summary**
 
-By the end of this stage, you should have a clear understanding of how the Course Builder is intended to be used at a conceptual level. You should understand why it starts with intent and structure, how AI assistance is deliberately limited, why iteration and reflection are expected, and where responsibility remains human-owned.
+By the end of this stage, you should have a clear understanding of how the Course Engine is intended to be used at a conceptual level. You should understand why it starts with intent and structure, how AI assistance is deliberately limited, why iteration and reflection are expected, and where responsibility remains human-owned.
 
 ---
 
@@ -267,13 +269,13 @@ When you clarify the purpose of a course, define its structure, and decide how i
 
 A capability-aware course recognises that **judgement cannot be automated**.
 
-In AI-supported design, there is a temptation to treat outputs as authoritative simply because they are fluent or comprehensive. The Course Builder resists this by maintaining clear boundaries between assistance and decision-making.
+In AI-supported design, there is a temptation to treat outputs as authoritative simply because they are fluent or comprehensive. The Course Engine resists this by maintaining clear boundaries between assistance and decision-making.
 
 ## **21. Making Capability Visible Without Enforcing It**
 
 In many institutional contexts, there is a need to explain how a course supports particular capabilities, frameworks, or priorities. At the same time, over-enforcement can be counterproductive, reducing complex judgement to checklist compliance.
 
-The Course Builder is designed to support **visibility without enforcement**.
+The Course Engine is designed to support **visibility without enforcement**.
 
 In v1.6 this is expressed through a clearer distinction:
 
@@ -323,17 +325,17 @@ When AI is used in course design, the most important question is often not *what
 
 In many AI-supported workflows, boundaries between human judgement and automated assistance are left implicit. As a result, responsibility can drift.
 
-The Course Builder is designed to avoid this ambiguity. It treats **role clarity as a design requirement**, not as an afterthought.
+The Course Engine is designed to avoid this ambiguity. It treats **role clarity as a design requirement**, not as an afterthought.
 
 ## **27. The Human Role: Ownership and Judgement**
 
-Within the Course Builder, humans retain ownership of all substantive decisions.
+Within the Course Engine, humans retain ownership of all substantive decisions.
 
 This includes decisions about purpose and scope, emphasis and prioritisation, pedagogical appropriateness, ethical framing and implications, and suitability for a particular audience or context.
 
 ## **28. The AI Role: Assistance, Not Authority**
 
-AI within the Course Builder plays a **supporting role**.
+AI within the Course Engine plays a **supporting role**.
 
 It can assist by drafting, exploring alternative explanations, supporting early sense-making, and accelerating routine drafting tasks.
 
@@ -343,7 +345,7 @@ AI does not approve, reject, or certify quality. Outputs remain provisional and 
 
 A key risk in AI-supported design is the **illusion of automation** — the sense that because something has been generated smoothly or quickly, it must be correct, complete, or authoritative.
 
-The Course Builder resists this by preserving explicit structure, explicit decisions, and inspectable outputs.
+The Course Engine resists this by preserving explicit structure, explicit decisions, and inspectable outputs.
 
 ## **30. Boundaries as a Form of Protection**
 
@@ -359,7 +361,7 @@ Even when AI contributes to drafting, the human user remains responsible for wha
 
 ## **32. Transparency Over Hidden Intelligence**
 
-The Course Builder prioritises transparency over “seamless intelligence”.
+The Course Engine prioritises transparency over “seamless intelligence”.
 
 This transparency allows users and reviewers to understand how outputs were produced, revisit earlier decisions, explain design choices to others, and adapt work without reverse-engineering it.
 
@@ -375,29 +377,29 @@ Clear boundaries support reflective practice, collaboration, governance, and ass
 
 ## **Stage 2C Summary**
 
-By the end of this stage, you should have a clear understanding of how human and AI roles are defined within the Course Builder, why these boundaries exist, and how they protect judgement, accountability, and trust.
+By the end of this stage, you should have a clear understanding of how human and AI roles are defined within the Course Engine, why these boundaries exist, and how they protect judgement, accountability, and trust.
 
 ---
 
-# **STAGE 3 — WHAT THE COURSE BUILDER CAN DO**
+# **STAGE 3 — WHAT THE COURSE ENGINE CAN DO**
 
 *Capabilities that support responsible, reviewable course design*
 
 ## **35. From Principles to Practical Capability**
 
-By this point, the design principles behind the Course Builder should be clear: intent before automation, structure before scale, and human judgement before optimisation.
+By this point, the design principles behind the Course Engine should be clear: intent before automation, structure before scale, and human judgement before optimisation.
 
-This stage explains **what the Course Builder can actually do**, in practical terms, and how those capabilities support responsible course production rather than replacing professional decision-making.
+This stage explains **what the Course Engine can actually do**, in practical terms, and how those capabilities support responsible course production rather than replacing professional decision-making.
 
 ## **36. Using a Single Source of Truth for Course Design**
 
-At the centre of the Course Builder is the idea of a **single source of truth** for a course: `course.yml`.
+At the centre of the Course Engine is the idea of a **single source of truth** for a course: `course.yml`.
 
-Rather than scattering course decisions across documents, tools, and interfaces, the Course Builder works from a single, explicit course specification that can be reviewed, updated, and reused.
+Rather than scattering course decisions across documents, tools, and interfaces, the Course Engine works from a single, explicit course specification that can be reviewed, updated, and reused.
 
 ## **37. Validating Structure and Assumptions**
 
-The Course Builder supports **validation of structure and metadata**, helping to surface missing elements, inconsistencies, or unclear relationships between parts of the course.
+The Course Engine supports **validation of structure and metadata**, helping to surface missing elements, inconsistencies, or unclear relationships between parts of the course.
 
 From v1.6, validation also includes explicit **fail-fast guardrails** around lesson definitions:
 
@@ -406,19 +408,31 @@ From v1.6, validation also includes explicit **fail-fast guardrails** around les
 
 ## **38. Generating Consistent, Publishable Outputs**
 
-The Course Builder generates **consistent, publishable learning artefacts** from a single course specification.
+The Course Engine generates **consistent, publishable learning artefacts** from a single course specification.
 
-Rather than manually recreating the same course in multiple formats, the builder compiles a Quarto project and can then render it to HTML (and other Quarto outputs where configured).
+Rather than manually recreating the same course in multiple formats, the engine compiles a Quarto project and can then render it to HTML (and other Quarto outputs where configured).
 
 ## **38A. Supporting External Lesson Authoring (v1.6)**
 
-From v1.6, the Course Builder supports authoring lesson content as **external source files**, rather than requiring all lesson text to be embedded directly in `course.yml`.
+From v1.6, the Course Engine supports authoring lesson content as **external source files**, rather than requiring all lesson text to be embedded directly in `course.yml`.
 
 This supports real-world maintenance where lesson files may be revised, reviewed, reused, or versioned independently over time.
 
 ## **39. Producing Auditable, Inspectable Metadata**
 
-Alongside human-readable outputs, the Course Builder produces **machine-readable metadata** in `manifest.json`.
+## **39A. Explainability for Governance and CI (v1.8+, stabilised v1.10.0)**
+
+The Course Engine includes an **explainability interface** intended for governance, QA, and automation contexts.
+
+From **v1.8+**, explain outputs support structured review of both declared inputs and generated artefacts.
+In **v1.10.0**, the explain interface was **stabilised as a contract**: output semantics and format selection
+are explicit, deterministic (timestamps aside), and safe to rely on in CI and audit workflows.
+
+Explain outputs are **descriptive, not evaluative**: they are designed to support inspection and review
+without asserting pedagogical quality, compliance, or approval.
+
+
+Alongside human-readable outputs, the Course Engine produces **machine-readable metadata** in `manifest.json`.
 
 This supports inspection, reporting, and audit without requiring users to understand internal code.
 
@@ -430,7 +444,7 @@ From v1.6, the manifest can include:
 
 ## **40. Supporting Framework Alignment and Capability Mapping**
 
-The Course Builder supports two related layers of “framework-aware” authoring:
+The Course Engine supports two related layers of “framework-aware” authoring:
 
 ### **A. framework_alignment (v1.6)**
 
@@ -447,7 +461,7 @@ The Course Builder supports two related layers of “framework-aware” authorin
 
 ## **41. Enabling Coverage Reporting and Review**
 
-Where capability mapping exists, the builder can produce a structured view of coverage and gaps.
+Where capability mapping exists, the engine can produce a structured view of coverage and gaps.
 
 Where capability mapping is absent but framework alignment exists (v1.6+), `report` will still produce a **declared alignment summary** rather than failing.
 
@@ -471,9 +485,9 @@ By default, builds do not overwrite existing outputs unless explicitly requested
 
 This protects earlier versions and supports cautious iteration.
 
-## **45. What the Course Builder Does Not Do**
+## **45. What the Course Engine Does Not Do**
 
-The Course Builder does not:
+The Course Engine does not:
 
 - evaluate pedagogical quality  
 - judge academic merit  
@@ -484,23 +498,23 @@ These are deliberate exclusions that preserve human judgement.
 
 ## **Stage 3 Summary**
 
-By the end of this stage, you should have a clear picture of what the Course Builder can do and how its capabilities support responsible, reviewable course design.
+By the end of this stage, you should have a clear picture of what the Course Engine can do and how its capabilities support responsible, reviewable course design.
 
 ---
 
-# **STAGE 4 — USING THE COURSE BUILDER IN PRACTICE**
+# **STAGE 4 — USING THE COURSE ENGINE IN PRACTICE**
 
 *Applying the system in real design, review, and governance contexts*
 
 ## **46. From Capability to Day-to-Day Use**
 
-This stage describes common ways the Course Builder is used by educators, learning designers, and institutions.
+This stage describes common ways the Course Engine is used by educators, learning designers, and institutions.
 
 These are not rigid workflows. They are typical patterns of use that illustrate how the system supports thoughtful, accountable course design in different contexts.
 
 ## **47. Designing a New Course**
 
-When designing a new course, the Course Builder is most effective when introduced early.
+When designing a new course, the Course Engine is most effective when introduced early.
 
 Users typically begin by clarifying purpose, audience, and scope, then translating intent into explicit structure. AI assistance can support drafting, but always within the structure that has already been decided.
 
@@ -512,13 +526,13 @@ This supports defensibility under review and reduces the likelihood of “drift�
 
 ## **49. Collaborative Course Design**
 
-The Course Builder supports collaboration by making course structure and intent visible in a shared, inspectable specification.
+The Course Engine supports collaboration by making course structure and intent visible in a shared, inspectable specification.
 
 It becomes easier to discuss decisions, review sections, and document change rationales.
 
 ## **50. Supporting Review and Quality Assurance**
 
-In QA and governance contexts, the Course Builder is often used to support **inspection rather than production**.
+In QA and governance contexts, the Course Engine is often used to support **inspection rather than production**.
 
 Reviewers can inspect outputs and metadata, without the system claiming quality or compliance.
 
@@ -529,19 +543,19 @@ Reviewers can inspect outputs and metadata, without the system claiming quality 
 
 This supports conversation and reflection without collapsing judgement into automation.
 
-## **52. Integrating the Course Builder Into Existing Workflows**
+## **52. Integrating the Course Engine Into Existing Workflows**
 
-The Course Builder is designed to complement existing tools and processes rather than replace them.
+The Course Engine is designed to complement existing tools and processes rather than replace them.
 
-Outputs can be used in multiple contexts without requiring the Course Builder itself to become the platform of record.
+Outputs can be used in multiple contexts without requiring the Course Engine itself to become the platform of record.
 
 ## **53. Experimentation and Low-Risk Prototyping**
 
 Non-destructive workflows make the tool suitable for low-risk prototyping: you can iterate, compare builds, and refine structure without losing earlier versions.
 
-## **54. Using the Course Builder Over Time**
+## **54. Using the Course Engine Over Time**
 
-The Course Builder supports stewardship: courses can be revisited as contexts change, AI capabilities evolve, or institutional expectations shift.
+The Course Engine supports stewardship: courses can be revisited as contexts change, AI capabilities evolve, or institutional expectations shift.
 
 ## **55. What Good Practice Looks Like in Use**
 
@@ -555,27 +569,27 @@ Good practice tends to share these characteristics:
 
 ## **Stage 4 Summary**
 
-By the end of this stage, you should have a sense of how the Course Builder is used in real settings: designing new courses, revising existing ones, collaborating, supporting review, and stewarding learning materials over time.
+By the end of this stage, you should have a sense of how the Course Engine is used in real settings: designing new courses, revising existing ones, collaborating, supporting review, and stewarding learning materials over time.
 
 ---
 
 # **STAGE 5 — LIMITS, RISKS, AND RESPONSIBLE USE**
 
-*Understanding what the Course Builder cannot do — and how to use it well*
+*Understanding what the Course Engine cannot do — and how to use it well*
 
 ## **56. Why Limits Matter**
 
 Responsible use begins with understanding limits.
 
-The Course Builder is intentionally powerful in some areas and intentionally restrained in others. These limits are deliberate design choices to protect judgement, accountability, and trust.
+The Course Engine is intentionally powerful in some areas and intentionally restrained in others. These limits are deliberate design choices to protect judgement, accountability, and trust.
 
-## **57. The Course Builder Does Not Judge Quality**
+## **57. The Course Engine Does Not Judge Quality**
 
-The Course Builder does not evaluate pedagogical quality, academic merit, or educational effectiveness.
+The Course Engine does not evaluate pedagogical quality, academic merit, or educational effectiveness.
 
 Structured output is not the same as good pedagogy. Quality remains a matter of professional judgement and review.
 
-## **58. The Course Builder Does Not Decide What Should Be Taught**
+## **58. The Course Engine Does Not Decide What Should Be Taught**
 
 It does not decide content scope, framing, or priorities.
 
@@ -613,13 +627,13 @@ Reviewers must still ask critical questions and consider context.
 
 ## **64. Ethical and Contextual Judgement Remain Essential**
 
-The Course Builder cannot resolve cultural, ethical, or contextual appropriateness.
+The Course Engine cannot resolve cultural, ethical, or contextual appropriateness.
 
 Users must apply professional judgement and domain expertise.
 
 ## **65. Designing for Review, Not Avoiding It**
 
-The Course Builder should be used to invite review, support discussion, and document decisions — not to avoid scrutiny.
+The Course Engine should be used to invite review, support discussion, and document decisions — not to avoid scrutiny.
 
 ## **66. Principles for Responsible Use**
 
@@ -631,39 +645,39 @@ The Course Builder should be used to invite review, support discussion, and docu
 
 ## **Stage 5 Summary**
 
-By the end of this stage, you should have a clear understanding of the limits of the Course Builder, the risks associated with misuse or over-reliance, and the responsibilities that remain human-owned.
+By the end of this stage, you should have a clear understanding of the limits of the Course Engine, the risks associated with misuse or over-reliance, and the responsibilities that remain human-owned.
 
 ---
 
-# **CLOSING — USING THE COURSE BUILDER AS INTENDED**
+# **CLOSING — USING THE COURSE ENGINE AS INTENDED**
 
 *Responsibility, continuity, and confidence over time*
 
 ## **Bringing the Pieces Together**
 
-This handbook has described the Course Builder as **infrastructure for responsible course design**.
+This handbook has described the Course Engine as **infrastructure for responsible course design**.
 
-Across the preceding stages, the emphasis has been on intent before generation, structure before scale, and judgement before optimisation. The Course Builder is designed to support these priorities by making design decisions explicit, reviewable, and revisitable.
+Across the preceding stages, the emphasis has been on intent before generation, structure before scale, and judgement before optimisation. The Course Engine is designed to support these priorities by making design decisions explicit, reviewable, and revisitable.
 
-## **The Course Builder in the CloudPedagogy Ecosystem**
+## **The Course Engine in the CloudPedagogy Ecosystem**
 
-The Course Builder sits within a wider ecosystem that includes capability frameworks, reflective tools, and design methods.
+The Course Engine sits within a wider ecosystem that includes capability frameworks, reflective tools, and design methods.
 
 Its role is not to define capability or determine governance decisions, but to produce artefacts that can be examined, discussed, and improved over time.
 
-## **Using the Course Builder Over Time**
+## **Using the Course Engine Over Time**
 
-The Course Builder is most effective when used **over time**.
+The Course Engine is most effective when used **over time**.
 
 Courses are expected to be revisited as contexts change, feedback is gathered, and expectations evolve.
 
 ## **Confidence Without Overreach**
 
-The Course Builder supports confidence through structure, auditability, and transparency — without claiming authority over quality, ethics, or effectiveness.
+The Course Engine supports confidence through structure, auditability, and transparency — without claiming authority over quality, ethics, or effectiveness.
 
 ## **A Tool That Assumes Professional Judgement**
 
-The Course Builder assumes professional judgement: it is designed to support careful practice, not replace it.
+The Course Engine assumes professional judgement: it is designed to support careful practice, not replace it.
 
 ## **This Handbook as a Living Document**
 
@@ -677,7 +691,7 @@ Workflow descriptions, examples, and feature-specific guidance will expand as th
 
 ## **Purpose of This Appendix**
 
-This appendix helps readers take **practical first steps** with the Course Builder without turning the handbook into a command reference.
+This appendix helps readers take **practical first steps** with the Course Engine without turning the handbook into a command reference.
 
 Detailed installation and command usage are documented separately in the repository documentation.
 
@@ -728,7 +742,7 @@ Refer to the repository documentation, including:
 - `README.md`  
 - `docs/END_USER_INSTRUCTIONS.md`  
 - `docs/POLICY_FILES.md`  
-- and any version-specific design notes (e.g., `docs/v1.6-design.md`)
+- and any version-specific design notes (e.g., `docs/design/v1.6.0-design.md`)
 
 ---
 
@@ -749,6 +763,6 @@ Under the following conditions:
 
 This handbook supports educational, research, and public-interest use. It does not grant permission to resell, sublicense, or incorporate this content into paid products or services without explicit consent.
 
-The CloudPedagogy Course Builder (Course Engine) software is released separately under the **MIT Licence**. This handbook is a documentation and guidance resource and is not itself part of the software distribution.
+The CloudPedagogy Course Engine software is released separately under the **MIT Licence**. This handbook is a documentation and guidance resource and is not itself part of the software distribution.
 
 Software licensing terms do not override or replace the licence terms that apply to this handbook.

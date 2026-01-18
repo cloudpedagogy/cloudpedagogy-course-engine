@@ -14,6 +14,7 @@ from jinja2 import Template
 from . import __version__
 from .explain import explain_course_yml
 from .explain.artefact import explain_dist_dir
+from .explain.text import explain_payload_to_text
 from .generator.build import build_quarto_project
 from .generator.html_single import build_html_single_project
 from .generator.render import render_quarto
@@ -270,31 +271,48 @@ def inspect(project_dir: str) -> None:
 @app.command()
 def explain(
     path: str = typer.Argument(..., help="Path to course.yml OR dist/<course> folder to explain."),
-    json_out: bool = typer.Option(True, "--json", help="Output machine-readable JSON (default)."),
-    out: Optional[str] = typer.Option(None, "--out", help="Write JSON to a file instead of stdout."),
+    json_out: bool = typer.Option(
+        True,
+        "--json",
+        help="Legacy/compatibility flag (default: true). Prefer --format json|text.",
+    ),
+    format: Optional[str] = typer.Option(
+        None,
+        "--format",
+        help="Output format: json | text (preferred; overrides --json).",
+    ),
+    out: Optional[str] = typer.Option(None, "--out", help="Write output to a file instead of stdout."),
 ) -> None:
     """
-    Explain an input into a governance-friendly JSON artefact (explain-only).
+    Explain an input into a governance-friendly artefact (explain-only).
 
     Supported inputs:
       - course.yml (source explain)
-      - dist/<course> directory containing manifest.json (artefact explain)  [v1.9]
+      - dist/<course> directory containing manifest.json (artefact explain)
 
     This command does not build outputs and does not enforce policies.
-    It surfaces structure, provenance, and rendering-relevant defaults in a stable JSON format.
 
-    Determinism policy (v1.8+):
-      - Deterministic except for engine.built_at_utc (runtime metadata)
+    v1.10+:
+      - JSON remains the canonical explain format.
+      - --format is the preferred interface for selecting output.
+      - --json is retained for backwards compatibility.
     """
-    if not json_out:
-        raise typer.BadParameter("Only JSON output is supported for explain (use --json).")
+    # Resolve output format
+    if format is None:
+        resolved_format = "json" if json_out else "text"
+    else:
+        resolved_format = format.strip().lower()
 
-    # Keep command provenance as close as possible to the user's actual invocation.
+    allowed = {"json", "text"}
+    if resolved_format not in allowed:
+        raise typer.BadParameter("Unknown --format. Use: json | text")
+
+    # Preserve invocation context for provenance
     command_str = "course-engine " + " ".join(sys.argv[1:])
 
     p = Path(path)
 
-    # v1.9: Dist/artefact explain (manifest-backed)
+    # Artefact explain (manifest-backed)
     if p.exists() and p.is_dir():
         payload = explain_dist_dir(
             dist_dir=p,
@@ -302,14 +320,17 @@ def explain(
             command=command_str,
         )
     else:
-        # v1.8: course.yml explain
+        # Source explain (course.yml)
         payload = explain_course_yml(
             course_yml_path=path,
             engine_version=__version__,
             command=command_str,
         )
 
-    text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+    if resolved_format == "json":
+        text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+    else:
+        text = explain_payload_to_text(payload) + "\n"
 
     if out:
         write_text(Path(out), text)

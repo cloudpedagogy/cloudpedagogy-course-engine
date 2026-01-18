@@ -5,6 +5,47 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+
+---
+
+## v1.10.0 – Explain Interface Stabilisation & Governance Hardening
+
+### Changed
+- Introduced `--format json|text` as the **preferred output selector** for `course-engine explain`
+- Retained `--json` as a **legacy / backward-compatibility flag**
+- Clarified output precedence:
+  - `--format` always overrides `--json`
+  - JSON remains the default when no flags are supplied
+- Improved CLI help text to explicitly document defaults and overrides
+
+### Fixed
+- Eliminated ambiguity in explain output selection for CI, QA, and automation workflows
+- Hardened type safety across explain, policy, and exporter subsystems
+- Achieved clean static analysis (`ruff`, `mypy`) and test (`pytest`) runs across the codebase
+
+### Behaviour guarantees
+- No changes to build outputs, schemas, or enforcement behaviour
+- Explain output remains deterministic except for runtime timestamps
+- Fully backward compatible with existing scripts using `--json`
+
+### Notes
+- This is a **polish and interface-hardening release**
+- Explainability is now considered **stable and governance-ready**
+
+
+---
+
+## v1.9.0 – Internal Refactor & Preparation Release
+
+### Notes
+- Internal refactoring and groundwork for explain interface stabilisation
+- No user-facing feature additions
+- No schema, build, or behaviour changes
+- Released as a stepping stone toward v1.10.0
+
+
+---
+
 ## v1.8.1
 
 ### Fixed

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 def _utc_now_z() -> str:
@@ -14,10 +14,6 @@ def _utc_now_z() -> str:
 def _normalise_path(p: Path) -> str:
     # Deterministic normalisation for reporting (no filesystem resolution side effects).
     return p.as_posix()
-
-
-def _read_json(path: Path) -> Dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _count_lesson_qmd_files(manifest_files: List[Dict[str, Any]]) -> int:
@@ -150,7 +146,7 @@ def explain_dist_dir(
         return payload
 
     try:
-        manifest = _read_json(manifest_path)
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except Exception as e:  # keep explain resilient (no stack traces)
         payload["errors"].append(
             {

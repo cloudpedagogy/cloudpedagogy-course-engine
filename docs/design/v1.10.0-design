@@ -1,0 +1,176 @@
+# Design Record: v1.10.0 — Explain Interface Stabilisation and Governance Hardening
+
+## Version
+- **Release:** v1.10.0
+- **Status:** Active design record (interface contract)
+
+---
+
+## Purpose
+
+This document records the **design intent, constraints, and stabilisation decisions** introduced in **Course Engine v1.10.0**.
+
+v1.10.0 marks the point at which the **explainability interface becomes contract-stable and governance-safe**. The focus of this release is *not* feature expansion, but the hardening of semantics, flags, defaults, and guarantees so that explain outputs can be relied upon by:
+
+- CI pipelines
+- QA and audit workflows
+- Institutional governance and review processes
+
+---
+
+## Context
+
+Prior to v1.10.0, the explain subsystem had evolved incrementally to support:
+
+- Inspection of source inputs
+- Inspection of generated artefacts
+- Early explain outputs for human review
+
+However, the interface semantics (flags, defaults, precedence, and guarantees) were still implicitly defined. This created ambiguity for automated consumers and governance contexts.
+
+v1.10.0 resolves this by **explicitly defining explain behaviour as an interface contract**.
+
+---
+
+## Design Goals
+
+- Establish a **deterministic explain contract**
+- Make output behaviour **explicit and testable**
+- Preserve backward compatibility
+- Avoid enforcement or interpretation
+- Support machine and human consumers equally
+
+---
+
+## Scope (v1.10.0)
+
+### In Scope
+
+- Explain CLI interface semantics
+- Flag precedence rules
+- Output format guarantees
+- Determinism boundaries
+- Governance framing and documentation
+
+### Out of Scope
+
+- New explain features
+- Enforcement of policy or capability claims
+- Scoring, validation, or judgement
+- Behavioural changes to build or inspect
+
+---
+
+## Explain Interface Contract
+
+### Supported Modes
+
+The explain subsystem supports two conceptual modes:
+
+- **Source explain** — explains declared inputs and intent (e.g. `course.yml`)
+- **Artefact explain** — explains generated outputs and provenance (e.g. manifests, compiled artefacts)
+
+These modes are *informational only* and do not alter build behaviour.
+
+---
+
+## Output Format Selection
+
+### Preferred Interface
+
+v1.10.0 introduces:
+
+```
+--format json|text
+```
+
+as the **canonical mechanism** for selecting explain output format.
+
+### Backward Compatibility
+
+- The legacy `--json` flag is **retained**
+- `--json` is treated as an alias for `--format json`
+- No existing scripts or workflows are broken
+
+### Precedence Rules
+
+The following precedence is **explicit and enforced**:
+
+1. `--format` takes priority over all other format indicators
+2. If `--format` is not provided:
+   - JSON is the default
+3. `--json` is ignored if `--format` is explicitly set
+
+This precedence is documented, tested, and considered part of the public interface.
+
+---
+
+## Determinism Guarantees
+
+Explain outputs in v1.10.0 are deterministic **by design**, with the following rules:
+
+### Guaranteed Stable
+
+- Keys and structural schema
+- Semantic meaning of fields
+- Ordering of sections (where applicable)
+- Flag interpretation and precedence
+
+### Explicitly Variable
+
+- Timestamps
+- Build paths
+- Runtime environment identifiers
+
+These boundaries are intentional and documented so consumers can safely compare explain outputs across runs.
+
+---
+
+## Governance Positioning
+
+Explain outputs are:
+
+- **Descriptive, not evaluative**
+- **Informational, not enforcing**
+- **Inspectable, not prescriptive**
+
+They are designed to support:
+
+- Review conversations
+- Audit trails
+- Policy discussions
+
+without asserting correctness, compliance, or quality.
+
+---
+
+## Relationship to Earlier Design Records
+
+v1.10.0 does **not replace** earlier design decisions. Instead, it stabilises the interface through which earlier features are surfaced.
+
+In particular, this design:
+
+- Builds on capability metadata introduced in v1.1.0
+- Supports policy explanation patterns developed in v1.5.0
+- Hardens explainability mechanisms introduced in v1.8.0
+
+---
+
+## Non-Goals and Explicit Exclusions
+
+To avoid scope creep and governance risk, v1.10.0 explicitly does **not**:
+
+- Interpret capability mappings
+- Validate policy compliance
+- Produce scores or risk ratings
+- Influence build artefacts
+
+These concerns are reserved for *external systems* or future, opt-in tooling.
+
+---
+
+## Summary
+
+v1.10.0 establishes the explain subsystem as a **stable, deterministic, and governance-ready interface**.
+
+By clarifying semantics, defaults, and guarantees — without introducing enforcement — this release enables Course Engine to be safely embedded in CI, QA, and institutional review contexts while preserving its core principles of transparency and reproducibility.

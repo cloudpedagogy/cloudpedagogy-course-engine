@@ -79,55 +79,55 @@ def _render_block(block: ContentBlock) -> str:
         if not body:
             return ""
         # simple portable callout
-        lines = [f"{instructor_prefix}**{title} ({style})**", ""]
+        callout_lines = [f"{instructor_prefix}**{title} ({style})**", ""]
         for line in body.splitlines():
-            lines.append(f"> {line}".rstrip())
-        lines.append("")
-        return "\n".join(lines)
+            callout_lines.append(f"> {line}".rstrip())
+        callout_lines.append("")
+        return "\n".join(callout_lines)
 
     if block.type == "quiz":
         prompt = (block.prompt or "").strip()
         options = block.options or []
         if not prompt or not options:
             return ""
-        lines: list[str] = []
+        quiz_lines: list[str] = []
         if instructor_prefix:
-            lines.append(instructor_prefix.rstrip())
-        lines.append("## Knowledge check")
-        lines.append("")
-        lines.append(f"**{prompt}**")
-        lines.append("")
+            quiz_lines.append(instructor_prefix.rstrip())
+        quiz_lines.append("## Knowledge check")
+        quiz_lines.append("")
+        quiz_lines.append(f"**{prompt}**")
+        quiz_lines.append("")
         for opt in options:
-            lines.append(f"- {opt}")
-        lines.append("")
+            quiz_lines.append(f"- {opt}")
+        quiz_lines.append("")
         # v0.4: do NOT show answers/solutions by default
-        return "\n".join(lines)
+        return "\n".join(quiz_lines)
 
     if block.type == "reflection":
         prompt = (block.prompt or "").strip()
         if not prompt:
             return ""
-        lines: list[str] = []
+        reflection_lines: list[str] = []
         if instructor_prefix:
-            lines.append(instructor_prefix.rstrip())
-        lines.append("## Reflection")
-        lines.append("")
-        lines.append(prompt)
-        lines.append("")
-        return "\n".join(lines)
+            reflection_lines.append(instructor_prefix.rstrip())
+        reflection_lines.append("## Reflection")
+        reflection_lines.append("")
+        reflection_lines.append(prompt)
+        reflection_lines.append("")
+        return "\n".join(reflection_lines)
 
     if block.type == "submission":
         prompt = (block.prompt or "").strip()
         if not prompt:
             return ""
-        lines: list[str] = []
+        submission_lines: list[str] = []
         if instructor_prefix:
-            lines.append(instructor_prefix.rstrip())
-        lines.append("## Submission")
-        lines.append("")
-        lines.append(prompt)
-        lines.append("")
-        return "\n".join(lines)
+            submission_lines.append(instructor_prefix.rstrip())
+        submission_lines.append("## Submission")
+        submission_lines.append("")
+        submission_lines.append(prompt)
+        submission_lines.append("")
+        return "\n".join(submission_lines)
 
     return ""
 

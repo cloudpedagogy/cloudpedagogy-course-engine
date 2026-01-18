@@ -1,8 +1,10 @@
-# CloudPedagogy Course Engine (v1.8)
+# CloudPedagogy Course Engine (v1.10.0)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
-This tool is designed for **reproducible course production** in educator, learning design, QA, and governance contexts.
+The Course Engine is designed for **reproducible course production** in educator, learning design, quality assurance (QA), and academic governance contexts.
+
+It prioritises **determinism, transparency, and explainability** over automation or enforcement.
 
 ---
 
@@ -15,102 +17,43 @@ This tool is designed for **reproducible course production** in educator, learni
 - Defaults to **non-destructive builds** (explicit `--overwrite` required)
 - Supports optional **capability mapping metadata** for governance and audit (v1.1)
 - Supports **external lesson source files with provenance tracking** (v1.6)
+- Supports **explain-only inspection workflows** without building (v1.8+)
 
 ---
 
-## What’s new in v1.6
+## What’s new in v1.10
 
-v1.6 introduces **first-class support for authoring lessons as external source files**, while preserving deterministic, auditable builds.
+v1.10 is a **polish, clarity, and interface-hardening release**.
 
-New in v1.6:
+It introduces no new build modes, schemas, or enforcement behaviour.
+Instead, it finalises the **explainability and governance interfaces** introduced in earlier versions.
 
-- Lessons may be authored as standalone `.md` or `.qmd` files using `source:`
-- Strict guardrails prevent ambiguous lesson definitions
-- Lesson source provenance (paths and SHA-256 hashes) is recorded in `manifest.json`
-- Invalid course layouts fail fast with explicit, actionable errors
+### Highlights
 
-No new build modes or CLI flags were added.
+- **Clear, unambiguous explain output selection**
+  - `--format json|text` is now the preferred interface
+  - `--json` is retained as a **legacy / compatibility flag**
+- **Explain determinism confirmed**
+  - Only runtime timestamps vary
+  - All structural and provenance data is stable and diff-friendly
+- **Improved CLI semantics and help text**
+  - Explicit signalling of defaults and overrides
+  - Reduced ambiguity for CI, QA, and automation contexts
+- **Type safety and static analysis hardened**
+  - Clean `ruff`, `mypy`, and `pytest` runs across the codebase
+- **Documentation alignment**
+  - README, CLI behaviour, and explain output now tell a single, coherent story
 
----
-
-## What’s new in v1.7
-
-v1.7 is a **stability and clarity release**. It does not introduce new build modes, enforcement logic, or automation.
-
-The focus of this release is to make existing, real-world authoring workflows **explicit, predictable, and governance-safe**, based on lessons learned from v1.6.
-
-New in v1.7:
-
-- Formalised expectations for the authoring pipeline (documentation-only)
-- Explicit recognition of lesson-splitting as a supported authoring utility
-- Optional lesson display labels for academic referencing (informational only)
-- Consolidated lesson-level navigation and in-page TOC behaviour
-- Improved inspection clarity for QA and review contexts
-
-There are **no schema changes** and **no breaking changes** in this release.
+v1.10 marks the point at which **explainability is no longer experimental**, but a stable, governance-ready capability.
 
 ---
-
----
-
-## What’s new in v1.8
-
-v1.8 introduces **first-class explainability** for `course.yml`, enabling
-governance, review, and audit workflows **without executing builds**.
-
-This release focuses on **explanation, provenance, and determinism** —
-not automation, enforcement, or authoring changes.
-
-New in v1.8:
-
-- A new `explain` command that produces a **stable, machine-readable JSON explanation**
-- Deterministic explain output (except for a single runtime timestamp)
-- Structural explanation of:
-  - course metadata
-  - module and lesson layout
-  - content block structure
-- **Lesson-level source provenance**:
-  - declared paths
-  - resolved paths
-  - SHA-256 hashes
-  - byte counts
-- Explain-only behaviour (no mutation, no validation, no enforcement)
-
-Explain output is designed for:
-
-- QA and governance review
-- CI pipelines and dashboards
-- Diffing and comparison workflows
-- External audit and assurance contexts
-
-Example (CLI):
-
-```bash
-course-engine explain course.yml --json
-```
-
-The `explain` command operates directly on `course.yml` and does **not**
-require a build or `manifest.json`.
-
----
-
 
 ## Outputs
 
-- Multi-page Quarto website (project build + `quarto render`)
-- Single-page HTML handout
-- Print-ready PDF handout (via Quarto + TinyTeX/LaTeX)
-- Markdown export package
-
----
-
-## Install (dev)
-
-```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-pytest
-```
+- Multi-page Quarto websites
+- Single-page HTML handouts
+- Print-ready PDF handouts (via Quarto + TinyTeX/LaTeX)
+- Portable Markdown export packages
 
 ---
 
@@ -122,39 +65,32 @@ Preflight checks (recommended):
 course-engine check
 ```
 
-Build a website (example):
+Build a website:
 
 ```bash
 course-engine build examples/sample-course/course.yml --out dist --overwrite
 course-engine render dist/sample-course
 ```
 
-Build a PDF handout (example):
+Explain a course (no build required; read-only):
 
 ```bash
-course-engine build examples/sample-course/course.yml --format pdf --out dist --overwrite
-course-engine render dist/sample-course-pdf
-```
-
-Inspect build metadata:
-
-```bash
-course-engine inspect dist/sample-course-pdf
+course-engine explain course.yml --format json
 ```
 
 ---
 
 ## CLI commands
 
-- **`init`** – Scaffold a new course project
-- **`build`** – Compile `course.yml` into an output package
-- **`render`** – Run Quarto to render the built package
-- **`inspect`** – Show build metadata (manifest summary)
-- **`explain`** – Explain `course.yml` structure and provenance as JSON (v1.8)
-- **`report`** – Generate a capability coverage report from build outputs (v1.2)
-- **`validate`** – Validate or explain capability policy resolution (v1.3 / v1.5)
-- **`clean`** – Remove generated artefacts safely
-- **`check`** – Run dependency preflight checks (Quarto / TinyTeX where relevant)
+- **init** – Scaffold a new course project
+- **build** – Compile `course.yml` into an output package
+- **render** – Render outputs with Quarto
+- **inspect** – Summarise build metadata
+- **explain** – Explain course structure and provenance
+- **report** – Generate capability coverage reports
+- **validate** – Validate or explain policy resolution
+- **clean** – Remove generated artefacts safely
+- **check** – Run dependency preflight checks
 
 ---
 
@@ -165,7 +101,7 @@ Course Engine supports optional, **informational capability mapping metadata**.
 This allows a course to declare how its content aligns to capability domains
 (e.g. an AI capability framework) without enforcing compliance at build time.
 
-In v1.1, capability mapping is:
+Capability mapping is:
 
 - optional
 - non-enforced (informational only)
@@ -186,29 +122,13 @@ The reporting system:
 - flags domains with no declared coverage or evidence
 - produces **human-readable**, **verbose**, or **JSON** output
 
-Reporting examples (CLI):
+Reporting examples:
 
 ```bash
 course-engine report dist/sample-course
 course-engine report dist/sample-course --verbose
 course-engine report dist/sample-course --json
 ```
-
-Capability mapping example (`course.yml`):
-
-```yaml
-capability_mapping:
-  framework: "CloudPedagogy AI Capability Framework (2026 Edition)"
-  version: "2026"
-  domains:
-    awareness:
-      label: "AI Awareness & Orientation"
-      intent: "Introduce foundational concepts and shared vocabulary."
-      coverage: ["m1"]
-      evidence: ["lesson:l1", "learning_objectives"]
-```
-
-Coverage reporting supports review and assurance workflows but does not infer quality or completeness.
 
 ---
 
@@ -219,8 +139,6 @@ In v1.3, Course Engine introduces **capability mapping defensibility validation*
 This allows declared capability mappings to be checked against explicit rules, supporting assurance, audit, and governance workflows.
 
 Validation operates on the generated `manifest.json` and does **not modify builds**.
-
-Validation rules focus on presence, traceability, and consistency — not pedagogical quality or effectiveness.
 
 ---
 
@@ -235,32 +153,6 @@ Explain mode is:
 - explain-only (no validation executed)
 - safe for CI, dashboards, and automation
 - machine-readable via JSON output
-- compatible with preset and file-based policies
-
-Explain examples (CLI):
-
-```bash
-course-engine validate /tmp   --policy preset:baseline   --profile baseline   --explain   --json
-```
-
-Validation modes:
-
-- **Non-strict (default)**  
-  Reports warnings and informational issues without failing. Suitable for review, QA, and iterative design.
-
-- **Strict mode**  
-  Treats unmet rules as errors and exits with a non-zero status. Suitable for automated QA or CI gating.
-
-Validation examples (CLI):
-
-```bash
-course-engine validate dist/sample-course
-course-engine validate dist/sample-course --strict
-```
-
-For guidance on configuring thresholds using policy files and profiles, see:
-
-- `docs/POLICY_FILES.md`
 
 ---
 
@@ -286,100 +178,74 @@ structure:
           source: content/lessons/lesson-01.md
 ```
 
-Behaviour:
-
-- `source:` paths are resolved relative to the `course.yml` location
-- Lesson titles are resolved from:
-  1. an explicit `title:` in `course.yml` (if provided), or
-  2. the first Markdown H1 (`# Heading`) in the source file
-- Source files are injected internally as a single Markdown content block
-- Invalid combinations fail fast with clear, actionable errors
-- Lesson source provenance is recorded in `manifest.json` under `lesson_sources` (informational)
-
-See **End User Instructions (v1.6)** for full authoring rules and examples:
-
-- `docs/END_USER_INSTRUCTIONS.md`
-
 ---
 
-## Alignment
+## Explainability (v1.8)
 
-This project is intended to be:
+v1.8 introduces **first-class explainability** for `course.yml`, enabling
+governance, review, and audit workflows **without executing builds**.
 
-- **Framework-aligned** — courses can declare framework and capability-domain alignment
-- **Capability-Driven Development (CDD)-aligned** — intent-first specifications, auditability, and non-destructive builds
+Explain output is designed to be:
 
-Reports and validation are informational by default and do not block builds unless strict validation is explicitly enabled.
+- stable
+- diff-friendly
+- machine-consumable
 
 ---
 
 ## Versioning and evolution
 
-The Course Engine evolves incrementally through minor and patch releases.
-
-New capabilities are added conservatively, with an emphasis on:
+The Course Engine evolves conservatively through minor releases, prioritising:
 
 - backward compatibility
 - non-destructive defaults
-- preserving human judgement and governance boundaries
+- governance safety
 
-Detailed change history is maintained in `CHANGELOG.md`.
+Detailed history is maintained in `CHANGELOG.md`.
 
 ---
 
-## Course Builder Handbook
+## Course Engine Handbook
 
-A detailed, governance-aware guide to the intent, design principles, capabilities, boundaries, and responsible use of the Course Engine is available in:
+A detailed, governance-aware guide is available in:
 
-- `docs/course-builder-handbook.md`
+- `docs/course-engine-handbook.md`
 
-This Markdown file is the **canonical source** of the handbook.
-
-Derived versions for distribution and reference are also available in:
+Derived Word and PDF versions are available in:
 
 - `docs/handbook/`
 
-These include Word and PDF formats generated from the Markdown source.
-
 ---
 
-## Course Builder Design & Rationale
+## Course Engine Design & Rationale
 
-A separate design record documenting the principles, architectural decisions, and deliberate trade-offs behind the Course Engine is available in:
+Design principles and architectural decisions are documented in:
 
-- `docs/course-builder-design-rationale.md`
-
-Design decisions specific to v1.6 are documented in:
-
+- `docs/course-engine-design-rationale.md`
 - `docs/v1.6-design.md`
 
 ---
 
 ## Disclaimer
 
-The CloudPedagogy Course Engine is a technical tool for compiling, inspecting, and reviewing course artefacts in a transparent and reproducible manner.
+The CloudPedagogy Course Engine is a technical tool for compiling, inspecting,
+and explaining course artefacts.
 
-It does not evaluate pedagogical quality, academic merit, or educational effectiveness, and it does not replace institutional governance processes, academic judgement, or professional review.
-
-Capability mapping, reporting, and validation features are informational by default and are intended to support reflection, assurance, and audit workflows — not to enforce compliance or determine approval outcomes.
-
-All outputs should be interpreted in context and alongside appropriate academic, professional, and institutional judgement.
+It does **not** evaluate pedagogical quality or replace institutional governance processes.
 
 ---
 
-## Licensing & scope
+## Licensing
 
-The CloudPedagogy Course Engine is open-source infrastructure released under the MIT License.
-
-CloudPedagogy frameworks, capability models, profiles, taxonomies, and training materials are separate works and may be licensed differently.
-
-This repository focuses on providing transparent, auditable tooling for course production and review, without embedding or enforcing any specific framework.
+- Course Engine code: **MIT License**
+- CloudPedagogy frameworks and models: licensed separately
 
 ---
 
 ## About CloudPedagogy
 
-CloudPedagogy develops open, governance-credible resources for building confident, responsible AI capability across education, research, and public service.
+CloudPedagogy develops governance-credible resources for building confident,
+responsible AI capability across education, research, and public service.
 
 - Website: https://www.cloudpedagogy.com/
 - Framework repo: https://github.com/cloudpedagogy/cloudpedagogy-ai-capability-framework
