@@ -242,6 +242,25 @@ It does **not** evaluate pedagogical quality or replace institutional governance
 
 ---
 
+## Attribution & Citation (Optional)
+
+If you use the **CloudPedagogy Course Engine** in **academic, institutional, or published work**, you are encouraged (but not required) to acknowledge its use or cite the repository.
+
+This software is released under the MIT Licence, which **does not require public attribution** beyond retaining the licence text in redistributions. However, acknowledgement helps support the ongoing development of open, governance-aware educational tooling.
+
+**Suggested acknowledgement wording (optional):**
+
+> “This work was produced using the CloudPedagogy Course Engine.”
+
+or
+
+> “Course materials were compiled using the CloudPedagogy Course Engine (MIT Licence).”
+
+Where appropriate, you may also cite or link to the project repository.
+
+
+---
+
 ## About CloudPedagogy
 
 CloudPedagogy develops governance-credible resources for building confident,
