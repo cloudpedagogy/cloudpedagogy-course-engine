@@ -19,7 +19,7 @@ Rather than generating content directly, the Course Engine treats **course inten
 
 Where capability frameworks are used, the system supports two related but distinct mechanisms:
 
-- **Framework alignment** (v1.6): a *declaration* of which framework and domains the course intends to reference (informational, non-enforced).
+- **Framework alignment** (v1.6+): a *declaration* of which framework and domains the course intends to reference (informational, non-enforced).
 - **Capability mapping** (v1.1+): structured *coverage/evidence metadata* that can be reported on, and (optionally) validated against policy rules.
 
 The Course Engine is intentionally **non-prescriptive**. It supports reflection, review, traceability, and transparency, but it does not evaluate pedagogical quality, determine academic merit, or decide whether a course should be approved or adopted. Those responsibilities remain firmly with the human user.
@@ -420,6 +420,18 @@ This supports real-world maintenance where lesson files may be revised, reviewed
 
 ## **39. Producing Auditable, Inspectable Metadata**
 
+Alongside human-readable outputs, the Course Engine produces **machine-readable metadata** in `manifest.json`.
+
+This supports inspection, reporting, and audit without requiring users to understand internal code.
+
+The engine also provides a **separate explainability interface** for inspecting inputs, resolution, and provenance **without making quality or compliance claims**.
+
+From v1.6, the manifest can include:
+
+- **framework_alignment** (declared)
+- **lesson_sources** (provenance summary)
+- **render** (captured when rendering is run)
+
 ## **39A. Explainability for Governance and CI (v1.8+, stabilised v1.10.0)**
 
 The Course Engine includes an **explainability interface** intended for governance, QA, and automation contexts.
@@ -431,16 +443,6 @@ are explicit, deterministic (timestamps aside), and safe to rely on in CI and au
 Explain outputs are **descriptive, not evaluative**: they are designed to support inspection and review
 without asserting pedagogical quality, compliance, or approval.
 
-
-Alongside human-readable outputs, the Course Engine produces **machine-readable metadata** in `manifest.json`.
-
-This supports inspection, reporting, and audit without requiring users to understand internal code.
-
-From v1.6, the manifest can include:
-
-- **framework_alignment** (declared)
-- **lesson_sources** (provenance summary)
-- **render** (captured when rendering is run)
 
 ## **40. Supporting Framework Alignment and Capability Mapping**
 

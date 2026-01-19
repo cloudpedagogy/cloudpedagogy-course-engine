@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.10.0)
+# CloudPedagogy Course Engine (v1.11.0)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -17,34 +17,31 @@ It prioritises **determinism, transparency, and explainability** over automation
 - Defaults to **non-destructive builds** (explicit `--overwrite` required)
 - Supports optional **capability mapping metadata** for governance and audit (v1.1)
 - Supports **external lesson source files with provenance tracking** (v1.6)
-- Supports **explain-only inspection workflows** without building (v1.8+)
+- Supports **explain-only policy resolution** (read-only) for CI, dashboards, and QA workflows via `validate --explain --json` (v1.10+)
 
 ---
 
-## What’s new in v1.10
+## What’s new in v1.11
 
-v1.10 is a **polish, clarity, and interface-hardening release**.
+v1.11 is a **governance adoption and documentation hardening** release.
 
-It introduces no new build modes, schemas, or enforcement behaviour.
-Instead, it finalises the **explainability and governance interfaces** introduced in earlier versions.
+It focuses on making policy validation and explainability **easy to operationalise** in QA, CI, and audit workflows without changing build behaviour.
 
 ### Highlights
 
-- **Clear, unambiguous explain output selection**
-  - `--format json|text` is now the preferred interface
-  - `--json` is retained as a **legacy / compatibility flag**
-- **Explain determinism confirmed**
-  - Only runtime timestamps vary
-  - All structural and provenance data is stable and diff-friendly
-- **Improved CLI semantics and help text**
-  - Explicit signalling of defaults and overrides
-  - Reduced ambiguity for CI, QA, and automation contexts
-- **Type safety and static analysis hardened**
-  - Clean `ruff`, `mypy`, and `pytest` runs across the codebase
-- **Documentation alignment**
-  - README, CLI behaviour, and explain output now tell a single, coherent story
+- **Demo course includes defensible capability mapping**
+  - The scenario-planning demo now declares both `framework_alignment` (intent) and `capability_mapping` (coverage and evidence), enabling end-to-end QA demonstrations.
 
-v1.10 marks the point at which **explainability is no longer experimental**, but a stable, governance-ready capability.
+- **Policy validation guidance clarified**
+  - `docs/POLICY_FILES.md` explicitly documents:
+    - what policy validation evaluates (structure only),
+    - the requirement for `capability_mapping`,
+    - and how profiles and thresholds are resolved.
+
+- **Explainability JSON contract documented**
+  - A stable, machine-readable contract for policy resolution output is now documented:
+    - `docs/explainability-json-contract.md`
+  - Intended for CI pipelines, dashboards, and governance tooling.
 
 ---
 
@@ -72,10 +69,10 @@ course-engine build examples/sample-course/course.yml --out dist --overwrite
 course-engine render dist/sample-course
 ```
 
-Explain a course (no build required; read-only):
+Explain resolved validation rules (no validation executed; read-only):
 
 ```bash
-course-engine explain course.yml --format json
+course-engine validate dist/<course> --policy preset:strict-ci --explain --json
 ```
 
 ---
@@ -111,9 +108,8 @@ Capability mapping is:
 
 ## Capability coverage reporting (v1.2)
 
-In v1.2, Course Engine adds **capability coverage reporting**.
-
-This moves capability mapping from *declared metadata* to a **defensible, auditable view of coverage and gaps**.
+Capability coverage reporting provides a **defensible view of coverage and gaps**
+based on declared capability mapping.
 
 The reporting system:
 
@@ -122,7 +118,7 @@ The reporting system:
 - flags domains with no declared coverage or evidence
 - produces **human-readable**, **verbose**, or **JSON** output
 
-Reporting examples:
+Examples:
 
 ```bash
 course-engine report dist/sample-course
@@ -132,35 +128,51 @@ course-engine report dist/sample-course --json
 
 ---
 
-## Capability validation (v1.3)
+## Capability validation (v1.3+)
 
-In v1.3, Course Engine introduces **capability mapping defensibility validation**.
+Capability validation checks declared capability mappings against **explicit, user-defined rules**.
 
-This allows declared capability mappings to be checked against explicit rules, supporting assurance, audit, and governance workflows.
+Validation:
 
-Validation operates on the generated `manifest.json` and does **not modify builds**.
+- operates on `manifest.json`
+- never modifies builds
+- evaluates declared structure only (not pedagogical quality)
 
----
+Policies and profiles are documented in:
 
-## Policy explain mode (v1.5)
-
-In v1.5, Course Engine introduces an **explain-only policy resolution mode**.
-
-This allows policies and profiles to be resolved, inspected, and consumed by external tools **without requiring a built course or `manifest.json`**.
-
-Explain mode is:
-
-- explain-only (no validation executed)
-- safe for CI, dashboards, and automation
-- machine-readable via JSON output
+- `docs/POLICY_FILES.md`
 
 ---
 
-## External lesson authoring (v1.6)
+## Explain-only policy resolution (v1.5+)
 
-From v1.6, lessons may be authored **either inline** or as **external source files**.
+Explain mode resolves policies and profiles **without executing validation**.
 
-Lessons must define **exactly one of**:
+This mode is:
+
+- read-only
+- safe for CI and automation
+- available as stable JSON output
+
+```bash
+course-engine validate dist/course \
+  --policy policies/my-policy.yml \
+  --profile strict-ci \
+  --explain \
+  --json
+```
+
+The JSON contract is documented in:
+
+- `docs/explainability-json-contract.md`
+
+---
+
+## External lesson authoring (v1.6+)
+
+Lessons may be authored **inline** or as **external source files**.
+
+Each lesson must define **exactly one of**:
 
 - `content_blocks` (inline YAML authoring), or
 - `source` (external Markdown or Quarto file)
@@ -168,28 +180,11 @@ Lessons must define **exactly one of**:
 Example:
 
 ```yaml
-structure:
-  modules:
-    - id: module-1
-      title: Foundations
-      lessons:
-        - id: lesson-01
-          title: "Optional explicit title"
-          source: content/lessons/lesson-01.md
+lessons:
+  - id: lesson-01
+    title: "Optional explicit title"
+    source: content/lessons/lesson-01.md
 ```
-
----
-
-## Explainability (v1.8)
-
-v1.8 introduces **first-class explainability** for `course.yml`, enabling
-governance, review, and audit workflows **without executing builds**.
-
-Explain output is designed to be:
-
-- stable
-- diff-friendly
-- machine-consumable
 
 ---
 
@@ -205,24 +200,17 @@ Detailed history is maintained in `CHANGELOG.md`.
 
 ---
 
-## Course Engine Handbook
+## Documentation
 
-A detailed, governance-aware guide is available in:
+- **Course Engine Handbook:** `docs/course-engine-handbook.md`
+- **Design & Rationale:** `docs/course-engine-design-rationale.md`
+- **Policy files guide:** `docs/POLICY_FILES.md`
+- **Explainability JSON contract:** `docs/explainability-json-contract.md`
+- **Release notes:** `docs/releases/`
 
-- `docs/course-engine-handbook.md`
-
-Derived Word and PDF versions are available in:
+Derived Word and PDF artefacts (where available) are in:
 
 - `docs/handbook/`
-
----
-
-## Course Engine Design & Rationale
-
-Design principles and architectural decisions are documented in:
-
-- `docs/course-engine-design-rationale.md`
-- `docs/v1.6-design.md`
 
 ---
 
@@ -242,22 +230,13 @@ It does **not** evaluate pedagogical quality or replace institutional governance
 
 ---
 
-## Attribution & Citation (Optional)
+## Attribution & citation (optional)
 
-If you use the **CloudPedagogy Course Engine** in **academic, institutional, or published work**, you are encouraged (but not required) to acknowledge its use or cite the repository.
+If you use the **CloudPedagogy Course Engine** in academic, institutional, or published work, you are encouraged (but not required) to acknowledge its use.
 
-This software is released under the MIT Licence, which **does not require public attribution** beyond retaining the licence text in redistributions. However, acknowledgement helps support the ongoing development of open, governance-aware educational tooling.
-
-**Suggested acknowledgement wording (optional):**
+**Suggested wording (optional):**
 
 > “This work was produced using the CloudPedagogy Course Engine.”
-
-or
-
-> “Course materials were compiled using the CloudPedagogy Course Engine (MIT Licence).”
-
-Where appropriate, you may also cite or link to the project repository.
-
 
 ---
 
@@ -267,4 +246,4 @@ CloudPedagogy develops governance-credible resources for building confident,
 responsible AI capability across education, research, and public service.
 
 - Website: https://www.cloudpedagogy.com/
-- Framework repo: https://github.com/cloudpedagogy/cloudpedagogy-ai-capability-framework
+- Framework repository: https://github.com/cloudpedagogy/cloudpedagogy-ai-capability-framework

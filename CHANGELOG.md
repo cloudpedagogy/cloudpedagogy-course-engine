@@ -5,6 +5,33 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+---
+
+## v1.11.0 – Governance Adoption & Documentation Consolidation
+
+### Added
+- Demonstration course updated to include **defensible capability mapping**
+  - Declares both `framework_alignment` (intent) and `capability_mapping` (coverage and evidence)
+  - Enables end-to-end QA, validation, and reporting demonstrations
+- Documented **explainability JSON contract** for policy resolution
+  - Formalises the structure and guarantees of `validate --explain --json`
+  - Intended for CI pipelines, dashboards, and governance tooling
+
+### Changed
+- Policy documentation clarified to emphasise:
+  - structural (not qualitative) validation
+  - requirement for `capability_mapping` to enable validation
+  - separation between declaration, reporting, and enforcement
+- Documentation aligned with current CLI semantics and governance positioning
+
+### Behaviour guarantees
+- No changes to build outputs, schemas, or validation logic
+- No new enforcement behaviour introduced
+- Fully backward compatible with v1.10.0
+
+### Notes
+- This is a **documentation and adoption release**
+- Intended to make existing governance features easier to understand and operationalise
 
 ---
 

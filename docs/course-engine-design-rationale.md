@@ -452,6 +452,27 @@ By allowing policies and profiles to be resolved and inspected **without requiri
 
 Architecturally, this required treating policy resolution as a distinct concern, rather than as a side effect of validation.
 
+## **33A. Explainability as a Contract-Stable Governance Interface (v1.10+)**
+
+From v1.10 onwards, the Course Engine’s explainability interface is treated as a
+**contract-stable governance surface**, not merely a debugging aid.
+
+Explain outputs are explicitly designed to:
+
+- surface resolved inputs, policies, profiles, and provenance
+- support CI, QA, and institutional review workflows
+- remain deterministic and machine-readable (timestamps aside)
+- avoid making pedagogical, quality, or compliance claims
+
+This interface is intentionally **separate from build artefacts** such as
+`manifest.json`. While the manifest records *what was built*, the explainability
+interface exists to explain **how decisions, rules, and resolution paths were derived**.
+
+By stabilising explain output semantics and format selection, the Course Engine
+treats explainability as infrastructure for governance and audit — not as an
+implementation detail or transient debugging output.
+
+
 ## **34. Non-Destructive Defaults and Explicit Overrides**
 
 Non-destructive behaviour is enforced architecturally through defaults that preserve existing artefacts unless explicitly overridden.
