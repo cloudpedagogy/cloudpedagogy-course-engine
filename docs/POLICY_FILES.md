@@ -1,9 +1,10 @@
 # Policy Files Guide
-> **Applies to course-engine v1.4+ (policy-based validation), including v1.5 explain-only JSON mode and v1.6 external lesson source support.**
 
-This document explains how **policy files** are used with the CloudPedagogy Course Engine to configure capability-mapping validation in a transparent, defensible way.
+> **Applies to course-engine v1.4+ (policy-based validation), including v1.10+ explainability contract (`--explain --json`) and v1.6+ external lesson source support.**
 
-Policy files define **local validation thresholds**.  
+This document explains how **policy files** are used with the CloudPedagogy Course Engine to configure **capability-mapping validation** in a transparent, defensible way.
+
+Policy files define **local validation thresholds**.
 They do **not** define quality standards, pedagogical effectiveness, or compliance with external frameworks.
 
 ---
@@ -43,13 +44,11 @@ Preset policies are shipped with the engine and selected via:
 ```
 
 **Examples:**
-
 - `preset:baseline`
 - `preset:higher-ed-example`
 - `preset:strict-ci`
 
 **Presets:**
-
 - are examples only
 - are not standards or recommendations
 - include explicit disclaimers
@@ -64,7 +63,6 @@ You should not modify preset files directly.
 Institutional policy files are external files owned by you or your organisation.
 
 They:
-
 - live in your own repository or project
 - reflect local assurance expectations
 - can be reviewed, versioned, and audited independently
@@ -110,7 +108,7 @@ profiles:
       forbid_empty_domains: false
 ```
 
-Only `policy_version` and `profiles` are required.  
+Only `policy_version` and `profiles` are required.
 All other fields are informational and intended for governance and audit contexts.
 
 ---
@@ -120,7 +118,6 @@ All other fields are informational and intended for governance and audit context
 A profile is a named set of validation rules.
 
 Profiles allow the same course to be validated under different conditions, for example:
-
 - early design review
 - routine QA
 - automated CI gating
@@ -132,7 +129,6 @@ course-engine validate dist/course --policy policy.yml --profile qa-lite
 ```
 
 If no profile is specified:
-
 - the policy’s `default_profile` is used (if defined)
 - otherwise the engine default (`baseline`) is used
 
@@ -166,125 +162,17 @@ profiles:
       forbid_empty_domains: true
 ```
 
-**Inheritance rules:**
-
-- only one parent may be extended
-- inheritance depth is limited
-- cycles are not allowed
-- child rules override parent rules
-- metadata is not merged
-
 ---
 
-## Validation rules
+## Capability mapping required for validation (v1.6+)
 
-Policy files may only use the following rule keys:
-
-| Rule | Meaning |
-|-----|--------|
-| `require_coverage.min_domains` | Minimum number of declared capability domains |
-| `require_evidence.min_items_per_domain` | Minimum evidence items per domain |
-| `min_coverage_items_per_domain` | Minimum coverage items per domain |
-| `forbid_empty_domains` | Flag declared domains with no coverage and no evidence |
-
-Unknown rule keys are treated as **errors**.
-
-This is intentional: silent or permissive parsing can lead to false confidence.
-
-### No capability mapping present (v1.6+)
+Policy validation operates on declared **capability mapping** only.
 
 If a course declares **no `capability_mapping`**, validation fails with a clear message indicating that there is nothing to validate.
 
-This prevents false assumptions that framework alignment alone is sufficient for validation.
-
 ---
 
-## Interaction with lesson authoring (v1.6)
-
-Policy validation operates exclusively on declared capability mapping and manifest metadata.
-
-The introduction of **external lesson source files** in v1.6:
-
-- does not change validation rules
-- does not introduce new policy keys
-- does not affect thresholds or enforcement logic
-
-Lesson source provenance is recorded for **audit and inspection purposes only** and is not evaluated by policy rules.
-
----
-
-## Using policy files with the CLI
-
-### Default behaviour (v1.3-compatible)
-
-```bash
-course-engine validate dist/course
-```
-
-Uses the engine default behaviour. No policy file required.
-
----
-
-### Using a preset policy
-
-```bash
-course-engine validate dist/course --policy preset:higher-ed-example
-```
-
----
-
-### Using an institutional policy file
-
-```bash
-course-engine validate dist/course \
-  --policy policies/my-policy.yml \
-  --profile qa-lite
-```
-
----
-
-## Strict mode (CI / QA gates)
-
-```bash
-course-engine validate dist/course \
-  --policy policies/my-policy.yml \
-  --profile strict-ci \
-  --strict
-```
-
-Strict mode changes **severity**, not thresholds.
-
----
-
-## Listing available profiles
-
-```bash
-course-engine validate --policy policies/my-policy.yml --list-profiles
-```
-
----
-
-## Explaining resolved rules (no validation)
-
-```bash
-course-engine validate dist/course \
-  --policy policies/my-policy.yml \
-  --profile strict-ci \
-  --explain
-```
-
-This outputs:
-
-- policy source
-- selected profile
-- inheritance chain
-- resolved rules
-
-Validation is **not** executed. No files are read or written in this mode.
-
----
-
-## Explain-only JSON output (v1.5+)
+## Explain-only JSON output (v1.10+)
 
 This output is intended as a stable interface for CI pipelines, dashboards, and external tooling.
 
@@ -296,30 +184,7 @@ course-engine validate dist/course \
   --json
 ```
 
-### JSON output includes
-
-- policy provenance
-- resolved profile
-- inheritance chain
-- resolved rules
-- strict flag state
-
 This mode is **read-only** and contract-stable.
-
----
-
-## Important disclaimers
-
-Policy files define **local expectations only**.
-
-Validation results:
-
-- do not imply pedagogical quality
-- do not imply completeness
-- do not imply compliance with external standards
-- do not replace expert review
-
-The engine evaluates declared structure and traceability — nothing more.
 
 ---
 
@@ -327,7 +192,5 @@ The engine evaluates declared structure and traceability — nothing more.
 
 Policy files exist to make validation **transparent, adaptable, and defensible**.
 
-They are a tool for structured review — not an authority on meaning.
-
-The engine evaluates structure.  
+The engine evaluates structure.
 You decide what matters.

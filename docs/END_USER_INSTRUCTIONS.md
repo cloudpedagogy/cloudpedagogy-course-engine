@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.6**
+**course-engine v1.11**
 
 ---
 
@@ -354,6 +354,27 @@ This mode:
 - does not require `manifest.json`
 - does not execute validation
 - is safe for CI pipelines and dashboards
+
+### Explain output format (v1.10+)
+
+From v1.10 onwards, explain output supports an explicit format selector:
+
+- `--format json|text` is the **preferred interface**
+- `--json` is retained for **backward compatibility**
+
+If both are supplied, `--format` takes precedence.
+
+Example (recommended):
+
+```bash
+course-engine validate dist/my-course \
+  --policy preset:baseline \
+  --explain \
+  --format json
+```
+
+The explain output is contract-stable, machine-readable, and suitable for CI,
+dashboards, and governance tooling.
 
 ---
 
