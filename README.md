@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.11.0)
+# CloudPedagogy Course Engine (v1.12.0)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -14,6 +14,7 @@ It prioritises **determinism, transparency, and explainability** over automation
 - Validates course structure and metadata
 - Compiles publishable artefacts via templates
 - Produces **auditable, reproducible outputs** with a machine-readable `manifest.json`
+- Records declared **design intent** (rationale, AI positioning, governance context) and surfaces it in `manifest.json` and `course-engine explain` (v1.12)
 - Defaults to **non-destructive builds** (explicit `--overwrite` required)
 - Supports optional **capability mapping metadata** for governance and audit (v1.1)
 - Supports **external lesson source files with provenance tracking** (v1.6)
@@ -21,25 +22,48 @@ It prioritises **determinism, transparency, and explainability** over automation
 
 ---
 
+## What’s new in v1.12
+
+v1.12 introduces **explicit design intent capture** as a first-class governance signal.
+
+Courses may now declare *why* design choices were made — including AI positioning,
+framework references, and review context — without affecting build behaviour.
+
+### Highlights
+
+- **Design intent block added to `course.yml`**
+  - Optional, informational metadata capturing rationale, AI use boundaries, and governance context.
+
+- **Manifest upgraded (v1.3.0)**
+  - Design intent is recorded with a stable hash and summary for auditability.
+
+- **Explain output enhanced**
+  - `course-engine explain` surfaces design intent in both JSON and human-readable reports.
+
+This change strengthens transparency and audit readiness without introducing
+validation or enforcement.
+
+---
+
 ## What’s new in v1.11
 
-v1.11 is a **governance adoption and documentation hardening** release.
+v1.11 was a **governance adoption and documentation hardening** release.
 
-It focuses on making policy validation and explainability **easy to operationalise** in QA, CI, and audit workflows without changing build behaviour.
+It focused on making policy validation and explainability **easy to operationalise** in QA, CI, and audit workflows without changing build behaviour.
 
 ### Highlights
 
 - **Demo course includes defensible capability mapping**
-  - The scenario-planning demo now declares both `framework_alignment` (intent) and `capability_mapping` (coverage and evidence), enabling end-to-end QA demonstrations.
+  - The scenario-planning demo declares both `framework_alignment` (intent) and `capability_mapping` (coverage and evidence), enabling end-to-end QA demonstrations.
 
 - **Policy validation guidance clarified**
-  - `docs/POLICY_FILES.md` explicitly documents:
+  - `docs/POLICY_FILES.md` documents:
     - what policy validation evaluates (structure only),
     - the requirement for `capability_mapping`,
     - and how profiles and thresholds are resolved.
 
 - **Explainability JSON contract documented**
-  - A stable, machine-readable contract for policy resolution output is now documented:
+  - A stable, machine-readable contract for policy resolution output:
     - `docs/explainability-json-contract.md`
   - Intended for CI pipelines, dashboards, and governance tooling.
 
@@ -155,11 +179,7 @@ This mode is:
 - available as stable JSON output
 
 ```bash
-course-engine validate dist/course \
-  --policy policies/my-policy.yml \
-  --profile strict-ci \
-  --explain \
-  --json
+course-engine validate dist/course   --policy policies/my-policy.yml   --profile strict-ci   --explain   --json
 ```
 
 The JSON contract is documented in:
@@ -188,6 +208,29 @@ lessons:
 
 ---
 
+## Design intent (v1.12)
+
+Course Engine supports an optional `design_intent` block in `course.yml`.
+
+Design intent allows authors to declare:
+
+- the rationale behind course design choices,
+- how (and where) AI is positioned or constrained,
+- relevant frameworks or policy contexts,
+- review cadence and evolution expectations.
+
+Design intent is:
+
+- optional
+- informational (not enforced)
+- recorded in `manifest.json`
+- surfaced via `course-engine explain`
+
+It is intended to support **audit, QA, and governance conversations**
+without inspecting lesson content or evaluating pedagogical quality.
+
+---
+
 ## Versioning and evolution
 
 The Course Engine evolves conservatively through minor releases, prioritising:
@@ -202,7 +245,7 @@ Detailed history is maintained in `CHANGELOG.md`.
 
 ## Documentation
 
-- **Course Engine Handbook:** `docs/course-engine-handbook.md`
+- **Course Engine Handbook:** `docs/course-engine-handbook.md` (includes design intent and governance metadata)
 - **Design & Rationale:** `docs/course-engine-design-rationale.md`
 - **Policy files guide:** `docs/POLICY_FILES.md`
 - **Explainability JSON contract:** `docs/explainability-json-contract.md`
@@ -219,7 +262,8 @@ Derived Word and PDF artefacts (where available) are in:
 The CloudPedagogy Course Engine is a technical tool for compiling, inspecting,
 and explaining course artefacts.
 
-It does **not** evaluate pedagogical quality or replace institutional governance processes.
+It records declared intent and structure for transparency, but does **not**
+evaluate pedagogical quality or replace institutional governance processes.
 
 ---
 

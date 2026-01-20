@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.11**
+**course-engine v1.12**
 
 ---
 
@@ -23,7 +23,9 @@ It is designed for **educators, learning designers, and curriculum developers** 
 
 From v1.1 onwards, `course-engine` supports **optional capability mapping metadata** for governance, audit, and curriculum review contexts.
 
-From **v1.6**, it also supports **authoring lessons as separate source files**, with lesson provenance recorded in the build manifest.
+From **v1.6**, it supports **authoring lessons as separate source files**, with lesson provenance recorded in the build manifest.
+
+From **v1.12**, it supports **explicit design intent metadata**, enabling authors to record rationale, AI positioning, and governance context without affecting build or validation behaviour.
 
 ---
 
@@ -112,8 +114,6 @@ Clone or download the repository, then install in your virtual environment:
 pip install -e .
 ```
 
-This makes the `course-engine` command available.
-
 Verify:
 
 ```bash
@@ -143,14 +143,12 @@ Edit `course.yml` to define your course structure, lessons, and metadata.
 
 ## 6. Authoring lessons (v1.6)
 
-From **v1.6**, lessons can be authored either:
+Lessons may be authored either:
 
 - inline using `content_blocks`, **or**
 - as **separate Markdown or Quarto files** referenced using `source:`
 
 ### 6.1 Authoring lessons as source files
-
-Example:
 
 ```yaml
 structure:
@@ -163,346 +161,112 @@ structure:
           source: content/lessons/lesson-01.md
 ```
 
-How this works:
+Rules:
 
-- `source:` paths are resolved **relative to the `course.yml` location**
-- Lesson title is resolved in this order:
-  1. explicit `title:` in `course.yml`
-  2. first Markdown H1 (`# Heading`) in the source file
-- Source files are injected as a single internal Markdown content block at build time
-- Provenance is recorded in `manifest.json` under `lesson_sources` (informational)
-
-### Constraints (enforced)
-
-- A lesson must define **exactly one of**:
-  - `source`, or
-  - `content_blocks`
-- Defining both will cause a build error
-- Defining neither will cause a build error
-- If no title can be inferred, the build fails with a clear message
+- Paths are resolved **relative to `course.yml`**
+- Titles are inferred from Markdown H1 if omitted
+- Exactly one of `source` or `content_blocks` is required
+- Provenance is recorded in `manifest.json`
 
 ---
 
-## 7. Core commands
+## 7. Design intent metadata (v1.12)
 
-### 7.1 Build outputs
+Courses may optionally declare **design intent** in `course.yml`.
 
-Build a multi-page Quarto project (default):
+Design intent allows authors to record:
 
-```bash
-course-engine build course.yml
+- rationale for design choices
+- AI positioning and constraints
+- relevant frameworks or policy context
+- review cadence and evolution expectations
+
+Example:
+
+```yaml
+design_intent:
+  summary: >
+    This course supports responsible AI-assisted curriculum foresight
+    while preserving human judgement and decision accountability.
 ```
 
-Build a single-page HTML handout:
+Design intent is:
 
-```bash
-course-engine build course.yml --format html-single
-```
+- optional
+- informational (not validated)
+- recorded in `manifest.json`
+- surfaced via `course-engine explain`
 
-Build a PDF handout project:
+---
 
-```bash
-course-engine build course.yml --format pdf
-```
+## 8. Core commands
 
-If the output directory already exists, rebuild safely with:
+### Build
 
 ```bash
 course-engine build course.yml --overwrite
 ```
 
-Or (example):
-
-```bash
-course-engine build course.yml --format pdf --overwrite
-```
-
-Notes:
-
-- `build` generates the project files + writes `manifest.json`
-- For Quarto/PDF formats, you typically follow with `course-engine render`
-
----
-
-### 7.2 Render outputs (Quarto render)
-
-Render an existing Quarto project directory:
+### Render
 
 ```bash
 course-engine render dist/my-course
 ```
 
-Common results:
-
-- **Multi-page Quarto site:** typically appears under `dist/my-course/_site/`
-- **PDF project:** by default appears as `index.pdf` in the project directory (and is listed in the manifest)
-
----
-
-### 7.3 Inspect outputs (recommended)
-
-Each build produces a `manifest.json`.
-
-Inspect it with:
+### Inspect
 
 ```bash
 course-engine inspect dist/my-course
 ```
 
-This shows:
-
-- course metadata  
-- build and render timestamps  
-- output format  
-- declared framework alignment and mapping mode (if present)  
-- capability mapping summary (if declared)  
-- file inventory with counts/sizes  
-- **lesson source provenance summary (v1.6)**  
-
----
-
-### 7.4 Clean outputs
-
-Safely delete generated output directories:
+### Explain (artefact-level)
 
 ```bash
-course-engine clean dist/my-course
+course-engine explain dist/my-course --format text
+course-engine explain dist/my-course --format json
 ```
 
-Skip confirmation:
+Explain surfaces:
 
-```bash
-course-engine clean dist/my-course -y
-```
+- course identity
+- build provenance
+- framework alignment
+- capability mapping presence
+- **design intent summary (v1.12)**
 
 ---
 
-### 7.5 Capability coverage reporting (v1.2+)
+## 9. Capability mapping, reporting, and validation
 
-If a course declares capability mapping metadata, `course-engine` can generate a **capability coverage report** from a built output directory.
+All behaviour remains unchanged from earlier versions:
 
-Generate a report:
-
-```bash
-course-engine report dist/my-course
-```
-
-Verbose output:
-
-```bash
-course-engine report dist/my-course --verbose
-```
-
-Machine-readable JSON:
-
-```bash
-course-engine report dist/my-course --json
-```
-
-v1.6 behaviour:
-
-- If `capability_mapping` is missing but `framework_alignment` is present, `report` prints a **declared alignment summary** (informational).
-
----
-
-### 7.6 Capability validation (v1.3+)
-
-From v1.3, `course-engine` can validate the **defensibility** of declared capability mappings using explicit rules.
-
-Validation:
-
-- reads `manifest.json`
-- does not modify outputs
-- supports governance, QA, and audit workflows
-
-Run validation:
-
-```bash
-course-engine validate dist/my-course
-```
-
-Strict mode (non-zero exit on failure):
-
-```bash
-course-engine validate dist/my-course --strict
-```
-
-If no `capability_mapping` is present, validation exits non-zero with a clear message (because there is nothing defensible to validate).
-
----
-
-### 7.7 Policy explanation & inspection (v1.5+)
-
-From v1.5, `course-engine validate` supports **explain-only policy inspection**.
-
-This allows inspection of:
-
-- policy source and provenance
-- selected profile
-- inheritance chain
-- resolved rules
-- strict mode state
-
-Example (explain-only, JSON):
-
-```bash
-course-engine validate /tmp --policy preset:baseline --profile baseline --explain --json
-```
-
-This mode:
-
-- does not require `manifest.json`
-- does not execute validation
-- is safe for CI pipelines and dashboards
-
-### Explain output format (v1.10+)
-
-From v1.10 onwards, explain output supports an explicit format selector:
-
-- `--format json|text` is the **preferred interface**
-- `--json` is retained for **backward compatibility**
-
-If both are supplied, `--format` takes precedence.
-
-Example (recommended):
-
-```bash
-course-engine validate dist/my-course \
-  --policy preset:baseline \
-  --explain \
-  --format json
-```
-
-The explain output is contract-stable, machine-readable, and suitable for CI,
-dashboards, and governance tooling.
-
----
-
-## 8. Output structure (examples)
-
-Typical Quarto site build + render:
-
-```text
-dist/my-course/
-├── _quarto.yml
-├── index.qmd
-├── lessons/
-│   └── ...
-├── _site/
-│   └── ... rendered HTML site ...
-└── manifest.json
-```
-
-Typical PDF build + render:
-
-```text
-dist/my-course-pdf/
-├── _quarto.yml
-├── index.qmd
-├── index.pdf
-└── manifest.json
-```
-
----
-
-## 9. Common errors & fixes
-
-### “PDF output requires a LaTeX toolchain”
-
-Run:
-
-```bash
-quarto install tinytex
-```
-
-Then try `course-engine render` again.
-
----
-
-### “Target output folder already exists”
-
-Rebuild safely with:
-
-```bash
-course-engine build course.yml --overwrite
-```
-
----
-
-### “Lesson cannot have both `source` and `content_blocks`”
-
-Remove one of the two fields. Exactly one is required.
-
----
-
-### “Lesson must define either `source` or `content_blocks`”
-
-Add one of the two fields to the lesson.
-
----
-
-### “Lesson has `source` but no title could be inferred”
-
-Add a `title:` to the lesson **or** include a Markdown H1 in the source file.
-
----
-
-### “Invalid course.yml structure: found top-level `modules`”
-
-Modules must be nested under:
-
-```yaml
-structure:
-  modules:
-```
-
----
-
-### “Unsupported key: found top-level `content`”
-
-Remove unsupported legacy keys. Lesson content must be provided via:
-
-- `structure.modules[].lessons[].content_blocks`, or
-- `structure.modules[].lessons[].source`
+- Capability mapping is optional and informational
+- Reporting summarises declared coverage
+- Validation checks defensibility using explicit policies
+- Design intent is **not** validated
 
 ---
 
 ## 10. Design principles
 
-- Fail fast: errors are explicit and early  
-- Non-destructive by default: outputs are never overwritten silently  
-- Traceable: every build produces a manifest  
-- Format-agnostic: one spec → multiple outputs  
-- Human-auditable: outputs and metadata are readable without special tooling  
+- Fail fast  
+- Non-destructive by default  
+- Deterministic builds  
+- Human-auditable artefacts  
+- Clear separation between intent, structure, and enforcement  
 
 ---
 
-## 11. Versioning notes
-
-- v1.0–v1.1: stability, reproducibility, clarity  
-- v1.1: optional capability mapping metadata  
-- v1.2: capability coverage reporting  
-- v1.3: rule-based capability validation  
-- v1.4: policy/profile selection (with inheritance)  
-- v1.5: explain-only policy inspection (`--explain --json`)  
-- **v1.6: external lesson source files + provenance + schema guardrails**  
-
----
-
-## 12. Getting help
-
-General help:
+## 11. Getting help
 
 ```bash
 course-engine --help
 ```
 
-Command help:
+Command-specific help:
 
 ```bash
 course-engine build --help
-course-engine render --help
-course-engine inspect --help
-course-engine report --help
+course-engine explain --help
 course-engine validate --help
 ```

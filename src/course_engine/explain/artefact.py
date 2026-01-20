@@ -1,3 +1,4 @@
+# src/course_engine/explain/artefact.py
 from __future__ import annotations
 
 import json
@@ -89,6 +90,13 @@ def explain_dist_dir(
                 "files": 0,
                 "missing": 0,
             },
+        },
+        # NEW: surfaced governance metadata (manifest-backed when present)
+        "framework_alignment": {},
+        "design_intent": {
+            "present": False,
+            "hash_sha256": None,
+            "summary": None,
         },
         "policies": {
             "active": [],
@@ -228,10 +236,20 @@ def explain_dist_dir(
     payload["structure"]["counts"]["modules"] = 0
     payload["structure"]["counts"]["content_blocks"] = 0
 
-    # Capability mapping / framework alignment (if present in manifest)
-    if manifest.get("capability_mapping"):
+    # Governance signals copied from manifest (if present)
+    fw = manifest.get("framework_alignment")
+    if isinstance(fw, dict) and fw:
+        payload["framework_alignment"] = fw
+
+    di = manifest.get("design_intent")
+    if isinstance(di, dict) and di:
+        payload["design_intent"] = di
+
+    # Capability mapping (if present in manifest)
+    cap = manifest.get("capability_mapping")
+    if cap:
         payload["capability_mapping"]["present"] = True
-        payload["capability_mapping"]["summary"] = manifest.get("capability_mapping") or {}
+        payload["capability_mapping"]["summary"] = cap or {}
         payload["capability_mapping"]["details"] = None
 
     return payload

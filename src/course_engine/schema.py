@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
@@ -178,6 +178,40 @@ class FrameworkAlignmentModel(BaseModel):
     notes: Optional[str] = None
 
 
+class DesignIntentAIPositionModel(BaseModel):
+    assessments: Optional[str] = None
+    learning_activities: Optional[str] = None
+
+
+class DesignIntentFrameworkReferenceModel(BaseModel):
+    name: str
+    version: Optional[str] = None
+    alignment_type: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class DesignIntentPolicyContextModel(BaseModel):
+    title: str
+    scope: Optional[str] = None
+    url: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class DesignIntentReviewModel(BaseModel):
+    last_reviewed: Optional[str] = None
+    review_cycle: Optional[str] = None
+    reflection_prompt: Optional[str] = None
+
+
+class DesignIntentModel(BaseModel):
+    summary: Optional[str] = None
+    ai_position: Optional[DesignIntentAIPositionModel] = None
+    roles_and_responsibilities: Dict[str, str] = Field(default_factory=dict)
+    framework_references: List[DesignIntentFrameworkReferenceModel] = Field(default_factory=list)
+    policy_context: List[DesignIntentPolicyContextModel] = Field(default_factory=list)
+    review_and_evolution: Optional[DesignIntentReviewModel] = None
+
+
 class CapabilityDomainMappingModel(BaseModel):
     label: Optional[str] = None
     intent: Optional[str] = None
@@ -201,6 +235,7 @@ class CourseMetaModel(BaseModel):
 
 class RootModel(BaseModel):
     course: CourseMetaModel
+    design_intent: Optional[DesignIntentModel] = None
     framework_alignment: FrameworkAlignmentModel
     capability_mapping: Optional[CapabilityMappingModel] = None
     outputs: OutputsModel = Field(default_factory=OutputsModel)

@@ -37,6 +37,13 @@ def _truthy_dict(value: Any) -> Optional[Dict[str, Any]]:
     return None
 
 
+def _truncate(s: str, n: int = 160) -> str:
+    s = (s or "").strip()
+    if not s:
+        return ""
+    return s if len(s) <= n else s[: n - 1] + "…"
+
+
 def explain_payload_to_text(payload: Dict[str, Any]) -> str:
     """
     Render a human-readable explain report from the canonical explain JSON payload.
@@ -162,8 +169,13 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
     # 5. Governance signals
     lines.append("5. Governance Signals")
 
-    # framework_alignment may not exist; keep honest
+    # Framework alignment:
+    # Prefer canonical payload.framework_alignment, but fall back to manifest-backed
+    # rendering.artefact.framework_alignment if present (belt-and-braces).
     fw = payload.get("framework_alignment")
+    if not (isinstance(fw, dict) and fw):
+        fw = _get_nested(payload, "rendering", "artefact", "framework_alignment")
+
     if isinstance(fw, dict) and fw:
         lines.append("  Framework alignment:")
         lines.append(_line("    Framework", fw.get("framework_name")))
@@ -189,6 +201,18 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
     else:
         # fallback for older shapes
         lines.append("  Capability mapping: " + ("present" if cap else "none"))
+
+    # v1.12+: design_intent (manifest-backed)
+    di = payload.get("design_intent") or {}
+    if isinstance(di, dict) and di.get("present") is True:
+        lines.append("  Design intent: present")
+        if di.get("hash_sha256"):
+            lines.append(_line("    Hash (sha256)", di.get("hash_sha256")))
+        if di.get("summary"):
+            lines.append(_line("    Summary", _truncate(str(di.get("summary")))))
+    else:
+        lines.append("  Design intent: none")
+
     lines.append("")
 
     # 6. Determinism note
