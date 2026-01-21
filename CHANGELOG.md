@@ -7,6 +7,48 @@ This project follows semantic versioning.
 
 ---
 
+## v1.12.0 – Design Intent & Governance Signal Formalisation
+
+### Added
+- **Design intent metadata block** (`design_intent`) in `course.yml`
+  - Optional, informational author-declared rationale
+  - Intended to capture:
+    - design context and reasoning,
+    - AI positioning and boundaries,
+    - relevant frameworks or governance considerations
+  - Does not affect build, render, validation, or enforcement behaviour
+
+- **Design intent recorded in `manifest.json`**
+  - Stored with:
+    - presence flag,
+    - stable SHA-256 hash,
+    - human-readable summary
+  - Enables auditability and change detection without inspecting lesson content
+
+- **Explain output enhanced**
+  - `course-engine explain` now surfaces design intent in:
+    - machine-readable JSON output
+    - human-readable text reports
+  - Available in artefact (manifest-backed) explain mode
+
+### Changed
+- Manifest schema version bumped to **1.3.0**
+  - Adds `design_intent` metadata
+  - Fully backward compatible with earlier manifests
+
+### Behaviour guarantees
+- No changes to build outputs or rendering behaviour
+- No new validation or enforcement logic introduced
+- Design intent is **purely informational**
+- Fully backward compatible with v1.11.0
+
+### Notes
+- This release strengthens governance transparency and audit readiness
+- Design intent complements (but does not replace) `framework_alignment` and `capability_mapping`
+
+
+---
+
 ## v1.11.0 – Governance Adoption & Documentation Consolidation
 
 ### Added

@@ -17,10 +17,11 @@ At a practical level, the CloudPedagogy Course Engine is a **structured course c
 
 Rather than generating content directly, the Course Engine treats **course intent and structure as first-class design elements**. Courses are compiled from a single source of truth, produce reproducible outputs across formats such as web, PDF, and markdown, and generate machine-readable metadata to support inspection, reporting, and audit.
 
-Where capability frameworks are used, the system supports two related but distinct mechanisms:
+Where capability frameworks are used, the system supports three related but distinct mechanisms:
 
 - **Framework alignment** (v1.6+): a *declaration* of which framework and domains the course intends to reference (informational, non-enforced).
 - **Capability mapping** (v1.1+): structured *coverage/evidence metadata* that can be reported on, and (optionally) validated against policy rules.
+- **Design intent** (v1.12+): a *declaration* of rationale, AI positioning and boundaries, and governance/review context (informational, non-enforced). Design intent is recorded in `manifest.json` with a stable hash and surfaced via `course-engine explain`.
 
 The Course Engine is intentionally **non-prescriptive**. It supports reflection, review, traceability, and transparency, but it does not evaluate pedagogical quality, determine academic merit, or decide whether a course should be approved or adopted. Those responsibilities remain firmly with the human user.
 
@@ -186,6 +187,8 @@ The order matters. Skipping steps may be faster in the short term, but it usuall
 ## **9. Starting With Intent, Not Output**
 
 Many AI-enabled tools begin by asking what you want them to generate. The Course Engine begins by asking something more fundamental: **what are you trying to create, and for what purpose?**
+
+From **v1.12**, this “start with intent” step can also be captured explicitly in the course specification itself, using an optional `design_intent` block in `course.yml`. This metadata is **informational** (it does not affect build or validation behaviour), but it allows authors to record the course’s rationale, AI positioning, decision boundaries, and review context in a way that is **auditable and revisitable** over time. When present, it is recorded in `manifest.json` and surfaced by `course-engine explain` in both JSON and text reports.
 
 This distinction is important because courses are not simply collections of text. They are learning journeys, arguments about what matters, and structured commitments made to learners and institutions. When intent is unclear, even well-written content can become incoherent or misleading.
 
@@ -429,6 +432,7 @@ The engine also provides a **separate explainability interface** for inspecting 
 From v1.6, the manifest can include:
 
 - **framework_alignment** (declared)
+- **design_intent** (v1.12+; rationale/boundaries summary + hash for auditability)
 - **lesson_sources** (provenance summary)
 - **render** (captured when rendering is run)
 
@@ -442,6 +446,27 @@ are explicit, deterministic (timestamps aside), and safe to rely on in CI and au
 
 Explain outputs are **descriptive, not evaluative**: they are designed to support inspection and review
 without asserting pedagogical quality, compliance, or approval.
+
+## **39B. Capturing Design Intent as a Governance Signal (v1.12+)**
+
+From **v1.12**, the Course Engine supports an optional `design_intent` block in `course.yml`.
+
+This is intended to capture the *why* behind a course, without turning that rationale into enforcement.
+
+Design intent can include:
+
+- a concise design rationale and positioning (what this course is trying to achieve)
+- how AI is framed, used, or constrained (including decision boundaries)
+- relevant frameworks, policy context, or intended review audience
+- expectations for revision, stewardship, or review cadence
+
+When present:
+
+- it is recorded in `manifest.json` with a stable hash (supporting auditability and change detection)
+- it is surfaced via `course-engine explain` (JSON and human-readable text)
+- it remains **informational**: it is not validated as “correct”, and it does not imply quality, compliance, or approval
+
+This feature exists to support **transparent governance conversations**: it makes intent explicit, inspectable, and reviewable — while keeping responsibility with the human author.
 
 
 ## **40. Supporting Framework Alignment and Capability Mapping**
@@ -537,6 +562,8 @@ It becomes easier to discuss decisions, review sections, and document change rat
 In QA and governance contexts, the Course Engine is often used to support **inspection rather than production**.
 
 Reviewers can inspect outputs and metadata, without the system claiming quality or compliance.
+
+From **v1.12**, reviewers can also inspect declared **design intent** as part of the artefact metadata. This supports governance conversations about rationale, AI positioning, and decision boundaries without requiring reviewers to infer intent from content alone.
 
 ## **51. Using Framework and Capability Information in Practice**
 
@@ -744,7 +771,7 @@ Refer to the repository documentation, including:
 - `README.md`  
 - `docs/END_USER_INSTRUCTIONS.md`  
 - `docs/POLICY_FILES.md`  
-- and any version-specific design notes (e.g., `docs/design/v1.6.0-design.md`)
+- and any version-specific design notes (e.g., `docs/design/v1.6.0-design.md`, `docs/design/v1.12.0-design.md`)
 
 ---
 

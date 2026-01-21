@@ -196,6 +196,8 @@ Frameworks could articulate principles and values, while tools could generate co
 
 The Course Engine was conceived to occupy this middle layer: not a framework, not a generator, but a system that could **hold intent, structure, and evidence together**.
 
+From **v1.12**, this “hold intent together” requirement is supported directly through an optional `design_intent` block in `course.yml`. This provides a stable, inspectable place to record rationale, AI positioning/boundaries, and governance context as **informational metadata**, without turning intent into enforcement.
+
 ## **16. Summary of the Design Problem**
 
 Taken together, the design problem the Course Engine responds to can be summarised as follows:
@@ -254,6 +256,12 @@ Rather than allowing content to drive structure implicitly, the Course Engine re
 
 This principle shaped the decision to treat the course specification as a first-class artefact and to separate structural design from content elaboration. It also influenced the system’s resistance to “one-click” generation workflows that collapse design decisions into a single step.
 
+## **19A. Intent Must Be Inspectable (v1.12+)**
+
+A recurring governance failure mode in AI-supported course design is that intent exists only in tacit knowledge or transient prompts.
+
+From **v1.12**, the Course Engine supports an optional `design_intent` block to make rationale, AI positioning, and review context **explicit and inspectable**. This is a governance signal, not a compliance mechanism: it records author intent without asserting quality, correctness, or approval.
+
 ## **20. Transparency Over Seamlessness**
 
 Many AI-enabled systems prioritise seamlessness, hiding intermediate steps to create the impression of intelligence or autonomy.
@@ -284,6 +292,9 @@ Governance was treated as a **design requirement**, not a downstream concern.
 The Course Engine was designed on the assumption that courses may need to be reviewed, audited, or explained to others who were not involved in their creation. This required that evidence, structure, and declared intent be available in a form that could support such review.
 
 As a result, features such as metadata generation, reporting, and validation were designed to support inspection rather than enforcement. Governance is supported by making information available, not by automating approval.
+
+In **v1.12**, this governance stance is extended to *rationale itself*: authors can record declared **design intent** (why the course is structured and positioned as it is, including AI boundaries) in a way that is inspectable and durable, without being evaluated as “correct”.
+
 
 ## **23. Non-Destructive Defaults**
 
@@ -410,6 +421,21 @@ This guardrail approach supports:
 
 The system’s bias is toward clear failure with explanation, rather than permissive behaviour that produces hard-to-trace outcomes.
 
+## **30C. Design Intent as Manifest-Backed Metadata (v1.12)**
+
+In **v1.12**, the Course Engine introduced support for an optional `design_intent` block in `course.yml`.
+
+This feature extends the manifest-as-evidence approach: it allows authors to record *rationale and boundaries* as structured, inspectable metadata, without requiring reviewers to infer intent from the rendered content alone.
+
+Key architectural properties:
+
+- **informational only**: intent is recorded, not enforced
+- **manifest-backed**: intent is captured in `manifest.json` for auditability
+- **change-detectable**: a stable hash is recorded to support provenance and drift detection
+- **explain surfaced**: intent is visible via `course-engine explain` in both JSON and text forms
+
+This preserves the system’s core stance: governance is supported through transparency and evidence, not automated approval.
+
 ## **31. Informational Capability Mapping by Design**
 
 Capability mapping was implemented as **informational metadata**, not as an enforcement mechanism.
@@ -418,19 +444,22 @@ Architecturally, this meant designing capability declarations to be read, report
 
 This reflects a deliberate refusal to collapse complex judgement into automated scoring. The system supports visibility and discussion, but it does not claim authority over what constitutes sufficient or appropriate capability development.
 
-## **31A. Two Layers of Governance Signalling: Alignment vs Defensibility (v1.6)**
+## **31A. Three Layers of Governance Signalling: Intent, Alignment, and Defensibility (v1.12)**
 
-The Course Engine supports **two distinct layers** of governance signalling:
+The Course Engine supports **three distinct layers** of governance signalling:
 
-1. **Declared alignment** (`framework_alignment`)  
-   A human declaration that a course references a framework and domains. This is useful for orientation, inventory, and high-level reporting.
+1. **Design intent** (`design_intent`, v1.12+)  
+   A human declaration of rationale, AI positioning/boundaries, and review context. Informational only, captured for inspection and audit.
 
-2. **Defensible mapping evidence** (`capability_mapping`)  
+2. **Declared alignment** (`framework_alignment`, v1.6+)  
+   A human declaration that a course references a framework and domains. Useful for orientation, inventory, and high-level reporting.
+
+3. **Defensible mapping evidence** (`capability_mapping`, v1.1+)  
    Structured metadata (coverage and evidence) intended to support inspectable claims and stronger governance workflows.
 
 In v1.6, reporting was extended so that if no `capability_mapping` exists but `framework_alignment` does, the system can still produce an informative summary — without implying evidence-based coverage.
 
-Validation remains intentionally dependent on `capability_mapping`, reflecting the distinction between declaration and defensibility.
+Validation remains intentionally dependent on `capability_mapping`, reflecting the distinction between **intent**, **declaration**, and **defensibility**.
 
 ## **32. Validation as Explanation, Not Enforcement**
 
@@ -463,6 +492,8 @@ Explain outputs are explicitly designed to:
 - support CI, QA, and institutional review workflows
 - remain deterministic and machine-readable (timestamps aside)
 - avoid making pedagogical, quality, or compliance claims
+
+From **v1.12**, explain outputs may also surface declared **design intent** (when present) as a governance signal, while remaining descriptive rather than evaluative.
 
 This interface is intentionally **separate from build artefacts** such as
 `manifest.json`. While the manifest records *what was built*, the explainability

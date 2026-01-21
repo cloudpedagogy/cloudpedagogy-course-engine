@@ -7,13 +7,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
+import yaml
+
 try:
     from importlib.metadata import version as pkg_version  # type: ignore
 except Exception:  # pragma: no cover
     pkg_version = None  # type: ignore
 
 
-MANIFEST_VERSION = "1.2.0"
+# v1.12: manifest now includes design_intent signals (present + hash [+ optional summary])
+MANIFEST_VERSION = "1.3.0"
 
 
 def _utc_now_iso() -> str:
@@ -36,6 +39,10 @@ def _sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
                 break
             h.update(chunk)
     return h.hexdigest()
+
+
+def _sha256_text(s: str) -> str:
+    return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
 
 def _iter_files(out_dir: Path) -> Iterable[Path]:
@@ -149,22 +156,14 @@ def _framework_alignment_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
     This is the author's declared alignment intent (not coverage evidence).
     It should be recorded in the manifest for auditability, even when no
     lesson-level capability mapping exists.
-
-    IMPORTANT: Depending on the CourseSpec model shape, framework_alignment may live at:
-      - spec.framework_alignment
-      - spec.course.framework_alignment
-      - (dict forms) spec["framework_alignment"] / spec["course"]["framework_alignment"]
     """
-    # 1) Try top-level attribute
     fa = getattr(spec, "framework_alignment", None)
 
-    # 2) Try nested under spec.course
     if fa is None:
         course_obj = getattr(spec, "course", None)
         if course_obj is not None:
             fa = getattr(course_obj, "framework_alignment", None)
 
-    # 3) Try dict-shaped spec
     if fa is None and isinstance(spec, dict):
         fa = spec.get("framework_alignment")
         if fa is None:
@@ -177,7 +176,6 @@ def _framework_alignment_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
 
     out = _to_plain_dict(fa)
 
-    # Last resort: pick known common attributes if present
     if out is None:
         out = {
             "framework_name": getattr(fa, "framework_name", None),
@@ -186,11 +184,9 @@ def _framework_alignment_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
             "notes": getattr(fa, "notes", None),
         }
 
-    # Avoid writing empty/noisy blocks
     if not out:
         return None
 
-    # Optional: normalize domains to plain list if it came back as a custom type
     if "domains" in out and out["domains"] is not None and not isinstance(out["domains"], (list, dict)):
         try:
             out["domains"] = list(out["domains"])
@@ -208,17 +204,14 @@ def _capability_mapping_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
     """
     cap = getattr(spec, "capability_mapping", None)
 
-    # dict-shaped spec fallback
     if cap is None and isinstance(spec, dict):
         cap = spec.get("capability_mapping")
 
     if cap is None:
         return None
 
-    # If someone provided capability_mapping as a plain dict, pass it through
     cap_dict = _to_plain_dict(cap)
     if isinstance(cap, dict) and cap_dict is not None:
-        # keep status consistent with existing behaviour if missing
         cap_dict.setdefault("status", "informational (not enforced)")
         return cap_dict
 
@@ -250,7 +243,6 @@ def _lesson_sources_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
     """
     modules = getattr(spec, "modules", None) or []
 
-    # dict-shaped spec fallback
     if not modules and isinstance(spec, dict):
         modules = spec.get("modules", []) or []
 
@@ -267,11 +259,7 @@ def _lesson_sources_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
             lessons = module_item.get("lessons", []) or []
 
         for lesson_item in lessons:
-            src = (
-                getattr(lesson_item, "source", None)
-                if not isinstance(lesson_item, dict)
-                else lesson_item.get("source")
-            )
+            src = getattr(lesson_item, "source", None) if not isinstance(lesson_item, dict) else lesson_item.get("source")
             if not src:
                 continue
 
@@ -279,12 +267,8 @@ def _lesson_sources_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
                 {
                     "module_id": module_id,
                     "module_title": module_title,
-                    "lesson_id": getattr(lesson_item, "id", None)
-                    if not isinstance(lesson_item, dict)
-                    else lesson_item.get("id"),
-                    "lesson_title": getattr(lesson_item, "title", None)
-                    if not isinstance(lesson_item, dict)
-                    else lesson_item.get("title"),
+                    "lesson_id": getattr(lesson_item, "id", None) if not isinstance(lesson_item, dict) else lesson_item.get("id"),
+                    "lesson_title": getattr(lesson_item, "title", None) if not isinstance(lesson_item, dict) else lesson_item.get("title"),
                     "source": src,
                     "resolved_path": getattr(lesson_item, "source_resolved_path", None)
                     if not isinstance(lesson_item, dict)
@@ -303,6 +287,56 @@ def _lesson_sources_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
         "lessons": lessons_out,
         "status": "informational (not enforced)",
     }
+
+
+def _design_intent_for_manifest(source_course_yml: Optional[Path]) -> Optional[Dict[str, Any]]:
+    """
+    v1.12 / manifest v1.3.0:
+    Record design_intent signals (presence + stable hash) from the canonical course.yml.
+
+    Governance-safe behaviour:
+      - We do NOT interpret or enforce design_intent.
+      - We record a stable hash so reviewers can verify what intent text was used at build time.
+      - We optionally store a short 'summary' field if provided by the author.
+    """
+    if not source_course_yml:
+        return None
+
+    p = Path(source_course_yml)
+    if not p.exists():
+        return None
+
+    try:
+        raw = yaml.safe_load(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+    if not isinstance(raw, dict):
+        return None
+
+    di = raw.get("design_intent")
+    if not di:
+        return {"present": False, "hash_sha256": None}
+
+    # Canonicalise to stable JSON for hashing
+    try:
+        di_json = json.dumps(di, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    except Exception:
+        # Last resort: string representation (still gives *some* stable-ish signal)
+        di_json = str(di)
+
+    block: Dict[str, Any] = {
+        "present": True,
+        "hash_sha256": _sha256_text(di_json),
+    }
+
+    # Optional: include summary if present (small, human-friendly, non-normative)
+    if isinstance(di, dict):
+        summary = di.get("summary")
+        if isinstance(summary, str) and summary.strip():
+            block["summary"] = summary.strip()
+
+    return block
 
 
 def build_manifest(
@@ -345,6 +379,11 @@ def build_manifest(
         },
         "files": build_file_inventory(out_dir, include_hashes=include_hashes, include_sizes=include_sizes),
     }
+
+    # v1.12: Persist design intent signals (presence + stable hash)
+    design_intent = _design_intent_for_manifest(source_course_yml)
+    if design_intent is not None:
+        manifest["design_intent"] = design_intent
 
     # Persist declared framework alignment (metadata, not coverage evidence)
     fw_align = _framework_alignment_for_manifest(spec)
