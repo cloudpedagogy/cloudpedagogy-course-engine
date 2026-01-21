@@ -17,6 +17,8 @@ TOP_LEVEL_KEYS_V18_EXPLAIN = [
     "policies",
     "rendering",
     "capability_mapping",
+    # v1.13: absence signals surfaced in course.yml explain
+    "signals",
     "warnings",
     "errors",
 ]
@@ -51,6 +53,7 @@ profiles:
 # ---------------------------------------------------------------------
 # v1.5: validate --explain --json (policy/profile explain-only)
 # ---------------------------------------------------------------------
+
 
 def test_explain_json_with_preset_does_not_require_manifest(tmp_path: Path):
     """
@@ -169,6 +172,7 @@ def test_explain_json_respects_strict_flag(tmp_path: Path):
 # v1.8: course-engine explain <course.yml> --json (course.yml explainability)
 # ---------------------------------------------------------------------
 
+
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[1]
 
@@ -193,6 +197,9 @@ def test_course_explain_json_schema_keys():
       - `course-engine explain <course.yml> --json` outputs valid JSON
       - includes required top-level keys
       - includes rendering defaults (toc/toc_depth)
+
+    v1.13 extension:
+      - includes top-level `signals` (may be empty, but must be present)
     """
     from course_engine.cli import app
 
@@ -224,9 +231,52 @@ def test_course_explain_json_schema_keys():
     assert payload["rendering"]["quarto"]["toc"] is True
     assert payload["rendering"]["quarto"]["toc_depth"] == 2
 
+    # v1.13: signals surface (may be empty, but must be present + list)
+    assert isinstance(payload["signals"], list)
+
     # warnings/errors arrays
     assert isinstance(payload["warnings"], list)
     assert isinstance(payload["errors"], list)
+
+
+def test_course_explain_signals_shape_and_order():
+    """
+    v1.13 requirement (AC-SIGNAL-003 / AC-SIGNAL-004):
+      - `signals` exists and is a list
+      - each signal contains required keys
+      - signal ordering is deterministic (sorted by id)
+
+    Note: we avoid asserting exact signal *content* here (examples may evolve),
+    only the contract shape and ordering.
+    """
+    from course_engine.cli import app
+
+    course_yml = _sample_course_yml()
+    assert course_yml.exists(), f"Expected sample course.yml to exist at: {course_yml}"
+
+    r = runner.invoke(app, ["explain", str(course_yml), "--json"])
+    assert r.exit_code == 0, r.output
+
+    payload = json.loads(r.output)
+    signals = payload.get("signals")
+    assert isinstance(signals, list), payload
+
+    # Required schema keys per-signal
+    required = {"id", "severity", "summary", "detail", "evidence"}
+
+    for s in signals:
+        assert isinstance(s, dict), s
+        missing = required.difference(s.keys())
+        assert not missing, f"Signal missing required keys: {missing} in {s}"
+        assert s["severity"] in ("info", "warning"), s
+        assert isinstance(s["evidence"], list), s
+
+    # Deterministic ordering: ids are sorted
+    ids = [s.get("id") for s in signals]
+    # If there are signals, ensure they're all strings and ordered.
+    for _id in ids:
+        assert isinstance(_id, str), ids
+    assert ids == sorted(ids), ids
 
 
 def test_course_explain_json_only_runtime_metadata_varies():
@@ -234,6 +284,9 @@ def test_course_explain_json_only_runtime_metadata_varies():
     v1.8 determinism policy:
       - output is deterministic given identical inputs
       - exception: engine.built_at_utc may vary
+
+    v1.13:
+      - signals are included in deterministic comparison (must not vary)
     """
     from course_engine.cli import app
 

@@ -15,6 +15,12 @@ from .model import (
     Lesson,
     Module,
     ReadingItem,
+    # v1.12+ design intent (model layer)
+    DesignIntent,
+    DesignIntentAIPosition,
+    DesignIntentFrameworkReference,
+    DesignIntentPolicyContext,
+    DesignIntentReview,
 )
 
 Audience = Literal["learner", "instructor"]
@@ -104,7 +110,7 @@ class ContentBlockModel(BaseModel):
 
 
 class LessonModel(BaseModel):
-    id: str = Field(pattern=r"^[a-z0-9][a-z0-9\-]*$")
+    id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
 
     # v1.6: title can be omitted if source is provided (we can infer from Markdown H1)
     title: Optional[str] = None
@@ -160,7 +166,7 @@ class LessonModel(BaseModel):
 
 
 class ModuleModel(BaseModel):
-    id: str = Field(pattern=r"^[a-z0-9][a-z0-9\-]*$")
+    id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
     title: str = Field(min_length=1)
     lessons: list[LessonModel] = Field(default_factory=list)
 
@@ -226,7 +232,7 @@ class CapabilityMappingModel(BaseModel):
 
 
 class CourseMetaModel(BaseModel):
-    id: str = Field(pattern=r"^[a-z0-9][a-z0-9\-]*$")
+    id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
     title: str = Field(min_length=1)
     subtitle: Optional[str] = None
     version: str = Field(min_length=1)
@@ -377,6 +383,53 @@ class RootModel(BaseModel):
             notes=self.framework_alignment.notes,
         )
 
+        # v1.12+: Convert design_intent (pydantic) -> model layer (dataclasses)
+        design_intent_obj: DesignIntent | None = None
+        if self.design_intent is not None:
+            ai_pos = None
+            if self.design_intent.ai_position is not None:
+                ai_pos = DesignIntentAIPosition(
+                    assessments=self.design_intent.ai_position.assessments,
+                    learning_activities=self.design_intent.ai_position.learning_activities,
+                )
+
+            framework_refs = [
+                DesignIntentFrameworkReference(
+                    name=fr.name,
+                    version=fr.version,
+                    alignment_type=fr.alignment_type,
+                    notes=fr.notes,
+                )
+                for fr in self.design_intent.framework_references
+            ]
+
+            policy_ctx = [
+                DesignIntentPolicyContext(
+                    title=pc.title,
+                    scope=pc.scope,
+                    url=pc.url,
+                    notes=pc.notes,
+                )
+                for pc in self.design_intent.policy_context
+            ]
+
+            review = None
+            if self.design_intent.review_and_evolution is not None:
+                review = DesignIntentReview(
+                    last_reviewed=self.design_intent.review_and_evolution.last_reviewed,
+                    review_cycle=self.design_intent.review_and_evolution.review_cycle,
+                    reflection_prompt=self.design_intent.review_and_evolution.reflection_prompt,
+                )
+
+            design_intent_obj = DesignIntent(
+                summary=self.design_intent.summary,
+                ai_position=ai_pos,
+                roles_and_responsibilities=dict(self.design_intent.roles_and_responsibilities),
+                framework_references=framework_refs,
+                policy_context=policy_ctx,
+                review_and_evolution=review,
+            )
+
         return CourseSpec(
             id=self.course.id,
             title=self.course.title,
@@ -386,11 +439,14 @@ class RootModel(BaseModel):
             # existing flat fields (keep)
             framework_name=self.framework_alignment.framework_name,
             domains=list(self.framework_alignment.domains),
-            # new structured field (v1.6)
-            framework_alignment=fw,
+            # non-default fields
             formats=self.outputs.formats,
             theme=self.outputs.theme,
             toc=self.outputs.toc,
+            # v1.12+ optional governance metadata
+            design_intent=design_intent_obj,
+            # new structured field (v1.6)
+            framework_alignment=fw,
             capability_mapping=capability_mapping,
             modules=modules,
         )
@@ -413,33 +469,46 @@ def _preflight_course_dict(data: dict) -> None:
     # Common legacy/alternate layouts
     if "modules" in data and "structure" not in data:
         raise ValueError(
-            "Invalid course.yml structure: found top-level 'modules'.\n"
-            "Course Engine expects modules under:\n"
-            "  structure:\n"
-            "    modules:\n"
-            "Move 'modules:' under 'structure:' and try again."
+            """Invalid course.yml structure: found top-level 'modules'.
+
+Course Engine expects modules under:
+
+  structure:
+    modules:
+
+Move 'modules:' under 'structure:' and try again.
+"""
         )
 
     if "content" in data:
         raise ValueError(
-            "Unsupported key in course.yml: found top-level 'content:'.\n"
-            "Course Engine v1.6 expects lesson content to be provided via:\n"
-            "  structure.modules[].lessons[].content_blocks\n"
-            "or\n"
-            "  structure.modules[].lessons[].source\n"
-            "Remove 'content:' and reference files directly in lesson.source."
+            """Unsupported key in course.yml: found top-level 'content:'.
+
+Course Engine v1.6 expects lesson content to be provided via:
+
+  structure.modules[].lessons[].content_blocks
+
+or
+
+  structure.modules[].lessons[].source
+
+Remove 'content:' and reference files directly in lesson.source.
+"""
         )
 
     struct = data.get("structure")
     if struct is None or not isinstance(struct, dict):
         raise ValueError(
-            "Missing required key: 'structure'.\n"
-            "Expected:\n"
-            "  structure:\n"
-            "    modules:\n"
-            "      - id: ...\n"
-            "        title: ...\n"
-            "        lessons: ..."
+            """Missing required key: 'structure'.
+
+Expected:
+
+  structure:
+    modules:
+      - id: ...
+        title: ...
+        lessons: ...
+"""
         )
 
     mods = struct.get("modules")

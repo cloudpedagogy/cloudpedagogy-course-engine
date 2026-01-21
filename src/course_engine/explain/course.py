@@ -12,6 +12,7 @@ import yaml
 
 from ..schema import validate_course_dict
 from ..utils.lesson_sources import load_lesson_source
+from ..utils.signals import compute_signals  # v1.13
 
 
 EXPLAIN_SCHEMA_VERSION = "1.0"
@@ -98,6 +99,21 @@ def _sort_errors(es: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         return (code, lesson_id, path)
 
     return sorted(es, key=key)
+
+
+def _sort_signals(ss: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Deterministic ordering for signals.
+
+    Primary: id
+    Secondary: severity
+    """
+    def key(s: Dict[str, Any]) -> Tuple[str, str]:
+        sid = s.get("id") or ""
+        sev = s.get("severity") or ""
+        return (sid, sev)
+
+    return sorted(ss, key=key)
 
 
 def _block_source_summary(block: Any) -> Dict[str, Any]:
@@ -270,6 +286,7 @@ def explain_course_yml(
             capability_mapping_obj=capability_mapping_obj,
             warnings=warnings,
             errors=errors,
+            signals_obj=[],  # always present
         )
 
     data_bytes, read_err = _read_file_bytes(p)
@@ -293,6 +310,7 @@ def explain_course_yml(
             capability_mapping_obj=capability_mapping_obj,
             warnings=warnings,
             errors=errors,
+            signals_obj=[],
         )
 
     input_obj["bytes"] = len(data_bytes)
@@ -314,6 +332,7 @@ def explain_course_yml(
             capability_mapping_obj=capability_mapping_obj,
             warnings=warnings,
             errors=errors,
+            signals_obj=[],
         )
 
     try:
@@ -332,7 +351,11 @@ def explain_course_yml(
             capability_mapping_obj=capability_mapping_obj,
             warnings=warnings,
             errors=errors,
+            signals_obj=[],
         )
+
+    # v1.13: compute absence signals (informational, deterministic)
+    signals_obj = _sort_signals([s.to_dict() for s in compute_signals(spec)])
 
     # -------------------------
     # Course block
@@ -496,6 +519,7 @@ def explain_course_yml(
         capability_mapping_obj=capability_mapping_obj,
         warnings=warnings,
         errors=errors,
+        signals_obj=signals_obj,
     )
 
 
@@ -511,6 +535,7 @@ def _finalise_explain(
     capability_mapping_obj: Dict[str, Any],
     warnings: List[ExplainWarning],
     errors: List[ExplainError],
+    signals_obj: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     out = {
         "explain_schema_version": EXPLAIN_SCHEMA_VERSION,
@@ -527,6 +552,8 @@ def _finalise_explain(
         "policies": policies_obj,
         "rendering": rendering_obj,
         "capability_mapping": capability_mapping_obj,
+        # v1.13: always present
+        "signals": _sort_signals(list(signals_obj or [])),
         "warnings": _sort_warnings([w.as_dict() for w in warnings]),
         "errors": _sort_errors([e.as_dict() for e in errors]),
     }

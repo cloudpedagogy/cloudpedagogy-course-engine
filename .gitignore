@@ -46,3 +46,6 @@ Thumbs.db
 /demo/
 /scripts/
 split_lessons.py
+
+# local scratch outputs
+/tmp-manifest-check/

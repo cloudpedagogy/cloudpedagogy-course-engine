@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 
 def _utc_now_z() -> str:
@@ -27,6 +27,21 @@ def _count_lesson_qmd_files(manifest_files: List[Dict[str, Any]]) -> int:
         if p.startswith("lessons/") and p.endswith(".qmd"):
             n += 1
     return n
+
+
+def _sort_signals(signals: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Deterministic ordering for signal lists.
+
+    We sort by (id, severity) to keep explain output stable for identical inputs.
+    """
+
+    def key(s: Dict[str, Any]) -> Tuple[str, str]:
+        sid = s.get("id") or ""
+        sev = s.get("severity") or ""
+        return (sid, sev)
+
+    return sorted(signals, key=key)
 
 
 def explain_dist_dir(
@@ -91,7 +106,7 @@ def explain_dist_dir(
                 "missing": 0,
             },
         },
-        # NEW: surfaced governance metadata (manifest-backed when present)
+        # surfaced governance metadata (manifest-backed when present)
         "framework_alignment": {},
         "design_intent": {
             "present": False,
@@ -125,6 +140,8 @@ def explain_dist_dir(
             "summary": {},
             "details": None,
         },
+        # v1.13: absence signals (always present; copied from manifest if available)
+        "signals": [],
         "warnings": [],
         "errors": [],
     }
@@ -231,12 +248,12 @@ def explain_dist_dir(
     payload["sources"]["counts"]["missing"] = int(missing)
 
     # Structure counts (artefact-level best-effort)
-    lesson_count = _count_lesson_qmd_files(files)
+    lesson_count = _count_lesson_qmd_files(files if isinstance(files, list) else [])
     payload["structure"]["counts"]["lessons"] = int(lesson_count)
     payload["structure"]["counts"]["modules"] = 0
     payload["structure"]["counts"]["content_blocks"] = 0
 
-    # Governance signals copied from manifest (if present)
+    # Governance metadata copied from manifest (if present)
     fw = manifest.get("framework_alignment")
     if isinstance(fw, dict) and fw:
         payload["framework_alignment"] = fw
@@ -244,6 +261,14 @@ def explain_dist_dir(
     di = manifest.get("design_intent")
     if isinstance(di, dict) and di:
         payload["design_intent"] = di
+
+    # v1.13: signals copied from manifest (state-at-build-time)
+    sigs = manifest.get("signals")
+    if isinstance(sigs, list):
+        sig_dicts = [s for s in sigs if isinstance(s, dict)]
+        payload["signals"] = _sort_signals(sig_dicts)
+    else:
+        payload["signals"] = []
 
     # Capability mapping (if present in manifest)
     cap = manifest.get("capability_mapping")

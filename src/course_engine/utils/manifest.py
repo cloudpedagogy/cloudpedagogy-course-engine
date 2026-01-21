@@ -14,9 +14,12 @@ try:
 except Exception:  # pragma: no cover
     pkg_version = None  # type: ignore
 
+# v1.13: absence signals recorded in manifest
+from .signals import compute_signals
 
-# v1.12: manifest now includes design_intent signals (present + hash [+ optional summary])
-MANIFEST_VERSION = "1.3.0"
+# v1.12: manifest includes design_intent signals (present + hash [+ optional summary])
+# v1.13: manifest includes absence signals (signals[])
+MANIFEST_VERSION = "1.4.0"
 
 
 def _utc_now_iso() -> str:
@@ -339,6 +342,24 @@ def _design_intent_for_manifest(source_course_yml: Optional[Path]) -> Optional[D
     return block
 
 
+def _signals_for_manifest(spec: Any) -> list[dict[str, Any]]:
+    """
+    v1.13 / manifest v1.4.0:
+    Compute absence signals from the validated CourseSpec.
+
+    Governance-safe behaviour:
+      - Signals are informational/advisory only.
+      - Signals are recorded as state-at-build-time (not live inference).
+      - If we cannot compute signals, return [] rather than failing the build.
+    """
+    try:
+        signals = compute_signals(spec)  # expects CourseSpec; our build pipeline provides it
+        return [s.to_dict() for s in signals]
+    except Exception:
+        # Deliberately non-blocking: manifest should not fail if signals can't be computed.
+        return []
+
+
 def build_manifest(
     *,
     spec: Any,
@@ -377,6 +398,8 @@ def build_manifest(
             "format": output_format,
             "out_dir": str(out_dir),
         },
+        # v1.13: first-class absence signals (non-blocking, informational)
+        "signals": _signals_for_manifest(spec),
         "files": build_file_inventory(out_dir, include_hashes=include_hashes, include_sizes=include_sizes),
     }
 
@@ -442,6 +465,8 @@ def refresh_manifest(
     """
     Refresh file inventory (and optionally hashes) in an existing manifest.json.
     Does not require access to the original CourseSpec.
+
+    v1.13: We do NOT recompute signals during refresh. Signals are state-at-build-time.
     """
     out_dir = Path(out_dir)
     manifest_path = out_dir / "manifest.json"
@@ -481,6 +506,8 @@ def update_manifest_after_render(
     """
     Add a render record and refresh inventory after a successful render.
     If manifest doesn't exist, raises FileNotFoundError (by design).
+
+    v1.13: We do NOT recompute signals here. Signals are state-at-build-time.
     """
     out_dir = Path(out_dir)
     manifest_path = out_dir / "manifest.json"
