@@ -1,3 +1,5 @@
+# tests/test_policy_loading.py
+
 from __future__ import annotations
 
 import json
@@ -73,6 +75,84 @@ def test_loads_minimal_json_policy(tmp_path: Path):
     # Assert
     assert policy["policy_version"] == 1
     assert "baseline" in policy["profiles"]
+
+
+def test_loads_policy_with_signals_block(tmp_path: Path):
+    """
+    v1.13+: A policy/profile may include a `signals:` block.
+    Loading should succeed as long as the block is valid.
+    """
+    p = tmp_path / "policy.yml"
+    _write_yaml(
+        p,
+        """
+policy_version: 1
+signals:
+  default_action: info
+  overrides:
+    SIG-INTENT-001: warn
+profiles:
+  baseline:
+    rules:
+      require_coverage:
+        min_domains: 1
+    signals:
+      default_action: warn
+      overrides:
+        SIG-META-001: error
+      ignore:
+        - SIG-IGNORE-001
+""".lstrip(),
+    )
+
+    from course_engine.utils.policy import load_policy_file
+
+    policy = load_policy_file(p)
+
+    assert policy["policy_version"] == 1
+
+    # Top-level signals contract
+    assert "signals" in policy
+    assert policy["signals"]["default_action"] == "info"
+    assert policy["signals"]["overrides"]["SIG-INTENT-001"] == "warn"
+
+    # Profile-level signals contract
+    assert "profiles" in policy
+    assert "baseline" in policy["profiles"]
+    baseline = policy["profiles"]["baseline"]
+    assert "signals" in baseline
+    assert baseline["signals"]["default_action"] == "warn"
+    assert baseline["signals"]["overrides"]["SIG-META-001"] == "error"
+    assert baseline["signals"]["ignore"] == ["SIG-IGNORE-001"]
+
+
+def test_rejects_invalid_signal_action(tmp_path: Path):
+    """
+    v1.13+: Invalid signal actions should be rejected at load time.
+    """
+    p = tmp_path / "policy.yml"
+    _write_yaml(
+        p,
+        """
+policy_version: 1
+signals:
+  default_action: explode
+profiles:
+  baseline:
+    rules:
+      require_coverage:
+        min_domains: 1
+""".lstrip(),
+    )
+
+    from course_engine.utils.policy import load_policy_file
+
+    with pytest.raises(ValueError) as e:
+        load_policy_file(p)
+
+    msg = str(e.value).lower()
+    assert "default_action" in msg
+    assert "ignore|info|warn|error" in msg
 
 
 def test_rejects_missing_profiles(tmp_path: Path):

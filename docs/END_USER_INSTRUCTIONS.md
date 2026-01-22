@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.12**
+**course-engine v1.13.1**
 
 ---
 
@@ -26,6 +26,8 @@ From v1.1 onwards, `course-engine` supports **optional capability mapping metada
 From **v1.6**, it supports **authoring lessons as separate source files**, with lesson provenance recorded in the build manifest.
 
 From **v1.12**, it supports **explicit design intent metadata**, enabling authors to record rationale, AI positioning, and governance context without affecting build or validation behaviour.
+
+From **v1.13**, the engine also supports **explicit structural AI scoping metadata**, allowing authors to record inspectable AI use boundaries separately from narrative design intent.
 
 ---
 
@@ -199,6 +201,59 @@ Design intent is:
 
 ---
 
+## 7.1 AI scoping metadata (v1.13)
+
+From v1.13 onward, courses may optionally declare **structural AI scoping metadata** using an `ai_scoping` block in `course.yml`.
+
+AI scoping is used to record **explicit, inspectable boundaries** around how AI tools may or may not be used within a course.
+
+AI scoping is declarative metadata, not a policy or rule set, and is never enforced by the engine itself.
+
+This is intentionally separated from `design_intent`:
+
+- `design_intent` explains *why* AI is positioned a certain way
+- `ai_scoping` records *what is permitted, restricted, or expected*
+
+### What AI scoping captures
+
+AI scoping may include:
+- permitted uses of AI tools
+- explicitly disallowed uses
+- disclosure expectations
+- data handling constraints
+- decision-making boundaries
+
+Example:
+
+```yaml
+ai_scoping:
+  scope_summary: >
+    AI tools may support learning activities and formative drafting,
+    but must not be used to generate summative assessment submissions.
+  permitted_uses:
+    - Learning activities and exploratory analysis
+    - Formative drafting and planning
+  not_permitted:
+    - Generating final summative assessment submissions
+    - Entering sensitive or personal data into AI tools
+```
+
+### How AI scoping is used
+
+AI scoping is:
+
+- **optional**
+- **structural (machine-readable)**
+- **recorded in `manifest.json`**
+- **used to suppress advisory governance signals** about missing AI boundaries
+- **not enforced automatically**
+- **interpreted only via policy if an institution chooses to do so**
+
+This supports clearer QA, audit, and review conversations **without constraining pedagogy**.
+
+
+---
+
 ## 8. Core commands
 
 ### Build
@@ -226,13 +281,20 @@ course-engine explain dist/my-course --format text
 course-engine explain dist/my-course --format json
 ```
 
-Explain surfaces:
+Explain surfaces (artefact-level, read-only):
 
 - course identity
 - build provenance
 - framework alignment
 - capability mapping presence
 - **design intent summary (v1.12)**
+
+Explain does **not** compute, emit, or evaluate governance signals.
+
+Governance signals are:
+- computed at build time,
+- recorded in `manifest.json`,
+- interpreted during validation (not explain-only runs).
 
 ---
 
@@ -244,6 +306,8 @@ All behaviour remains unchanged from earlier versions:
 - Reporting summarises declared coverage
 - Validation checks defensibility using explicit policies
 - Design intent is **not** validated
+
+From v1.13 onward, governance signals and AI scoping improve validation clarity without changing capability mapping requirements or enforcement behaviour.
 
 ---
 

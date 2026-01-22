@@ -7,6 +7,7 @@ from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from .model import (
+    AIScoping,
     CapabilityDomainMapping,
     CapabilityMapping,
     ContentBlock,
@@ -15,7 +16,6 @@ from .model import (
     Lesson,
     Module,
     ReadingItem,
-    # v1.12+ design intent (model layer)
     DesignIntent,
     DesignIntentAIPosition,
     DesignIntentFrameworkReference,
@@ -27,15 +27,11 @@ Audience = Literal["learner", "instructor"]
 BlockType = Literal["markdown", "callout", "quiz", "reflection", "submission"]
 
 
-# -------------------------
-# v1.6 lesson source helpers
-# -------------------------
 def _sha256_text(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
 
 def _infer_title_from_md(md: str) -> Optional[str]:
-    # First Markdown H1 only: "# Title"
     for line in md.splitlines():
         line = line.strip()
         if line.startswith("# "):
@@ -45,10 +41,6 @@ def _infer_title_from_md(md: str) -> Optional[str]:
 
 
 def _read_lesson_source(base_dir: Path, source: str) -> tuple[str, str, str]:
-    """
-    Returns (markdown_body, sha256, resolved_path_str).
-    Resolves relative paths against base_dir.
-    """
     src = Path(source)
     resolved = src if src.is_absolute() else (base_dir / src)
 
@@ -62,9 +54,6 @@ def _read_lesson_source(base_dir: Path, source: str) -> tuple[str, str, str]:
     return md, _sha256_text(md), str(resolved)
 
 
-# -------------------------
-# Pydantic models
-# -------------------------
 class ReadingItemModel(BaseModel):
     title: str = Field(min_length=1)
     url: Optional[str] = None
@@ -73,21 +62,16 @@ class ReadingItemModel(BaseModel):
 
 class ContentBlockModel(BaseModel):
     type: BlockType
-
-    # shared
     audience: Audience = "learner"
 
-    # markdown/callout
     body: Optional[str] = None
     title: Optional[str] = None
-    style: Optional[str] = None  # note|warning|tip|important
+    style: Optional[str] = None
 
-    # quiz/reflection/submission
     prompt: Optional[str] = None
     options: list[str] = Field(default_factory=list)
 
-    # quiz-only (render-only in v0.3)
-    answer: Optional[int] = None  # 0-based index into options
+    answer: Optional[int] = None
     solution: Optional[str] = None
 
     def validate_semantics(self) -> None:
@@ -111,21 +95,13 @@ class ContentBlockModel(BaseModel):
 
 class LessonModel(BaseModel):
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
-
-    # v1.6: title can be omitted if source is provided (we can infer from Markdown H1)
     title: Optional[str] = None
-
-    # v1.7: optional display label for UI/nav ("5.3.6", "A", "Key Takeaways", etc.)
-    # This does not affect IDs or filenames.
     display_label: Optional[str] = None
 
     learning_objectives: list[str] = Field(default_factory=list)
-
-    # v1.6: either inline blocks OR external source
     content_blocks: list[ContentBlockModel] = Field(default_factory=list)
     source: Optional[str] = None
 
-    # metadata
     duration: Optional[int] = Field(default=None, ge=1)
     tags: list[str] = Field(default_factory=list)
     prerequisites: list[str] = Field(default_factory=list)
@@ -133,23 +109,12 @@ class LessonModel(BaseModel):
 
     @model_validator(mode="after")
     def _check_source_or_blocks(self) -> "LessonModel":
-        """
-        v1.6 rule set:
-          - source XOR content_blocks (cannot have both)
-          - preferred: require one of them
-          - compatibility: allow "minimal lesson" with neither, as long as title exists
-            (we will inject a placeholder markdown block at build time)
-
-        v1.7:
-          - display_label is optional and independent (may be present in any case)
-        """
         has_source = bool(self.source)
         has_blocks = bool(self.content_blocks)
 
         if has_source and has_blocks:
             raise ValueError("Lesson cannot have both 'source' and 'content_blocks'")
 
-        # If neither source nor blocks provided, allow minimal lesson ONLY if title exists
         if not has_source and not has_blocks:
             if not self.title or not self.title.strip():
                 raise ValueError(
@@ -157,7 +122,6 @@ class LessonModel(BaseModel):
                 )
             return self
 
-        # If no source, title is required
         if not has_source:
             if not self.title or not self.title.strip():
                 raise ValueError("Lesson 'title' is required when 'source' is not provided")
@@ -218,6 +182,18 @@ class DesignIntentModel(BaseModel):
     review_and_evolution: Optional[DesignIntentReviewModel] = None
 
 
+# -------------------------
+# v1.13+: AI scoping schema
+# -------------------------
+class AIScopingModel(BaseModel):
+    scope_summary: Optional[str] = None
+    permitted_uses: list[str] = Field(default_factory=list)
+    not_permitted: list[str] = Field(default_factory=list)
+    disclosure_expectations: Optional[str] = None
+    data_handling: Optional[str] = None
+    decision_boundaries: Optional[str] = None
+
+
 class CapabilityDomainMappingModel(BaseModel):
     label: Optional[str] = None
     intent: Optional[str] = None
@@ -242,6 +218,10 @@ class CourseMetaModel(BaseModel):
 class RootModel(BaseModel):
     course: CourseMetaModel
     design_intent: Optional[DesignIntentModel] = None
+
+    # v1.13+: AI scoping at top-level (sibling to design_intent)
+    ai_scoping: Optional[AIScopingModel] = None
+
     framework_alignment: FrameworkAlignmentModel
     capability_mapping: Optional[CapabilityMappingModel] = None
     outputs: OutputsModel = Field(default_factory=OutputsModel)
@@ -263,7 +243,6 @@ class RootModel(BaseModel):
                 source_resolved: Optional[str] = None
                 source_path: Optional[str] = lm.source
 
-                # ---- Case 1: lesson.source (v1.6) ----
                 if lm.source:
                     md, h, resolved = _read_lesson_source(base_dir, lm.source)
                     source_sha256 = h
@@ -280,7 +259,6 @@ class RootModel(BaseModel):
                             f"Add 'title' in course.yml or include a '# Heading' in the source file."
                         )
 
-                    # One markdown block from source file
                     ContentBlockModel(type="markdown", body=md).validate_semantics()
                     blocks = [
                         ContentBlock(
@@ -296,7 +274,6 @@ class RootModel(BaseModel):
                         )
                     ]
 
-                # ---- Case 2: inline content_blocks ----
                 elif lm.content_blocks:
                     for b in lm.content_blocks:
                         b.validate_semantics()
@@ -318,9 +295,7 @@ class RootModel(BaseModel):
 
                     lesson_title = lesson_title or lm.title  # type: ignore[assignment]
 
-                # ---- Case 3: minimal lesson (compatibility) ----
                 else:
-                    # Inject a placeholder markdown body so downstream generators always have content.
                     placeholder = "Content pending."
                     ContentBlockModel(type="markdown", body=placeholder).validate_semantics()
                     blocks = [
@@ -375,7 +350,6 @@ class RootModel(BaseModel):
                 },
             )
 
-        # Persist declared framework_alignment in both flattened + structured form
         fw = FrameworkAlignment(
             framework_name=self.framework_alignment.framework_name,
             domains=list(self.framework_alignment.domains),
@@ -383,7 +357,6 @@ class RootModel(BaseModel):
             notes=self.framework_alignment.notes,
         )
 
-        # v1.12+: Convert design_intent (pydantic) -> model layer (dataclasses)
         design_intent_obj: DesignIntent | None = None
         if self.design_intent is not None:
             ai_pos = None
@@ -430,43 +403,40 @@ class RootModel(BaseModel):
                 review_and_evolution=review,
             )
 
+        ai_scoping_obj: AIScoping | None = None
+        if self.ai_scoping is not None:
+            ai_scoping_obj = AIScoping(
+                scope_summary=self.ai_scoping.scope_summary,
+                permitted_uses=list(self.ai_scoping.permitted_uses),
+                not_permitted=list(self.ai_scoping.not_permitted),
+                disclosure_expectations=self.ai_scoping.disclosure_expectations,
+                data_handling=self.ai_scoping.data_handling,
+                decision_boundaries=self.ai_scoping.decision_boundaries,
+            )
+
         return CourseSpec(
             id=self.course.id,
             title=self.course.title,
             subtitle=self.course.subtitle,
             version=self.course.version,
             language=self.course.language,
-            # existing flat fields (keep)
             framework_name=self.framework_alignment.framework_name,
             domains=list(self.framework_alignment.domains),
-            # non-default fields
             formats=self.outputs.formats,
             theme=self.outputs.theme,
             toc=self.outputs.toc,
-            # v1.12+ optional governance metadata
             design_intent=design_intent_obj,
-            # new structured field (v1.6)
+            ai_scoping=ai_scoping_obj,
             framework_alignment=fw,
             capability_mapping=capability_mapping,
             modules=modules,
         )
 
 
-# -------------------------
-# User-friendly guardrails
-# -------------------------
 def _preflight_course_dict(data: dict) -> None:
-    """
-    v1.6: Fail fast with clear messages for common authoring mistakes.
-
-    Note:
-      - structure.modules MAY be an empty list (allowed for tests / minimal specs)
-      - generators may still choose to enforce "at least one module" elsewhere if desired
-    """
     if not isinstance(data, dict):
         raise ValueError("course.yml must parse to a YAML mapping (top-level object).")
 
-    # Common legacy/alternate layouts
     if "modules" in data and "structure" not in data:
         raise ValueError(
             """Invalid course.yml structure: found top-level 'modules'.
@@ -517,10 +487,6 @@ Expected:
 
 
 def validate_course_dict(data: dict, *, source_course_yml: Optional[Path] = None) -> CourseSpec:
-    """
-    source_course_yml (optional) lets the validator resolve lesson.source paths
-    relative to the course.yml location. If omitted, Path.cwd() is used.
-    """
     try:
         _preflight_course_dict(data)
         root = RootModel.model_validate(data)

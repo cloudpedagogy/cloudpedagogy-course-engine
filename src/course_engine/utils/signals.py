@@ -14,7 +14,6 @@ Notes:
 
 from __future__ import annotations
 
-
 from ..model import CourseSpec, Signal
 
 
@@ -41,6 +40,18 @@ def _is_thin_mapping(mapping: object) -> bool:
     return False
 
 
+def _has_ai_scoping(course: CourseSpec) -> bool:
+    """
+    v1.13+ helper: determine whether structural AI scoping metadata exists.
+
+    We deliberately keep this conservative and structural:
+    - Presence of the ai_scoping object is enough.
+    - We do not judge completeness/quality.
+    """
+    sc = getattr(course, "ai_scoping", None)
+    return sc is not None
+
+
 def compute_signals(course: CourseSpec) -> list[Signal]:
     """
     Compute v1.13 absence signals for a validated CourseSpec.
@@ -53,11 +64,10 @@ def compute_signals(course: CourseSpec) -> list[Signal]:
     - SIG-INTENT-001: design intent missing
     - SIG-MAP-001: alignment declared without capability mapping
     - SIG-MAP-002: capability mapping present but thin
-    - SIG-AI-001: AI positioning declared without separate structural scoping metadata (limited in v1.13)
+    - SIG-AI-001: AI positioning declared without separate structural scoping metadata
     """
     signals: list[Signal] = []
 
-    # Design intent is now a first-class field on CourseSpec (v1.12+ wiring).
     design_intent = course.design_intent
 
     # --- SIG-INTENT-001: Design intent missing (info)
@@ -120,20 +130,25 @@ def compute_signals(course: CourseSpec) -> list[Signal]:
             )
 
     # --- SIG-AI-001: AI positioning declared without structural scoping metadata (info)
-    # v1.13 minimal implementation: the schema provides design_intent.ai_position, but no separate
-    # structured AI scoping fields exist. We treat this as a review prompt, not a failure.
-    if design_intent is not None and design_intent.ai_position is not None:
+    # Updated wiring:
+    # - If design_intent.ai_position is present AND ai_scoping is absent => emit SIG-AI-001.
+    # - If ai_scoping exists => do NOT emit (structural boundary metadata exists).
+    if (
+        design_intent is not None
+        and design_intent.ai_position is not None
+        and not _has_ai_scoping(course)
+    ):
         signals.append(
             Signal(
                 id="SIG-AI-001",
                 severity="info",
                 summary="AI positioning declared without structural scoping metadata",
                 detail=(
-                    "Design intent includes AI positioning (design_intent.ai_position), but there is no separate, "
-                    "structured AI scoping metadata in the course specification. This may be acceptable, but "
-                    "reviewers may want explicit boundaries for traceability."
+                    "Design intent includes AI positioning (design_intent.ai_position), but the course does not "
+                    "declare a separate ai_scoping section. This may be acceptable, but reviewers may want explicit "
+                    "scope/boundary metadata for traceability."
                 ),
-                evidence=["course.yml:design_intent.ai_position"],
+                evidence=["course.yml:design_intent.ai_position", "course.yml:ai_scoping"],
                 review_question="Are the scope and boundaries of AI use clearly recorded for review and assurance?",
                 source="course.yml",
                 tags=["ai", "intent"],

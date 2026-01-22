@@ -1,17 +1,25 @@
 policy_version: 1
-policy_id: "preset:strict-ci"
-policy_name: "Strict CI Validation Policy (Example Preset)"
-owner: "Course Engine (preset)"
-last_updated: "2026-01-09"
+policy_id: preset:strict-ci
+policy_name: Strict CI Validation Policy (Example Preset)
+owner: Course Engine (preset)
+last_updated: "2026-01-21"
 notes: >
   Example preset intended for automated QA gates (CI).
-  This remains structural and framework-agnostic. Passing does not imply quality or compliance.
+  Structural and framework-agnostic. Passing does not imply quality or compliance.
 
-default_profile: "strict-ci"
+default_profile: strict-ci
+
+# v1.13+: policy-driven handling of governance "absence signals"
+# One of: ignore | info | warn | error
+# This applies to all profiles unless overridden at profile level.
+signals:
+  default_action: warn
+  overrides: {}
+  ignore: []
 
 profiles:
   baseline:
-    description: "Minimal baseline for comparison."
+    description: Minimal baseline for comparison.
     rules:
       require_coverage:
         min_domains: 1
@@ -20,9 +28,11 @@ profiles:
       min_coverage_items_per_domain: 0
       forbid_empty_domains: false
 
+    # baseline inherits top-level signals (warn-by-default, no overrides)
+
   strict-ci:
-    description: "High defensibility thresholds suitable for CI gating."
-    extends: "baseline"
+    description: High defensibility thresholds suitable for CI gating.
+    extends: baseline
     rules:
       require_coverage:
         min_domains: 6
@@ -30,3 +40,14 @@ profiles:
         min_items_per_domain: 2
       min_coverage_items_per_domain: 2
       forbid_empty_domains: true
+
+    # Strict CI: treat key absence signals as release blockers
+    signals:
+      default_action: warn
+      overrides:
+        SIG-INTENT-001: error
+        SIG-FRAMEWORK-001: error
+        SIG-ASSESS-001: error
+        # Intentionally warn-only to avoid blocking CI on optional enrichment metadata
+        SIG-ATTR-001: warn
+      ignore: []

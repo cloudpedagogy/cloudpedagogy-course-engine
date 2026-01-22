@@ -2,7 +2,7 @@ policy_version: 1
 policy_id: "preset:higher-ed-example"
 policy_name: "Higher Education Validation Policy (Example Preset)"
 owner: "Course Engine (preset)"
-last_updated: "2026-01-09"
+last_updated: "2026-01-21"
 notes: >
   Example preset intended for higher education QA / governance workflows.
   This is not a compliance standard and does not encode any framework semantics.
@@ -21,6 +21,17 @@ profiles:
       min_coverage_items_per_domain: 0
       forbid_empty_domains: false
 
+    # v1.13: policy-driven handling of governance "absence signals"
+    # One of: ignore | info | warn | error
+    signals:
+      default_action: "warn"
+      overrides:
+        SIG-INTENT-001: "warn"
+        SIG-FRAMEWORK-001: "warn"
+        SIG-ASSESS-001: "warn"
+        SIG-ATTR-001: "warn"
+      ignore: []
+
   qa-lite:
     description: "Routine publishing / QA review thresholds (non-judgemental)."
     extends: "baseline"
@@ -32,6 +43,16 @@ profiles:
       min_coverage_items_per_domain: 1
       forbid_empty_domains: false
 
+    # QA-lite: nudge strongly, but don't hard-fail routine publishing by default
+    signals:
+      default_action: "warn"
+      overrides:
+        SIG-INTENT-001: "warn"        # encourage design_intent for traceability
+        SIG-FRAMEWORK-001: "warn"     # encourage declared framework alignment
+        SIG-ASSESS-001: "warn"        # encourage assessment signalling
+        SIG-ATTR-001: "warn"          # encourage attribution/citation guidance
+      ignore: []
+
   strict-ci:
     description: "CI gate thresholds for releases (still structural, not quality scoring)."
     extends: "qa-lite"
@@ -42,3 +63,13 @@ profiles:
         min_items_per_domain: 2
       min_coverage_items_per_domain: 2
       forbid_empty_domains: true
+
+    # Strict CI: treat key absence signals as release blockers
+    signals:
+      default_action: "warn"
+      overrides:
+        SIG-INTENT-001: "error"
+        SIG-FRAMEWORK-001: "error"
+        SIG-ASSESS-001: "error"
+        SIG-ATTR-001: "warn"
+      ignore: []

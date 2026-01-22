@@ -9,7 +9,7 @@ from typing import Dict, List, Literal, Optional
 Audience = Literal["learner", "instructor"]
 ContentBlockType = Literal["markdown", "callout", "quiz", "reflection", "submission"]
 
-# v1.13: absence signalling
+# v1.13: absence signalling (computed facts)
 SignalSeverity = Literal["info", "warning"]
 
 
@@ -55,6 +55,35 @@ class Signal:
             "source": self.source,
             "tags": list(self.tags),
         }
+
+
+# -------------------------
+# v1.13+: signal policy interpretation (governance layer)
+# -------------------------
+
+SignalAction = Literal["ignore", "info", "warn", "error"]
+
+
+@dataclass(frozen=True)
+class SignalsPolicy:
+    """
+    v1.13+: Policy rules for interpreting governance signals.
+
+    This does NOT affect signal computation.
+    It defines how signals are surfaced or escalated during
+    validation workflows.
+    """
+
+    default_action: SignalAction = "info"
+    overrides: Dict[str, SignalAction] = field(default_factory=dict)
+    ignore: List[str] = field(default_factory=list)
+
+    def action_for(self, signal_id: str) -> SignalAction:
+        if signal_id in self.ignore:
+            return "ignore"
+        if signal_id in self.overrides:
+            return self.overrides[signal_id]
+        return self.default_action
 
 
 # -------------------------
@@ -111,6 +140,28 @@ class DesignIntent:
 
 
 # -------------------------
+# v1.13+: AI scoping (governance layer)
+# -------------------------
+
+@dataclass(frozen=True)
+class AIScoping:
+    """
+    v1.13+: Structural AI scoping metadata (informational only).
+
+    Purpose:
+    - make AI scope/boundaries explicit for review/audit
+    - support absence signalling (e.g., SIG-AI-001)
+    - NO enforcement, NO compliance claims
+    """
+    scope_summary: Optional[str] = None
+    permitted_uses: List[str] = field(default_factory=list)
+    not_permitted: List[str] = field(default_factory=list)
+    disclosure_expectations: Optional[str] = None
+    data_handling: Optional[str] = None
+    decision_boundaries: Optional[str] = None
+
+
+# -------------------------
 # course content structures
 # -------------------------
 
@@ -146,22 +197,20 @@ class Lesson:
     title: str
 
     # v1.7: optional display label (e.g., "5.3.6", "Key Takeaways", "Part A")
-    # Used for navigation/UI only. Does NOT affect filenames, IDs, or slugs.
     display_label: Optional[str] = None
 
     learning_objectives: List[str] = field(default_factory=list)
     content_blocks: List[ContentBlock] = field(default_factory=list)
 
-    # v0.3 metadata
     duration: Optional[int] = None  # minutes
     tags: List[str] = field(default_factory=list)
     prerequisites: List[str] = field(default_factory=list)  # lesson ids
     readings: List[ReadingItem] = field(default_factory=list)  # reading list
 
     # v1.6: optional external source provenance (informational)
-    source: Optional[str] = None  # as declared in course.yml (relative or absolute)
-    source_sha256: Optional[str] = None  # hash of the source markdown content
-    source_resolved_path: Optional[str] = None  # resolved absolute path used at build time
+    source: Optional[str] = None
+    source_sha256: Optional[str] = None
+    source_resolved_path: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -196,15 +245,11 @@ class CapabilityMapping:
 class FrameworkAlignment:
     """
     Declared framework alignment metadata (v1.6).
-
-    This is declared intent (not lesson-level coverage evidence).
     Stored for auditability and manifest persistence.
     """
     framework_name: str
     domains: List[str] = field(default_factory=list)
-
-    # Optional future extensions (safe defaults; can be populated later)
-    mapping_mode: Optional[str] = None  # e.g., "informational"
+    mapping_mode: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -232,8 +277,13 @@ class CourseSpec:
     # Optional governance metadata (v1.12+)
     design_intent: DesignIntent | None = None
 
-    # NEW in v1.6: preserve the declared framework_alignment block as-is
+    # v1.13+: structural AI scoping metadata (optional)
+    ai_scoping: AIScoping | None = None
+
+    # v1.6+: preserve the declared framework_alignment block as-is
     framework_alignment: FrameworkAlignment | None = None
 
+    # v1.1+: non-enforced capability mapping metadata
     capability_mapping: CapabilityMapping | None = None
+
     modules: List[Module] = field(default_factory=list)

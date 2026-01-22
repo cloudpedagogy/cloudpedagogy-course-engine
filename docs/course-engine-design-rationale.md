@@ -196,7 +196,7 @@ Frameworks could articulate principles and values, while tools could generate co
 
 The Course Engine was conceived to occupy this middle layer: not a framework, not a generator, but a system that could **hold intent, structure, and evidence together**.
 
-From **v1.12**, this “hold intent together” requirement is supported directly through an optional `design_intent` block in `course.yml`. This provides a stable, inspectable place to record rationale, AI positioning/boundaries, and governance context as **informational metadata**, without turning intent into enforcement.
+From **v1.12**, this “hold intent together” requirement is supported through an optional `design_intent` block in `course.yml`. This provides a stable, inspectable place to record rationale, AI positioning, and governance context, and governance context as **informational metadata**, without turning intent into enforcement.
 
 ## **16. Summary of the Design Problem**
 
@@ -261,6 +261,8 @@ This principle shaped the decision to treat the course specification as a first-
 A recurring governance failure mode in AI-supported course design is that intent exists only in tacit knowledge or transient prompts.
 
 From **v1.12**, the Course Engine supports an optional `design_intent` block to make rationale, AI positioning, and review context **explicit and inspectable**. This is a governance signal, not a compliance mechanism: it records author intent without asserting quality, correctness, or approval.
+
+From v1.13, machine-readable AI boundaries can also be declared via `ai_scoping`, separate from narrative intent.
 
 ## **20. Transparency Over Seamlessness**
 
@@ -435,6 +437,16 @@ Key architectural properties:
 - **explain surfaced**: intent is visible via `course-engine explain` in both JSON and text forms
 
 This preserves the system’s core stance: governance is supported through transparency and evidence, not automated approval.
+
+From **v1.13**, `ai_scoping` provides a **structural declaration** of **permitted**, **restricted**, and **expected** AI use. When present, it is recorded in `manifest.json` and can suppress advisory **absence signals** about missing AI boundaries.
+
+### **30D. AI Scoping and Absence Signals (Informational, v1.13+)**
+
+`ai_scoping` is **informational, structural metadata** describing **permitted**, **restricted**, and **expected** AI use boundaries.
+
+From v1.13, the Course Engine records **absence signals** in `manifest.json` to make **missing governance-relevant elements** explicit **without enforcement**.
+
+Absence signals are **advisory by default**. They are designed to support **review, assurance, and governance conversations**, rather than to trigger compliance decisions or automated approval outcomes.
 
 ## **31. Informational Capability Mapping by Design**
 

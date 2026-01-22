@@ -1,10 +1,10 @@
 # Policy Files Guide
 
-> **Applies to course-engine v1.4+ (policy-based validation), including v1.10+ explainability contract (`--explain --json`) and v1.6+ external lesson source support.**
+> **Applies to course-engine v1.4+ (policy-based validation), including v1.10+ explainability contract (`--explain --json`), v1.12+ design intent, and v1.13+ governance signals.**
 
-This document explains how **policy files** are used with the CloudPedagogy Course Engine to configure **capability-mapping validation** in a transparent, defensible way.
+This document explains how **policy files** are used with the CloudPedagogy Course Engine to configure **capability-mapping validation** and **governance signal interpretation** in a transparent, defensible way.
 
-Policy files define **local validation thresholds**.
+Policy files define **local validation thresholds and interpretation rules**.
 They do **not** define quality standards, pedagogical effectiveness, or compliance with external frameworks.
 
 ---
@@ -14,20 +14,22 @@ They do **not** define quality standards, pedagogical effectiveness, or complian
 A policy file is a human-editable configuration file (YAML or JSON) that defines:
 
 - one or more **validation profiles**
-- the **thresholds** applied by each profile
+- the **structural thresholds** applied by each profile
+- optional **governance signal interpretation rules**
 - optional metadata for audit and governance contexts
 
-Policy files are evaluated by the engine during validation, but they are **owned by the user or institution**, not by the tool.
+Policy files are evaluated by the engine during validation and explain workflows, but they are **owned by the user or institution**, not by the tool.
 
 The engine:
 - evaluates declared structure and traceability
-- applies thresholds defined in the policy
+- computes governance signals at build time (informational facts)
+- applies thresholds and interpretation rules during validation
 - reports results transparently
 
 The engine does **not**:
-- interpret meaning
-- infer quality
-- enforce compliance
+- interpret pedagogical meaning
+- infer educational quality
+- enforce compliance with external standards
 
 ---
 
@@ -115,9 +117,9 @@ All other fields are informational and intended for governance and audit context
 
 ## Profiles
 
-A profile is a named set of validation rules.
+A profile is a named set of validation rules and interpretation settings.
 
-Profiles allow the same course to be validated under different conditions, for example:
+Profiles allow the same course to be evaluated under different conditions, for example:
 - early design review
 - routine QA
 - automated CI gating
@@ -162,6 +164,81 @@ profiles:
       forbid_empty_domains: true
 ```
 
+Inheritance applies only to **rules** and **signals** blocks.
+Metadata fields are not inherited.
+
+---
+
+## Governance signals (v1.13+)
+
+Governance signals are **informational facts** computed by the engine about what is **present or absent** in a course specification.
+
+Examples include:
+- design intent not declared
+- framework alignment missing
+- learning objectives missing
+- assessments not declared
+- attribution or citation metadata absent
+
+Signals:
+- are computed by the engine
+- are **non-blocking by default**
+- do not score, rank, or judge quality
+- are intended to support QA, audit, and review conversations
+
+### Policy-driven interpretation of signals
+
+Policies may define how signals should be **interpreted or escalated**.
+
+This allows institutions to decide:
+- which signals to ignore
+- which to surface as informational messages
+- which to treat as warnings
+- which (if any) should be treated as errors in CI contexts
+
+Signals are interpreted **by policy**, not by the engine itself.
+
+### Signals configuration (profile-level)
+
+Signals are configured per profile using a `signals` block:
+
+```yaml
+profiles:
+  baseline:
+    rules:
+      require_coverage:
+        min_domains: 1
+
+    signals:
+      # One of: ignore | info | warn | error
+      default_action: "warn"
+
+      overrides:
+        SIG-INTENT-001: "warn"        # Design intent not declared
+        SIG-FRAMEWORK-001: "warn"     # Missing framework alignment
+        SIG-ASSESS-001: "warn"        # Missing assessment declaration
+
+      ignore:
+        - SIG-EXPERIMENTAL-999        # Suppress entirely
+```
+
+### Interpretation rules
+
+Signal handling follows this precedence order:
+
+1. **ignore list** – signal is suppressed entirely
+2. **explicit override** – action defined per signal ID
+3. **default_action** – applied if no override exists
+
+This ensures deterministic, auditable behaviour.
+
+### Design principles
+
+- signals never enforce policy
+- policies interpret signals
+- defaults are safe and backwards-compatible
+- CI escalation is explicit and opt-in
+
 ---
 
 ## Capability mapping required for validation (v1.6+)
@@ -169,6 +246,8 @@ profiles:
 Policy validation operates on declared **capability mapping** only.
 
 If a course declares **no `capability_mapping`**, validation fails with a clear message indicating that there is nothing to validate.
+
+Governance signals may still be computed and surfaced even when validation cannot proceed.
 
 ---
 
@@ -184,13 +263,36 @@ course-engine validate dist/course \
   --json
 ```
 
-This mode is **read-only** and contract-stable.
+This mode is:
+
+- read-only
+- contract-stable
+- safe for automation
+
+Governance signals do **not** appear in explain output.
+
+Explain mode resolves:
+- which validation rules apply,
+- how profiles are inherited,
+- and how signal severities *would* be interpreted by the selected policy.
+
+Actual governance signals (presence/absence facts) are:
+- computed at build time,
+- recorded in `manifest.json` under the `signals` key,
+- and interpreted during validation — not during explain-only runs.
+
+This separation ensures explain output remains contract-stable and reusable,
+while governance facts remain tied to a specific build artefact.
 
 ---
 
 ## Final note
 
-Policy files exist to make validation **transparent, adaptable, and defensible**.
+Policy files exist to make validation and governance interpretation:
 
-The engine evaluates structure.
+- transparent
+- adaptable
+- defensible
+
+The engine computes facts.
 You decide what matters.

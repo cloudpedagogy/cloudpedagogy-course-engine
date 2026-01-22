@@ -7,6 +7,81 @@ This project follows semantic versioning.
 
 ---
 
+## v1.13.1 – AI Scoping & Signal Stabilisation
+
+### Added
+- **Structured AI scoping metadata** (`ai_scoping`) as a first-class, inspectable block in `course.yml`
+  - Separates narrative AI positioning from structural AI boundaries
+  - Designed for governance clarity, auditability, and policy interpretation
+- **AI scoping recorded in `manifest.json`**
+  - Stored with:
+    - presence flag,
+    - stable SHA-256 hash,
+    - inspectable structure
+  - Enables deterministic detection of AI scope changes without inspecting content
+
+### Changed
+- **SIG-AI-001 behaviour refined**
+  - Advisory signal is now **suppressed** when valid `ai_scoping` metadata is present
+  - Reduces false-positive governance noise in well-specified courses
+- **Manifest schema version bumped to 1.4.0**
+  - Adds first-class `signals` array
+  - Fully backward compatible for downstream consumers
+
+### Fixed
+- Schema alignment between `design_intent.ai_position` and `ai_scoping`
+- Signal computation determinism under strict CI profiles
+- Validation noise under strict governance profiles for well-scoped courses
+
+### Behaviour guarantees
+- No new enforcement introduced
+- No changes to build or render outputs
+- Signals remain informational by default
+- Fully backward compatible with v1.13.0 (except improved signal precision)
+
+### Notes
+- This is a **stabilisation and governance-hardening patch**
+- Intended to make v1.13 safe for institutional rollout and CI use
+
+---
+
+## v1.13.0 – Absence Signals & Governance Contract Completion
+
+### Added
+- **Absence signalling framework**
+  - The engine now computes explicit, deterministic signals for missing or thin declarations, including:
+    - missing design intent,
+    - declared alignment without inspectable mapping,
+    - thin or empty capability mappings,
+    - AI positioning without structural scoping
+  - Signals are:
+    - non-blocking by default,
+    - recorded in `manifest.json`,
+    - interpreted only by policies (never enforced by the engine)
+
+- **Signals recorded in `manifest.json`**
+  - Provides a machine-readable governance surface
+  - Enables transparent downstream interpretation by QA tools, CI pipelines, and dashboards
+
+### Changed
+- **Clear separation of responsibilities**
+  - Engine computes facts
+  - Policies interpret signals
+  - Institutions decide enforcement thresholds
+- Validation behaviour clarified to reduce ambiguity and over-warning
+
+### Behaviour guarantees
+- Signals are informational unless elevated by policy
+- No automatic enforcement or scoring introduced
+- No pedagogical judgement performed
+- Fully backward compatible with v1.12.0
+
+### Notes
+- This release completes the **governance contract** introduced in earlier versions
+- Establishes a stable foundation for institutional adoption
+
+---
+
 ## v1.12.0 – Design Intent & Governance Signal Formalisation
 
 ### Added

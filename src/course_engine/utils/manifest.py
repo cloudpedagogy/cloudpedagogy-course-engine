@@ -1,3 +1,5 @@
+# src/course_engine/utils/manifest.py
+
 from __future__ import annotations
 
 import hashlib
@@ -14,12 +16,9 @@ try:
 except Exception:  # pragma: no cover
     pkg_version = None  # type: ignore
 
-# v1.13: absence signals recorded in manifest
 from .signals import compute_signals
 
-# v1.12: manifest includes design_intent signals (present + hash [+ optional summary])
-# v1.13: manifest includes absence signals (signals[])
-MANIFEST_VERSION = "1.4.0"
+MANIFEST_VERSION = "1.5.0"
 
 
 def _utc_now_iso() -> str:
@@ -58,39 +57,24 @@ def get_course_engine_version(default: str = "unknown") -> str:
     if pkg_version is None:
         return default
     try:
-        # IMPORTANT: distribution name must match your package name on install
         return pkg_version("course-engine")
     except Exception:
         return default
 
 
 def _should_exclude(rel_path: str) -> bool:
-    """
-    Decide whether a file should be excluded from the manifest inventory.
-
-    We exclude Quarto internals and common OS/LaTeX noise to keep manifests focused
-    on meaningful course artefacts (e.g., index.pdf, _quarto.yml, index.qmd, _site outputs).
-    """
     p = Path(rel_path)
 
-    # Exclude any path that contains these directory segments
     EXCLUDE_DIRS = {".quarto"}
-
-    # Exclude specific filenames
     EXCLUDE_FILES = {"manifest.json", ".DS_Store", ".gitignore"}
-
-    # Exclude common LaTeX noise (optional but helpful)
     EXCLUDE_SUFFIXES = {".log", ".aux", ".out"}
 
     if any(part in EXCLUDE_DIRS for part in p.parts):
         return True
-
     if p.name in EXCLUDE_FILES:
         return True
-
     if p.suffix in EXCLUDE_SUFFIXES:
         return True
-
     return False
 
 
@@ -105,7 +89,6 @@ def build_file_inventory(
 
     for file_path in _iter_files(out_dir):
         rel = _safe_relpath(file_path, out_dir)
-
         if _should_exclude(rel):
             continue
 
@@ -129,22 +112,16 @@ def build_file_inventory(
 
 
 def _to_plain_dict(obj: Any) -> Optional[Dict[str, Any]]:
-    """
-    Convert common model/dict-like objects into a plain JSON-serializable dict.
-    """
     if obj is None:
         return None
 
-    # Pydantic v2
     if hasattr(obj, "model_dump"):
         out = obj.model_dump()
         return out if out else None
 
-    # dict already
     if isinstance(obj, dict):
         return obj if obj else None
 
-    # mapping-like
     try:
         out = dict(obj)
         return out if out else None
@@ -153,13 +130,6 @@ def _to_plain_dict(obj: Any) -> Optional[Dict[str, Any]]:
 
 
 def _framework_alignment_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
-    """
-    v1.6: Declared framework alignment metadata.
-
-    This is the author's declared alignment intent (not coverage evidence).
-    It should be recorded in the manifest for auditability, even when no
-    lesson-level capability mapping exists.
-    """
     fa = getattr(spec, "framework_alignment", None)
 
     if fa is None:
@@ -200,16 +170,9 @@ def _framework_alignment_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
 
 
 def _capability_mapping_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
-    """
-    v1.1: Optional, informational capability mapping metadata.
-
-    This is NOT enforced. We simply record it for auditability and reporting.
-    """
     cap = getattr(spec, "capability_mapping", None)
-
     if cap is None and isinstance(spec, dict):
         cap = spec.get("capability_mapping")
-
     if cap is None:
         return None
 
@@ -238,14 +201,7 @@ def _capability_mapping_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
 
 
 def _lesson_sources_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
-    """
-    v1.6 / manifest v1.2.0:
-    Record lesson-level source provenance when lessons are authored via lesson.source.
-
-    This is informational: it supports auditability and reproducible builds.
-    """
     modules = getattr(spec, "modules", None) or []
-
     if not modules and isinstance(spec, dict):
         modules = spec.get("modules", []) or []
 
@@ -293,15 +249,6 @@ def _lesson_sources_for_manifest(spec: Any) -> Optional[Dict[str, Any]]:
 
 
 def _design_intent_for_manifest(source_course_yml: Optional[Path]) -> Optional[Dict[str, Any]]:
-    """
-    v1.12 / manifest v1.3.0:
-    Record design_intent signals (presence + stable hash) from the canonical course.yml.
-
-    Governance-safe behaviour:
-      - We do NOT interpret or enforce design_intent.
-      - We record a stable hash so reviewers can verify what intent text was used at build time.
-      - We optionally store a short 'summary' field if provided by the author.
-    """
     if not source_course_yml:
         return None
 
@@ -321,19 +268,13 @@ def _design_intent_for_manifest(source_course_yml: Optional[Path]) -> Optional[D
     if not di:
         return {"present": False, "hash_sha256": None}
 
-    # Canonicalise to stable JSON for hashing
     try:
         di_json = json.dumps(di, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
     except Exception:
-        # Last resort: string representation (still gives *some* stable-ish signal)
         di_json = str(di)
 
-    block: Dict[str, Any] = {
-        "present": True,
-        "hash_sha256": _sha256_text(di_json),
-    }
+    block: Dict[str, Any] = {"present": True, "hash_sha256": _sha256_text(di_json)}
 
-    # Optional: include summary if present (small, human-friendly, non-normative)
     if isinstance(di, dict):
         summary = di.get("summary")
         if isinstance(summary, str) and summary.strip():
@@ -342,21 +283,52 @@ def _design_intent_for_manifest(source_course_yml: Optional[Path]) -> Optional[D
     return block
 
 
-def _signals_for_manifest(spec: Any) -> list[dict[str, Any]]:
+def _ai_scoping_for_manifest(source_course_yml: Optional[Path]) -> Optional[Dict[str, Any]]:
     """
-    v1.13 / manifest v1.4.0:
-    Compute absence signals from the validated CourseSpec.
+    v1.13+ / manifest v1.5.0:
+    Record AI scoping (presence + stable hash) from canonical course.yml.
 
-    Governance-safe behaviour:
-      - Signals are informational/advisory only.
-      - Signals are recorded as state-at-build-time (not live inference).
-      - If we cannot compute signals, return [] rather than failing the build.
+    This is structural metadata only (no interpretation, no enforcement).
     """
+    if not source_course_yml:
+        return None
+
+    p = Path(source_course_yml)
+    if not p.exists():
+        return None
+
     try:
-        signals = compute_signals(spec)  # expects CourseSpec; our build pipeline provides it
+        raw = yaml.safe_load(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+    if not isinstance(raw, dict):
+        return None
+
+    sc = raw.get("ai_scoping")
+    if not sc:
+        return {"present": False, "hash_sha256": None}
+
+    try:
+        sc_json = json.dumps(sc, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    except Exception:
+        sc_json = str(sc)
+
+    block: Dict[str, Any] = {"present": True, "hash_sha256": _sha256_text(sc_json)}
+
+    if isinstance(sc, dict):
+        summary = sc.get("scope_summary")
+        if isinstance(summary, str) and summary.strip():
+            block["scope_summary"] = summary.strip()
+
+    return block
+
+
+def _signals_for_manifest(spec: Any) -> list[dict[str, Any]]:
+    try:
+        signals = compute_signals(spec)
         return [s.to_dict() for s in signals]
     except Exception:
-        # Deliberately non-blocking: manifest should not fail if signals can't be computed.
         return []
 
 
@@ -375,11 +347,7 @@ def build_manifest(
     course_title = getattr(spec, "title", None) or getattr(getattr(spec, "course", None), "title", None)
     course_version = getattr(spec, "version", None) or getattr(getattr(spec, "course", None), "version", None)
 
-    spec_meta: Dict[str, Any] = {
-        "id": course_id,
-        "title": course_title,
-        "version": course_version,
-    }
+    spec_meta: Dict[str, Any] = {"id": course_id, "title": course_title, "version": course_version}
 
     manifest: Dict[str, Any] = {
         "manifest_version": MANIFEST_VERSION,
@@ -390,25 +358,21 @@ def build_manifest(
             "python": platform.python_version(),
             "platform": platform.platform(),
         },
-        "input": {
-            "course_yml": str(source_course_yml) if source_course_yml else None,
-        },
+        "input": {"course_yml": str(source_course_yml) if source_course_yml else None},
         "course": spec_meta,
-        "output": {
-            "format": output_format,
-            "out_dir": str(out_dir),
-        },
-        # v1.13: first-class absence signals (non-blocking, informational)
+        "output": {"format": output_format, "out_dir": str(out_dir)},
         "signals": _signals_for_manifest(spec),
         "files": build_file_inventory(out_dir, include_hashes=include_hashes, include_sizes=include_sizes),
     }
 
-    # v1.12: Persist design intent signals (presence + stable hash)
     design_intent = _design_intent_for_manifest(source_course_yml)
     if design_intent is not None:
         manifest["design_intent"] = design_intent
 
-    # Persist declared framework alignment (metadata, not coverage evidence)
+    ai_scoping = _ai_scoping_for_manifest(source_course_yml)
+    if ai_scoping is not None:
+        manifest["ai_scoping"] = ai_scoping
+
     fw_align = _framework_alignment_for_manifest(spec)
     if fw_align is not None:
         manifest["framework_alignment"] = fw_align
@@ -449,11 +413,30 @@ def write_manifest(
     return manifest_path
 
 
+def _normalise_manifest_version(v: Any) -> str:
+    if v is None:
+        return ""
+    if isinstance(v, str):
+        return v.strip()
+    if isinstance(v, int):
+        return str(v)
+    try:
+        return str(v).strip()
+    except Exception:
+        return ""
+
+
 def load_manifest(out_dir: Path) -> Dict[str, Any]:
     manifest_path = Path(out_dir) / "manifest.json"
     if not manifest_path.exists():
         raise FileNotFoundError(f"No manifest.json found in: {out_dir}")
-    return json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    if isinstance(data, dict):
+        data["manifest_version"] = _normalise_manifest_version(data.get("manifest_version"))
+
+    return data
 
 
 def refresh_manifest(
@@ -462,12 +445,6 @@ def refresh_manifest(
     include_hashes: bool = True,
     include_sizes: bool = True,
 ) -> Path:
-    """
-    Refresh file inventory (and optionally hashes) in an existing manifest.json.
-    Does not require access to the original CourseSpec.
-
-    v1.13: We do NOT recompute signals during refresh. Signals are state-at-build-time.
-    """
     out_dir = Path(out_dir)
     manifest_path = out_dir / "manifest.json"
     if not manifest_path.exists():
@@ -475,11 +452,9 @@ def refresh_manifest(
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-    # Keep original built_at_utc; add a refresh marker
     manifest["refreshed_at_utc"] = _utc_now_iso()
     manifest["manifest_version"] = MANIFEST_VERSION
 
-    # Update builder runtime info (useful when rendering happens later)
     manifest.setdefault("builder", {})
     manifest["builder"].update(
         {
@@ -503,12 +478,6 @@ def update_manifest_after_render(
     input_file: Optional[str] = None,
     include_hashes: bool = True,
 ) -> Path:
-    """
-    Add a render record and refresh inventory after a successful render.
-    If manifest doesn't exist, raises FileNotFoundError (by design).
-
-    v1.13: We do NOT recompute signals here. Signals are state-at-build-time.
-    """
     out_dir = Path(out_dir)
     manifest_path = out_dir / "manifest.json"
     if not manifest_path.exists():
@@ -516,16 +485,13 @@ def update_manifest_after_render(
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-    render_block = {
+    manifest["render"] = {
         "rendered_at_utc": _utc_now_iso(),
         "to": to,
         "input_file": input_file,
     }
-
-    manifest["render"] = render_block
     manifest["manifest_version"] = MANIFEST_VERSION
 
-    # Refresh file inventory to include rendered outputs (e.g., index.pdf, _site/*)
     manifest["files"] = build_file_inventory(out_dir, include_hashes=include_hashes, include_sizes=True)
 
     manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

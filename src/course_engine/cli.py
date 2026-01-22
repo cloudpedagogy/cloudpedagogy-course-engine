@@ -1,3 +1,5 @@
+# src/course_engine/cli.py
+
 from __future__ import annotations
 
 import json
@@ -31,7 +33,7 @@ from .utils.validation import (
     validation_to_text,
 )
 
-# v1.4 policy support (profiles, presets, external policy files)
+# v1.4+ policy support (profiles, presets, external policy files)
 from .utils.policy import (
     load_policy_source,
     list_profiles as policy_list_profiles,
@@ -207,7 +209,6 @@ def inspect(project_dir: str) -> None:
     if m.get("input", {}).get("course_yml"):
         typer.echo(f"Source: {m['input']['course_yml']}")
 
-    # v1.6: declared framework alignment (metadata, not coverage evidence)
     fw = m.get("framework_alignment")
     if not fw:
         typer.echo("Framework alignment: none")
@@ -224,7 +225,6 @@ def inspect(project_dir: str) -> None:
         if fw.get("notes") not in (None, ""):
             typer.echo(f"  Notes: {fw.get('notes')}")
 
-    # v1.1: capability mapping summary (informational)
     if m.get("capability_mapping") is None:
         typer.echo("Capability mapping: none")
     else:
@@ -238,12 +238,16 @@ def inspect(project_dir: str) -> None:
             typer.echo(f"  Domains: {', '.join(domains.keys())}")
         typer.echo(f"  Status: {cap.get('status') or 'informational'}")
 
-    # v1.6: lesson source provenance (informational)
     ls = m.get("lesson_sources")
     if ls:
         typer.echo("Lesson sources:")
         typer.echo(f"  Count: {ls.get('count') or 0}")
         typer.echo(f"  Status: {ls.get('status') or 'informational (not enforced)'}")
+
+    sigs = m.get("signals") or []
+    if isinstance(sigs, list) and sigs:
+        typer.echo("Signals:")
+        typer.echo(f"  Count: {len(sigs)}")
 
     if render:
         typer.echo("\nRender:")
@@ -291,13 +295,7 @@ def explain(
       - dist/<course> directory containing manifest.json (artefact explain)
 
     This command does not build outputs and does not enforce policies.
-
-    v1.10+:
-      - JSON remains the canonical explain format.
-      - --format is the preferred interface for selecting output.
-      - --json is retained for backwards compatibility.
     """
-    # Resolve output format
     if format is None:
         resolved_format = "json" if json_out else "text"
     else:
@@ -307,12 +305,10 @@ def explain(
     if resolved_format not in allowed:
         raise typer.BadParameter("Unknown --format. Use: json | text")
 
-    # Preserve invocation context for provenance
     command_str = "course-engine " + " ".join(sys.argv[1:])
 
     p = Path(path)
 
-    # Artefact explain (manifest-backed)
     if p.exists() and p.is_dir():
         payload = explain_dist_dir(
             dist_dir=p,
@@ -320,7 +316,6 @@ def explain(
             command=command_str,
         )
     else:
-        # Source explain (course.yml)
         payload = explain_course_yml(
             course_yml_path=path,
             engine_version=__version__,
@@ -349,14 +344,6 @@ def report(
         help="Exit with code 2 if any domain has zero coverage and zero evidence (signal-only QA gate).",
     ),
 ) -> None:
-    """
-    Produce a capability coverage report from an output folder's manifest.json.
-
-    Reads capability mapping metadata recorded in manifest.json (v1.1+) and prints a summary.
-    This is informational and does not enforce mapping correctness unless --fail-on-gaps is used.
-
-    v1.6+: If no capability_mapping exists but framework_alignment exists, print a declared alignment summary.
-    """
     out_dir = Path(project_dir)
 
     try:
@@ -401,17 +388,11 @@ def report(
                 typer.echo(f"  Notes: {fw.get('notes')}")
         return
 
-    # Nothing to report
     typer.echo("No capability_mapping found in manifest.json (nothing to report).")
     raise typer.Exit(code=1)
 
 
 def _looks_like_profile_path(value: str) -> bool:
-    """
-    v1.3 compatibility shim:
-    If --profile looks like a file path (exists, or ends with .yml/.yaml/.json),
-    treat it as a legacy v1.3 profile file path.
-    """
     v = (value or "").strip()
     if not v:
         return False
@@ -427,13 +408,12 @@ def _looks_like_profile_path(value: str) -> bool:
 def validate(
     project_dir: str,
     strict: bool = typer.Option(False, "--strict", help="Fail (non-zero exit) if rules are violated."),
-    # v1.4:
     policy: Optional[str] = typer.Option(None, "--policy", help="Policy source: path or preset:<name>."),
     profile: Optional[str] = typer.Option(
         None,
         "--profile",
         help=(
-            "Profile name within selected policy (v1.4). "
+            "Profile name within selected policy (v1.4+). "
             "If --policy is omitted and this looks like a file path, treated as v1.3 legacy profile path."
         ),
     ),
@@ -445,29 +425,12 @@ def validate(
     explain: bool = typer.Option(
         False,
         "--explain",
-        help="Explain resolved policy/profile/rules and exit (no validation).",
+        help="Explain resolved policy/profile/rules/signals and exit (no validation).",
     ),
     json_out: bool = typer.Option(False, "--json", help="Output machine-readable JSON."),
 ):
-    """
-    Validate capability mapping defensibility against rules.
-
-    Reads manifest.json from a built output directory. Framework-agnostic.
-
-    v1.4 adds policy/profile selection:
-      --policy <path | preset:name>
-      --profile <name>
-      --list-profiles
-      --explain
-
-    Backward compatibility:
-      If --policy is omitted and --profile looks like a file path, it is treated as a v1.3 profile file path.
-    """
     out_dir = Path(project_dir)
 
-    # -------------------------
-    # v1.4/v1.5: policy-only modes
-    # -------------------------
     if list_profiles or explain:
         try:
             pol = load_policy_source(policy)
@@ -480,7 +443,6 @@ def validate(
                 typer.echo(n)
             raise typer.Exit(code=0)
 
-        # explain
         try:
             resolved = policy_resolve_profile(pol, profile=profile)
         except ValueError as e:
@@ -504,6 +466,7 @@ def validate(
                 },
                 "chain": resolved.get("chain") or [],
                 "rules": resolved.get("rules") or {},
+                "signals": resolved.get("signals") or {},
                 "strict": bool(strict),
             }
             typer.echo(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", nl=False)
@@ -516,30 +479,17 @@ def validate(
         typer.echo(f"Chain: {' -> '.join(chain) if chain else '—'}")
         typer.echo("Resolved rules:")
         typer.echo(str(resolved.get("rules") or {}))
+        typer.echo("Resolved signals:")
+        typer.echo(str(resolved.get("signals") or {}))
         raise typer.Exit(code=0)
 
-    # -------------------------
-    # Normal validation path
-    # -------------------------
     try:
         manifest = load_manifest(out_dir)
     except FileNotFoundError as e:
         raise typer.BadParameter(str(e)) from e
 
-    # v1.6: validation requires capability_mapping coverage/evidence data
-    if not manifest.get("capability_mapping"):
-        typer.echo(
-            "No capability_mapping present in manifest.json.\n"
-            "Validation requires capability_mapping coverage/evidence data.\n"
-            "Tip: use 'course-engine report' for declared framework_alignment, or add capability_mapping to course.yml."
-        )
-        raise typer.Exit(code=1)
-
     rep = build_capability_report(manifest)
 
-    # -------------------------
-    # v1.4: apply policy thresholds when --policy is provided
-    # -------------------------
     if policy is not None:
         try:
             pol = load_policy_source(policy)
@@ -554,6 +504,7 @@ def validate(
         prof = {
             "name": resolved.get("profile"),
             "rules": resolved.get("rules") or {},
+            "signals": resolved.get("signals") or {},
             "source": policy,
         }
 
@@ -563,8 +514,17 @@ def validate(
         except FileNotFoundError as e:
             raise typer.BadParameter(str(e)) from e
 
+        # Defensive: legacy profiles may not include signals
+        if "signals" not in prof:
+            prof["signals"] = {"default_action": "info", "overrides": {}, "ignore": []}
+
     else:
         prof = load_profile(None)
+
+        # Defensive: engine defaults should always include signals too.
+        # (Keeps validate_manifest() stable if defaults change.)
+        if "signals" not in prof:
+            prof["signals"] = {"default_action": "info", "overrides": {}, "ignore": []}
 
     result = validate_manifest(manifest=manifest, report=rep, profile=prof, strict=strict)
 
@@ -573,12 +533,17 @@ def validate(
     else:
         typer.echo(validation_to_text(result), nl=False)
 
-    if strict and not result.ok:
-        raise typer.Exit(code=3)
+    # Exit behaviour:
+    # - If --strict is set and validation failed, exit 3 (existing convention).
+    # - In non-strict mode, rule violations remain warnings, but signal action=error gates CI.
+    if not result.ok:
+        if strict:
+            raise typer.Exit(code=3)
+        if getattr(result, "signal_errors", []):
+            raise typer.Exit(code=3)
 
 
 def _is_dangerous_delete_target(p: Path) -> bool:
-    """Conservative safety checks to avoid catastrophic deletes."""
     rp = p.resolve()
 
     if rp == Path("/"):
@@ -599,7 +564,6 @@ def _is_dangerous_delete_target(p: Path) -> bool:
 
 
 def _maybe_overwrite_dir(target: Path, *, overwrite: bool) -> None:
-    """If target exists and overwrite=True, delete it safely. Otherwise error."""
     if not target.exists():
         return
 
@@ -627,12 +591,6 @@ def clean(
     path: str,
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt."),
 ) -> None:
-    """
-    Delete a generated output directory safely.
-
-    Example:
-      course-engine clean dist/ai-capability-foundations-pdf
-    """
     p = Path(path)
 
     if not p.exists():
@@ -686,7 +644,6 @@ def build(
         help="If the output directory exists, delete it first and rebuild (safe, opt-in).",
     ),
 ):
-    """Build outputs from course.yml."""
     course_path = Path(course_yml)
     out_root = Path(out)
     templates_dir = Path(templates) if templates else DEFAULT_TEMPLATES_DIR
@@ -780,7 +737,6 @@ def render(
     to: Optional[str] = typer.Option(None, "--to", help="Optional Quarto output format override (e.g., pdf, html)."),
     input: Optional[str] = typer.Option(None, "--input", help='Optional input file to render (e.g., "index.qmd").'),
 ):
-    """Render an existing Quarto project directory (calls `quarto render`)."""
     p = Path(project_dir)
 
     render_quarto(p, input_file=input, to=to)

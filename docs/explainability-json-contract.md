@@ -31,7 +31,7 @@ Notes:
 - In `--explain` mode, validation is **not executed**.
 - No learning content is evaluated.
 - No artefacts are modified.
-- The output describes **resolved policy rules** only.
+- The output describes **resolved policy rules and signal interpretation logic** only.
 
 ---
 
@@ -52,6 +52,25 @@ The explainability JSON is an object with these top-level keys:
 - `chain` (array of strings) — resolved inheritance chain, parent-first
 - `rules` (object) — resolved effective rules after inheritance and overrides
 - `strict` (boolean) — whether strict mode was requested (`--strict`)
+
+---
+
+> **Note on scope (v1.13+)**
+>
+> The explainability JSON describes **policy resolution only**:
+> - which rules apply,
+> - how profiles are inherited,
+> - and how signal severities *would* be interpreted.
+>
+> It does **not** include:
+> - computed absence signals,
+> - course-specific governance facts,
+> - or manifest-derived state.
+>
+> Those are recorded separately in `manifest.json` under the `signals` key.
+> This separation is intentional and ensures:
+> - explain output remains contract-stable and reusable,
+> - governance facts remain tied to a specific build artefact.
 
 ---
 
@@ -103,6 +122,14 @@ Known rule keys include:
 - `require_evidence.min_items_per_domain` (integer)
 - `min_coverage_items_per_domain` (integer)
 - `forbid_empty_domains` (boolean)
+
+In v1.13+, policies may also define **signal handling rules**, including:
+
+- default signal action (`ignore`, `info`, `warn`, `error`)
+- per-signal overrides (e.g. `SIG-AI-001: warn`)
+
+These rules describe **how signals would be interpreted** during validation;
+the signals themselves are neither computed nor emitted in explain mode.
 
 ---
 
@@ -158,5 +185,6 @@ This JSON output:
 - does not infer alignment
 - does not imply compliance
 - describes resolved rules and provenance only
+- does not represent the governance state of a specific course build
 
 It is intended to support transparent, auditable assurance workflows.

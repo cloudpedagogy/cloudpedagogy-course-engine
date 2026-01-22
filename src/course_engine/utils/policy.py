@@ -1,3 +1,5 @@
+# src/course_engine/utils/policy.py
+
 from __future__ import annotations
 
 import json
@@ -7,7 +9,6 @@ from types import ModuleType
 from typing import Any, Dict, List, Optional, Union
 
 # YAML is optional at import time, but required for .yml/.yaml policies.
-# mypy needs yaml to be typed as "module | None".
 yaml: ModuleType | None
 try:
     import yaml as _yaml  # type: ignore
@@ -32,18 +33,18 @@ _ALLOWED_TOP_LEVEL_RULE_KEYS = {
 _ALLOWED_REQUIRE_COVERAGE_KEYS = {"min_domains"}
 _ALLOWED_REQUIRE_EVIDENCE_KEYS = {"min_items_per_domain"}
 
+# ----------------------------
+# v1.13+: signal policy interpretation (optional)
+# ----------------------------
+
+_ALLOWED_SIGNAL_ACTIONS = {"ignore", "info", "warn", "error"}
+
 
 # ----------------------------
 # Public API
 # ----------------------------
 
 def load_policy_source(source: Optional[str]) -> PolicyDict:
-    """
-    Load a policy from either:
-      - None -> default (preset:baseline)
-      - 'preset:<name>' -> bundled preset policy
-      - filesystem path -> YAML/JSON policy file
-    """
     if source is None or str(source).strip() == "":
         return _load_preset_policy("baseline")
 
@@ -58,9 +59,6 @@ def load_policy_source(source: Optional[str]) -> PolicyDict:
 
 
 def load_policy_file(path: Union[str, Path]) -> PolicyDict:
-    """
-    Load and validate a policy file (.yml/.yaml/.json).
-    """
     p = Path(path)
     if not p.exists():
         raise ValueError(f"Policy file not found: {str(p)}")
@@ -83,7 +81,6 @@ def load_policy_file(path: Union[str, Path]) -> PolicyDict:
 
 
 def list_presets() -> List[str]:
-    """List available bundled preset policy names (without extension)."""
     policies_dir = _preset_policies_dir()
     names: List[str] = []
 
@@ -109,6 +106,23 @@ def list_profiles(policy: PolicyDict) -> List[str]:
 
 
 def resolve_profile(policy: PolicyDict, profile: Optional[str] = None) -> PolicyDict:
+    """
+    Resolve a profile (with inheritance) into:
+      - resolved structural rules
+      - resolved signals policy (policy-level + inherited profile-level overrides)
+
+    Returns a dict suitable for downstream validation/reporting:
+      {
+        "profile": "...",
+        "chain": [...],
+        "rules": {...},
+        "signals": {
+          "default_action": "info|warn|error|ignore",
+          "overrides": { "SIG-...": "warn", ... },
+          "ignore": ["SIG-...", ...]
+        }
+      }
+    """
     profiles = policy.get("profiles")
     if not isinstance(profiles, dict):
         raise ValueError("Policy 'profiles' must be a mapping.")
@@ -119,13 +133,25 @@ def resolve_profile(policy: PolicyDict, profile: Optional[str] = None) -> Policy
         raise ValueError(f"Unknown profile '{selected}'.")
 
     chain = _compute_inheritance_chain(profiles, selected)
-    resolved_rules: Dict[str, Any] = {}
 
+    resolved_rules: Dict[str, Any] = {}
     for name in chain:
-        rules = profiles[name].get("rules", {}) or {}
+        prof = profiles.get(name)
+        if not isinstance(prof, dict):
+            raise ValueError(f"Profile '{name}' must be a mapping/object.")
+        rules = prof.get("rules", {}) or {}
+        if not isinstance(rules, dict):
+            raise ValueError(f"Profile '{name}'.rules must be a mapping/object.")
         resolved_rules = _merge_rules(resolved_rules, rules)
 
-    return {"profile": selected, "chain": chain, "rules": resolved_rules}
+    resolved_signals = _resolve_signals_for_chain(policy=policy, profiles=profiles, chain=chain)
+
+    return {
+        "profile": selected,
+        "chain": chain,
+        "rules": resolved_rules,
+        "signals": resolved_signals,
+    }
 
 
 # ----------------------------
@@ -169,11 +195,22 @@ def _validate_policy_dict(policy: PolicyDict) -> None:
     if not isinstance(profiles, dict) or not profiles:
         raise ValueError("Policy must define non-empty 'profiles'")
 
-    for profile in profiles.values():
+    # optional: top-level signals block
+    if "signals" in policy and policy["signals"] is not None:
+        _validate_signals_block(policy["signals"], where="policy.signals")
+
+    for profile_name, profile in profiles.items():
+        if not isinstance(profile, dict):
+            raise ValueError(f"profiles.{profile_name} must be a mapping/object.")
+
         rules = profile.get("rules")
         if not isinstance(rules, dict):
             raise ValueError("Profile rules must be a mapping")
         _validate_rules(rules)
+
+        # optional: per-profile signals block
+        if "signals" in profile and profile["signals"] is not None:
+            _validate_signals_block(profile["signals"], where=f"profiles.{profile_name}.signals")
 
 
 def _validate_rules(rules: Dict[str, Any]) -> None:
@@ -190,6 +227,133 @@ def _validate_rules(rules: Dict[str, Any]) -> None:
         for k in rules["require_evidence"]:
             if k not in _ALLOWED_REQUIRE_EVIDENCE_KEYS:
                 raise ValueError(f"Unsupported require_evidence key: {k}")
+
+
+def _validate_signals_block(block: Any, *, where: str) -> None:
+    if not isinstance(block, dict):
+        raise ValueError(f"{where} must be a mapping/object.")
+
+    default_action = block.get("default_action", "info")
+    if not isinstance(default_action, str) or default_action not in _ALLOWED_SIGNAL_ACTIONS:
+        raise ValueError(f"{where}.default_action must be one of: ignore|info|warn|error")
+
+    overrides = block.get("overrides", {})
+    if overrides is None:
+        overrides = {}
+    if not isinstance(overrides, dict):
+        raise ValueError(f"{where}.overrides must be a mapping of {{SIGNAL_ID: action}}")
+
+    for sid, action in overrides.items():
+        if not isinstance(sid, str) or not sid.strip():
+            raise ValueError(f"{where}.overrides keys must be non-empty strings (signal IDs)")
+        if not isinstance(action, str) or action not in _ALLOWED_SIGNAL_ACTIONS:
+            raise ValueError(f"{where}.overrides values must be one of: ignore|info|warn|error")
+
+    ignore = block.get("ignore", [])
+    if ignore is None:
+        ignore = []
+    if not isinstance(ignore, list) or any((not isinstance(x, str) or not x.strip()) for x in ignore):
+        raise ValueError(f"{where}.ignore must be a list of signal ID strings")
+
+
+def _normalise_signals_block(raw: Any) -> Dict[str, Any]:
+    """
+    Normalise a signals block into stable keys.
+
+    Output shape (stable):
+      {
+        "default_action": "info|warn|error|ignore",
+        "overrides": { "SIG-...": "warn", ... },
+        "ignore": ["SIG-...", ...]
+      }
+    """
+    if not isinstance(raw, dict):
+        raw = {}
+
+    default_action = raw.get("default_action", "info")
+    if not isinstance(default_action, str) or default_action not in _ALLOWED_SIGNAL_ACTIONS:
+        default_action = "info"
+
+    overrides = raw.get("overrides") or {}
+    if not isinstance(overrides, dict):
+        overrides = {}
+
+    ignore = raw.get("ignore") or []
+    if not isinstance(ignore, list):
+        ignore = []
+
+    ignore_norm: List[str] = []
+    seen_ignore: set[str] = set()
+    for x in ignore:
+        if isinstance(x, str) and x.strip():
+            sid = x.strip()
+            if sid not in seen_ignore:
+                ignore_norm.append(sid)
+                seen_ignore.add(sid)
+
+    overrides_norm: Dict[str, str] = {}
+    for sid, action in overrides.items():
+        if not isinstance(sid, str) or not sid.strip():
+            continue
+        if not isinstance(action, str) or action not in _ALLOWED_SIGNAL_ACTIONS:
+            continue
+        overrides_norm[sid.strip()] = action
+
+    return {
+        "default_action": default_action,
+        "overrides": overrides_norm,
+        "ignore": ignore_norm,
+    }
+
+
+def _merge_signals_policy(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Merge signals policy with "override wins" semantics.
+    - default_action: override if provided
+    - overrides: dict merge (override wins per key)
+    - ignore: union (dedupe, stable order: base first, then override)
+    """
+    merged_default = base.get("default_action", "info")
+    merged_overrides = dict(base.get("overrides", {}) or {})
+    merged_ignore = list(base.get("ignore", []) or [])
+
+    # default_action
+    if "default_action" in override and override.get("default_action"):
+        merged_default = override["default_action"]
+
+    # overrides (override wins per key)
+    merged_overrides.update(override.get("overrides", {}) or {})
+
+    # ignore (union, stable order)
+    seen: set[str] = set(merged_ignore)
+    for sid in override.get("ignore", []) or []:
+        if sid not in seen:
+            merged_ignore.append(sid)
+            seen.add(sid)
+
+    return {
+        "default_action": merged_default,
+        "overrides": merged_overrides,
+        "ignore": merged_ignore,
+    }
+
+
+def _resolve_signals_for_chain(policy: PolicyDict, profiles: Dict[str, Any], chain: List[str]) -> Dict[str, Any]:
+    """
+    Resolve signals policy for a selected profile:
+    start with policy-level signals, then apply each profile's signals in chain order.
+    """
+    resolved = _normalise_signals_block(policy.get("signals") or {})
+
+    for name in chain:
+        prof = profiles.get(name, {}) or {}
+        if not isinstance(prof, dict):
+            raise ValueError(f"Profile '{name}' must be a mapping/object.")
+        if "signals" in prof and prof["signals"] is not None:
+            prof_block = _normalise_signals_block(prof["signals"])
+            resolved = _merge_signals_policy(resolved, prof_block)
+
+    return resolved
 
 
 def _compute_inheritance_chain(
@@ -209,7 +373,11 @@ def _compute_inheritance_chain(
         seen.add(current)
 
         chain.append(current)
-        parent = profiles[current].get("extends")
+        prof = profiles.get(current)
+        if not isinstance(prof, dict):
+            raise ValueError(f"Profile '{current}' must be a mapping/object.")
+
+        parent = prof.get("extends")
         if not parent:
             break
 

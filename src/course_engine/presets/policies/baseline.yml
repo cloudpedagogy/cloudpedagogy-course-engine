@@ -19,3 +19,21 @@ profiles:
         min_items_per_domain: 0
       min_coverage_items_per_domain: 0
       forbid_empty_domains: false
+
+    # v1.13: policy-driven handling of governance "absence signals"
+    # - Signals are computed by the engine (informational by default)
+    # - Policy chooses whether each signal should be ignored / info / warn / error
+    signals:
+      # One of: ignore | info | warn | error
+      # Backwards-compatible default: warn (does not fail builds)
+      default_action: "warn"
+
+      # Optional per-signal overrides (only applies if the signal exists)
+      overrides:
+        SIG-INTENT-001: "warn"        # Design intent not declared (example: keep as warn in baseline)
+        SIG-FRAMEWORK-001: "warn"     # Missing framework_alignment (future example)
+        SIG-ASSESS-001: "warn"        # Missing assessment signals (future example)
+        SIG-ATTR-001: "warn"          # Missing attribution/citations (future example)
+
+      # Optional list of signal IDs to suppress entirely
+      ignore: []

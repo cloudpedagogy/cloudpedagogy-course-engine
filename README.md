@@ -1,10 +1,11 @@
-# CloudPedagogy Course Engine (v1.12.0)
+# CloudPedagogy Course Engine (v1.13.1)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
 The Course Engine is designed for **reproducible course production** in educator, learning design, quality assurance (QA), and academic governance contexts.
 
 It prioritises **determinism, transparency, and explainability** over automation or enforcement.
+
 
 ---
 
@@ -19,6 +20,62 @@ It prioritises **determinism, transparency, and explainability** over automation
 - Supports optional **capability mapping metadata** for governance and audit (v1.1)
 - Supports **external lesson source files with provenance tracking** (v1.6)
 - Supports **explain-only policy resolution** (read-only) for CI, dashboards, and QA workflows via `validate --explain --json` (v1.10+)
+
+---
+
+## Why this matters
+
+Universities increasingly need to demonstrate **how** and **why** courses are designed — particularly where AI, capability frameworks, or external expectations are involved — without turning curriculum design into a compliance exercise.  
+
+The **CloudPedagogy Course Engine** provides a practical middle ground: it makes **design intent**, **structural decisions**, and **declared alignments** explicit, inspectable, and reproducible, while deliberately avoiding automated judgement or enforcement.  
+
+This supports **quality assurance, audit, and review conversations** with clearer evidence, reduced ambiguity, and lower operational risk — **without constraining academic autonomy or pedagogical practice**.
+
+---
+
+## What’s new in v1.13
+
+v1.13 refines Course Engine’s governance model by introducing **explicit absence signalling**
+and **structural AI scoping**, completing the separation between:
+
+- *declared intent*,
+- *inspectable structure*, and
+- *policy interpretation*.
+
+This release focuses on **reducing governance ambiguity and validation noise**
+without increasing enforcement or automation.
+
+### Highlights
+
+- **Absence signals introduced (manifest v1.4.0)**
+  - The engine now records *absence conditions* (e.g. missing design intent, missing mapping)
+    as **explicit, inspectable signals**.
+  - Signals are:
+    - informational by default,
+    - deterministic,
+    - non-scoring and non-comparative.
+  - Signals are recorded in `manifest.json` and interpreted by policies — never enforced by the engine itself.
+
+- **Structured AI scoping metadata (`ai_scoping`)**
+  - Courses may now declare **explicit AI use boundaries** separately from narrative design intent.
+  - This resolves ambiguity where AI positioning existed but no inspectable scope was declared.
+  - When present, AI scoping suppresses the advisory signal for missing AI boundaries.
+
+- **Policy-controlled signal interpretation**
+  - Policies now define how signals are treated (`ignore`, `info`, `warn`, `error`),
+    enabling:
+    - quiet authoring defaults,
+    - stricter CI gates,
+    - transparent QA review.
+  - Signal interpretation is explainable and inspectable via
+    `course-engine validate --explain --json`.
+
+- **Validation noise reduction**
+  - Well-scoped courses now validate cleanly under strict profiles.
+  - Governance issues are surfaced only when structurally meaningful.
+
+These changes complete the **governance contract**:
+the engine computes facts, policies interpret them, and institutions decide how to act.
 
 ---
 
@@ -229,6 +286,9 @@ Design intent is:
 It is intended to support **audit, QA, and governance conversations**
 without inspecting lesson content or evaluating pedagogical quality.
 
+From v1.13 onward, structural AI scoping is recorded separately from design intent,
+allowing narrative rationale and inspectable boundaries to evolve independently.
+
 ---
 
 ## Versioning and evolution
@@ -250,6 +310,7 @@ Detailed history is maintained in `CHANGELOG.md`.
 - **Policy files guide:** `docs/POLICY_FILES.md`
 - **Explainability JSON contract:** `docs/explainability-json-contract.md`
 - **Release notes:** `docs/releases/`
+- **AI scoping & governance notes:** `docs/releases/v1.13.1-ai-scoping.md`
 
 Derived Word and PDF artefacts (where available) are in:
 

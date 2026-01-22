@@ -1,5 +1,6 @@
-from __future__ import annotations
+# tests/test_profile_resolution.py
 
+from __future__ import annotations
 
 import pytest
 
@@ -123,6 +124,74 @@ def test_inheritance_child_overrides_parent_rules():
     # Inherited from qa-lite / baseline unless overridden
     assert resolved["rules"]["require_evidence"]["min_items_per_domain"] == 1
     assert resolved["chain"] == ["baseline", "qa-lite", "strict-ci"]
+
+
+def test_inherited_profiles_merge_signals_policy_correctly():
+    """
+    v1.13+: signals policy should merge along inheritance chain.
+
+    Contract we want to lock in:
+      - start with policy-level signals, then apply each profile's signals in chain order
+      - default_action: child overrides parent if provided
+      - overrides: dict merge (child wins per key)
+      - ignore: union/merge (deduped)
+      - precedence between ignore/overrides/default is handled later (SignalsPolicy.action_for),
+        but this resolver must carry the full merged config.
+    """
+    from course_engine.utils.policy import resolve_profile
+
+    policy = {
+        "policy_version": 1,
+        "signals": {
+            "default_action": "info",
+            "overrides": {"SIG-POLICY-ONLY": "warn"},
+            "ignore": ["SIG-POLICY-IGNORE"],
+        },
+        "profiles": {
+            "baseline": {
+                "rules": {"require_coverage": {"min_domains": 1}},
+                "signals": {
+                    "default_action": "warn",
+                    "overrides": {
+                        "SIG-A": "warn",
+                        "SIG-B": "error",
+                    },
+                    "ignore": ["SIG-BASELINE-IGNORE"],
+                },
+            },
+            "qa-lite": {
+                "extends": "baseline",
+                "rules": {"require_coverage": {"min_domains": 2}},
+                "signals": {
+                    "default_action": "error",
+                    "overrides": {
+                        "SIG-B": "warn",  # override baseline
+                        "SIG-C": "info",
+                    },
+                    "ignore": ["SIG-QA-IGNORE"],
+                },
+            },
+        },
+    }
+
+    resolved = resolve_profile(policy, profile="qa-lite")
+
+    assert resolved["chain"] == ["baseline", "qa-lite"]
+
+    sigs = resolved["signals"]
+    assert sigs["default_action"] == "error"
+
+    # overrides merged with child-wins semantics
+    expected_overrides = {
+        "SIG-POLICY-ONLY": "warn",
+        "SIG-A": "warn",
+        "SIG-B": "warn",  # overridden by qa-lite
+        "SIG-C": "info",
+    }
+    assert sigs["overrides"] == expected_overrides
+
+    # ignore is merged/deduped. We assert as a set to avoid brittleness.
+    assert set(sigs["ignore"]) == {"SIG-POLICY-IGNORE", "SIG-BASELINE-IGNORE", "SIG-QA-IGNORE"}
 
 
 def test_inheritance_depth_limit_enforced():
