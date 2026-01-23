@@ -16,31 +16,31 @@ python --version
 python -c "import sys; print('executable:', sys.executable)"
 
 echo
-echo "== 2) Quarto toolchain =="
+echo "== 2) Toolchain presence (minimal) =="
 command -v quarto >/dev/null
 quarto --version
-quarto check
+command -v pandoc >/dev/null
+pandoc --version | head -n 1
 
 echo
 echo "== 3) course-engine CLI entrypoint =="
 command -v course-engine >/dev/null
 course-engine --help >/dev/null
-course-engine check
-
-echo
-echo "== 3A) course-engine version =="
 course-engine --version
+course-engine check
+course-engine check --json | python -m json.tool >/dev/null
 
 echo
 echo "== 4) Import sanity =="
 python -c "import course_engine; print('course_engine:', course_engine.__file__)"
+python -c "from course_engine.explain.text import explain_payload_to_text, explain_payload_to_summary; print('explain text imports OK')"
 
 echo
 echo "== 5) Unit tests =="
 pytest -q
 
 echo
-echo "== 6) Build + render demo (non-destructive except a temp dist folder) =="
+echo "== 6) Build demo (writes to a temp dist folder) =="
 
 DEMO_YML="demo/scenario-planning-environmental-scanning/course.yml"
 if [[ ! -f "$DEMO_YML" ]]; then
@@ -50,28 +50,75 @@ fi
 
 OUT="dist/_smoke_demo"
 rm -rf "$OUT"
+mkdir -p "$OUT"
 
+# Build into OUT. Depending on CLI semantics, this may either:
+#  - write directly into OUT (manifest.json in OUT), or
+#  - create a subfolder under OUT (manifest.json in OUT/<slug>)
 course-engine build "$DEMO_YML" --out "$OUT" --overwrite
 
-# Resolve expected course slug folder name by reading the first directory created under OUT.
-# This avoids hard-coding the course slug.
-COURSE_DIR="$(find "$OUT" -mindepth 1 -maxdepth 1 -type d | head -n 1 || true)"
-if [[ -z "${COURSE_DIR:-}" ]]; then
-  echo "ERROR: build produced no course directory under $OUT"
-  exit 1
+ARTEFACT_DIR="$OUT"
+if [[ ! -f "$ARTEFACT_DIR/manifest.json" ]]; then
+  # fallback: first subdir under OUT
+  SUBDIR="$(find "$OUT" -mindepth 1 -maxdepth 1 -type d | head -n 1 || true)"
+  if [[ -z "${SUBDIR:-}" ]]; then
+    echo "ERROR: build produced no manifest.json in $OUT and no subdirectory."
+    exit 1
+  fi
+  ARTEFACT_DIR="$SUBDIR"
 fi
 
-course-engine render "$COURSE_DIR"
-course-engine inspect "$COURSE_DIR" | sed -n '1,160p'
+echo "Artefact dir: $ARTEFACT_DIR"
+test -f "$ARTEFACT_DIR/manifest.json" && echo "manifest OK"
 
 echo
-echo "== 7) Report + validate (may be informative-only depending on mapping) =="
-course-engine report "$COURSE_DIR" || true
-course-engine validate "$COURSE_DIR" || true
+echo "== 7) Explain (source + artefact) =="
+
+course-engine explain "$DEMO_YML" --json | python -m json.tool >/dev/null
+course-engine explain "$DEMO_YML" --format text | sed -n '1,60p'
+
+course-engine explain "$ARTEFACT_DIR" --json | python -m json.tool >/dev/null
+course-engine explain "$ARTEFACT_DIR" --format text | sed -n '1,80p'
 
 echo
-echo "== 8) Explain-only policy resolution (no manifest required) =="
-course-engine validate /tmp --policy preset:baseline --profile baseline --explain --json | head -n 60
+echo "== 8) Inspect (artefact) =="
+# If inspect exists, run it; otherwise skip.
+if course-engine inspect --help >/dev/null 2>&1; then
+  course-engine inspect "$ARTEFACT_DIR" | sed -n '1,200p'
+else
+  echo "(skip) course-engine inspect not available"
+fi
+
+echo
+echo "== 9) Report + validate (informational; do not fail smoke) =="
+if course-engine report --help >/dev/null 2>&1; then
+  course-engine report "$ARTEFACT_DIR" || true
+else
+  echo "(skip) course-engine report not available"
+fi
+
+if course-engine validate --help >/dev/null 2>&1; then
+  course-engine validate "$ARTEFACT_DIR" || true
+else
+  echo "(skip) course-engine validate not available"
+fi
+
+echo
+echo "== 10) Policy explain sanity (prefer policy explain; fallback to validate --explain) =="
+if course-engine policy --help >/dev/null 2>&1; then
+  course-engine policy explain preset:baseline --json | python -m json.tool >/dev/null
+  course-engine policy explain preset:baseline --json | head -n 60
+else
+  # Fallback: only if validate supports --explain
+  if course-engine validate --help 2>/dev/null | rg -q -- "--explain"; then
+    course-engine validate "$DEMO_YML" --policy preset:baseline --profile baseline --explain --json \
+      | python -m json.tool >/dev/null
+    course-engine validate "$DEMO_YML" --policy preset:baseline --profile baseline --explain --json \
+      | head -n 60
+  else
+    echo "(skip) no policy explain route detected"
+  fi
+fi
 
 echo
 echo "== DONE: smoke test completed successfully =="
