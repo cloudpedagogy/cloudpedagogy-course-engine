@@ -1,7 +1,7 @@
 # src/course_engine/explain/text.py
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 def _line(label: str, value: Any, indent: int = 0) -> str:
@@ -19,7 +19,10 @@ def _bullet(items: List[str], indent: int = 2, max_items: int | None = None) -> 
 
 
 def _as_dict(value: Any) -> Dict[str, Any]:
-    return value if isinstance(value, dict) else {}
+    if isinstance(value, dict):
+        # Runtime guard ensures dict-ness; keys may not be str but we treat them defensively.
+        return dict(value)  # shallow copy (also helps some type checkers)
+    return {}
 
 
 def _get_nested(d: Dict[str, Any], *path: str) -> Any:
@@ -29,12 +32,6 @@ def _get_nested(d: Dict[str, Any], *path: str) -> Any:
             return None
         cur = cur.get(k)
     return cur
-
-
-def _truthy_dict(value: Any) -> Optional[Dict[str, Any]]:
-    if isinstance(value, dict) and value:
-        return value
-    return None
 
 
 def _truncate(s: str, n: int = 160) -> str:
@@ -60,7 +57,7 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
     engine = _as_dict(payload.get("engine"))
     input_info = _as_dict(payload.get("input"))
     rendering = _as_dict(payload.get("rendering"))
-    artefact_block = _as_dict(rendering.get("artefact"))  # manifest-backed artefact block (dist explain)
+    artefact_block = _as_dict(rendering.get("artefact"))  # dist explain block (manifest-backed)
 
     sources = _as_dict(payload.get("sources"))
     source_files = sources.get("files") or []
@@ -69,7 +66,6 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
     notes = payload.get("notes") or payload.get("warnings") or []
     errors = payload.get("errors") or []
 
-    # Determine explain mode robustly
     input_type = input_info.get("type")
     is_artefact = bool(artefact_block) or (input_type == "dist_dir")
     explain_mode = "artefact (manifest-backed)" if is_artefact else "source (course.yml)"
@@ -103,7 +99,6 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
             cmd_s = cmd_s[:137] + "..."
         lines.append(_line("  Command", cmd_s))
 
-    # Input path details (useful when relative paths confuse people)
     if input_info:
         lines.append(_line("  Input type", input_info.get("type")))
         lines.append(_line("  Input path", input_info.get("path_normalised") or input_info.get("path")))
@@ -140,19 +135,15 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
     # 4. Outputs / Files
     lines.append("4. Outputs")
 
-    # Prefer sources.counts.files (stable for dist explain)
     file_count = source_counts.get("files") if source_counts else None
     if file_count is None and isinstance(source_files, list):
         file_count = len(source_files)
-
     lines.append(_line("  File count", file_count))
 
-    # Sample files: dist explain stores file objects with declared_path/resolved_path
     sample_paths: List[str] = []
     if isinstance(source_files, list) and source_files:
         for f in source_files:
             if isinstance(f, dict):
-                # Prefer declared_path (stable relative path)
                 dp = f.get("declared_path") or f.get("path") or f.get("resolved_path")
                 if dp:
                     sample_paths.append(str(dp))
@@ -160,7 +151,6 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
                 sample_paths.append(str(f))
 
     if sample_paths:
-        # Stabilise demo output: sort, then take first N
         sample_paths = sorted(sample_paths)[:12]
         lines.append("  Sample files:")
         lines.extend(_bullet(sample_paths, indent=4))
@@ -169,20 +159,19 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
     # 5. Governance signals
     lines.append("5. Governance Signals")
 
-    # Framework alignment:
-    # Prefer canonical payload.framework_alignment, but fall back to manifest-backed
-    # rendering.artefact.framework_alignment if present (belt-and-braces).
-    fw = payload.get("framework_alignment")
-    if not (isinstance(fw, dict) and fw):
-        fw = _get_nested(payload, "rendering", "artefact", "framework_alignment")
+    # Framework alignment (safe normalisation)
+    fw_raw: Any = payload.get("framework_alignment")
+    if not (isinstance(fw_raw, dict) and fw_raw):
+        fw_raw = _get_nested(_as_dict(payload), "rendering", "artefact", "framework_alignment")
+    fw = _as_dict(fw_raw)
 
-    if isinstance(fw, dict) and fw:
+    if fw:
         lines.append("  Framework alignment:")
         lines.append(_line("    Framework", fw.get("framework_name")))
-        domains = fw.get("domains") or []
+        domains_any: Any = fw.get("domains") or []
         lines.append("    Domains:")
-        if domains:
-            lines.extend(_bullet([str(d) for d in domains], indent=6))
+        if isinstance(domains_any, list) and domains_any:
+            lines.extend(_bullet([str(d) for d in domains_any], indent=6))
         else:
             lines.extend(_bullet([], indent=6))
         if fw.get("mapping_mode"):
@@ -199,12 +188,11 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
     elif present is False:
         lines.append("  Capability mapping: none")
     else:
-        # fallback for older shapes
         lines.append("  Capability mapping: " + ("present" if cap else "none"))
 
-    # v1.12+: design_intent (manifest-backed)
-    di = payload.get("design_intent") or {}
-    if isinstance(di, dict) and di.get("present") is True:
+    di_raw: Any = payload.get("design_intent") or {}
+    di = _as_dict(di_raw)
+    if di.get("present") is True:
         lines.append("  Design intent: present")
         if di.get("hash_sha256"):
             lines.append(_line("    Hash (sha256)", di.get("hash_sha256")))
@@ -214,27 +202,21 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
         lines.append("  Design intent: none")
 
     lines.append("")
-
-    # 6. Determinism note
     lines.append("6. Determinism")
     lines.append("  This report is derived from the canonical explain payload.")
     lines.append("  Non-determinism may occur only in runtime timestamps (e.g., built_at_utc).")
     lines.append("")
 
-    # Errors/warnings (high value for governance legibility)
     if errors:
         lines.append("Errors:")
         if isinstance(errors, list):
-            msgs = []
+            msgs: List[str] = []
             for e in errors[:20]:
                 if isinstance(e, dict):
                     code = e.get("code") or "ERROR"
                     msg = e.get("message") or ""
                     path = e.get("path")
-                    if path:
-                        msgs.append(f"{code}: {msg} ({path})")
-                    else:
-                        msgs.append(f"{code}: {msg}")
+                    msgs.append(f"{code}: {msg} ({path})" if path else f"{code}: {msg}")
                 else:
                     msgs.append(str(e))
             lines.extend(_bullet(msgs, indent=2))
@@ -262,11 +244,6 @@ def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
       - no build
       - no validation
       - no policy execution
-
-    Summary rules:
-      - facts + absences only (no judgements)
-      - stable ordering
-      - compact (intended for email/slide paste)
     """
     lines: List[str] = []
 
@@ -276,7 +253,6 @@ def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
     def present(v: Any) -> str:
         return "present" if v else "not present"
 
-    # Canonical blocks (match explain_payload_to_text expectations)
     course = _as_dict(payload.get("course"))
     engine = _as_dict(payload.get("engine"))
     input_info = _as_dict(payload.get("input"))
@@ -288,36 +264,29 @@ def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
     errors = payload.get("errors") or []
     notes = payload.get("notes") or payload.get("warnings") or []
 
-    # Determine mode robustly
     input_type = input_info.get("type")
     is_artefact = bool(artefact_block) or (input_type == "dist_dir")
     mode = "artefact (manifest-backed)" if is_artefact else "source (course.yml)"
 
-    # Header
     add("Course Engine Summary (v1.15)")
     add(f"Mode: {mode}")
     add(f"Path: {input_info.get('path_normalised') or input_info.get('path') or '—'}")
     if engine.get("built_at_utc"):
-        # v1.15 summary: avoid implying a build/render occurred for source explains
         add(f"Generated at (UTC): {engine.get('built_at_utc')}")
     add("")
 
-    # Artefacts / inventory (compact)
     add("Artefacts")
     add(f"- manifest.json: {present(is_artefact)}")
 
-    # For source explains, course.yml is implied; for artefact explains, manifest may carry it
-    src_course_yml = _get_nested(payload, "rendering", "artefact", "input", "course_yml")
+    src_course_yml = _get_nested(_as_dict(payload), "rendering", "artefact", "input", "course_yml")
     add(f"- course.yml: {present(src_course_yml or (not is_artefact))}")
 
-    # Files / lesson-ish counts (best-effort using existing counts)
     file_count = source_counts.get("files") if source_counts else None
     if file_count is None and isinstance(source_files, list):
         file_count = len(source_files)
     add(f"- file count: {file_count if file_count is not None else '—'}")
     add("")
 
-    # Declared metadata snapshot
     add("Declared metadata")
     add(f"- title: {course.get('title') or 'not declared'}")
     add(f"- id: {course.get('id') or 'not declared'}")
@@ -325,18 +294,18 @@ def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
     add(f"- language: {course.get('language') or 'not declared'}")
     add("")
 
-    # Framework alignment snapshot (facts)
-    fw = payload.get("framework_alignment")
-    if not (isinstance(fw, dict) and fw):
-        fw = _get_nested(payload, "rendering", "artefact", "framework_alignment")
-    fw = _as_dict(fw)
+    # Framework alignment (safe normalisation)
+    fw_raw: Any = payload.get("framework_alignment")
+    if not (isinstance(fw_raw, dict) and fw_raw):
+        fw_raw = _get_nested(_as_dict(payload), "rendering", "artefact", "framework_alignment")
+    fw = _as_dict(fw_raw)
 
     add("Framework alignment")
     if fw:
         add(f"- framework: {fw.get('framework_name') or 'not declared'}")
-        domains = fw.get("domains") or []
-        if isinstance(domains, list) and domains:
-            add(f"- domains (declared): {', '.join([str(d) for d in domains])}")
+        domains_any: Any = fw.get("domains") or []
+        if isinstance(domains_any, list) and domains_any:
+            add(f"- domains (declared): {', '.join([str(d) for d in domains_any])}")
         else:
             add("- domains (declared): none declared")
         if fw.get("mapping_mode"):
@@ -345,9 +314,9 @@ def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
         add("- declared: no")
     add("")
 
-    # Capability mapping snapshot
     cap = _as_dict(payload.get("capability_mapping"))
     cap_present = cap.get("present")
+
     add("Capability mapping")
     if cap_present is True or (cap and cap_present is None):
         add("- present: yes")
@@ -355,51 +324,43 @@ def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
         add("- present: no")
     add("")
 
-    # Design intent snapshot (v1.12+)
-    di = payload.get("design_intent") or {}
-    di = _as_dict(di)
+    di_raw: Any = payload.get("design_intent") or {}
+    di = _as_dict(di_raw)
     add("Design intent")
     add(f"- declared: {'yes' if di.get('present') is True else 'no'}")
     add("")
 
-    # Governance signals (observed) — payload may or may not include them, so be conservative
-    sigs = payload.get("signals") or _get_nested(payload, "rendering", "artefact", "signals") or []
+    sigs_any: Any = payload.get("signals") or _get_nested(_as_dict(payload), "rendering", "artefact", "signals") or []
     add("Governance signals (observed)")
-    if isinstance(sigs, list) and sigs:
-        # stable ordering by id if dict-shaped
-        dict_sigs = [s for s in sigs if isinstance(s, dict)]
+    if isinstance(sigs_any, list) and sigs_any:
+        dict_sigs = [x for x in sigs_any if isinstance(x, dict)]
         if dict_sigs:
-            def _sid(s: Dict[str, Any]) -> str:
-                return str(s.get("id") or s.get("signal") or s.get("code") or "")
-            for s in sorted(dict_sigs, key=_sid)[:12]:
-                sid = s.get("id") or s.get("signal") or s.get("code") or "—"
-                label = s.get("label") or s.get("message") or ""
+
+            def _sid(d: Dict[str, Any]) -> str:
+                return str(d.get("id") or d.get("signal") or d.get("code") or "")
+
+            for d in sorted(dict_sigs, key=_sid)[:12]:
+                sid = d.get("id") or d.get("signal") or d.get("code") or "—"
+                label = d.get("label") or d.get("message") or ""
                 label = _truncate(str(label), n=88)
-                if label:
-                    add(f"- {sid}: {label}")
-                else:
-                    add(f"- {sid}")
+                add(f"- {sid}: {label}" if label else f"- {sid}")
         else:
-            # If they’re plain strings
-            strs = sorted([str(s) for s in sigs])[:12]
-            for s in strs:
-                add(f"- {s}")
+            sig_strs: List[str] = sorted([str(x) for x in sigs_any])[:12]
+            for sig_str in sig_strs:
+                add(f"- {sig_str}")
     else:
         add("- none")
     add("")
 
-    # Missing declarations (observed) — absences only, no judgement
     missing: List[str] = []
 
-    # Lifecycle metadata is not yet in payload schema; reserve for later without breaking
-    lifecycle = course.get("lifecycle") if isinstance(course, dict) else None
+    lifecycle = course.get("lifecycle")
     if lifecycle is None:
         missing.append("lifecycle metadata not declared")
 
-    if not (isinstance(di, dict) and di.get("present") is True):
+    if di.get("present") is not True:
         missing.append("design intent not declared")
 
-    # AI scope: only report absence if key is not present at all
     ai_scope = payload.get("ai_scope") or payload.get("ai_usage") or payload.get("ai") or None
     if ai_scope is None:
         missing.append("ai_scope not declared")
@@ -407,7 +368,6 @@ def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
     if not (cap_present is True or (cap and cap_present is None)):
         missing.append("capability mapping not declared")
 
-    # Framework alignment absence
     if not fw:
         missing.append("framework alignment not declared")
 
@@ -418,7 +378,6 @@ def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
     else:
         add("- none")
 
-    # Keep summary one-screen: do not include full Errors/Warnings, only counts (facts)
     if errors or notes:
         add("")
         add("Notes")
