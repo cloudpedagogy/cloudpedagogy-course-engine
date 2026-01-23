@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+
+## v1.14.0 – Stability & governance credibility
+
+### Changed
+- Aligned CLI, package, and build metadata versioning
+- Hardened pre-release verification workflow (`verify-release.sh`)
+- Clarified maintainer release checks vs smoke tests
+- Improved repository hygiene and ignore rules
+
+### Notes
+- No changes to course schema, validation behaviour, or governance logic
+- This release focuses on reproducibility, auditability, and release confidence
+
 ---
 
 ## v1.13.1 – AI Scoping & Signal Stabilisation

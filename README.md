@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.13.1)
+# CloudPedagogy Course Engine (v1.14.0)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -30,6 +30,36 @@ Universities increasingly need to demonstrate **how** and **why** courses are de
 The **CloudPedagogy Course Engine** provides a practical middle ground: it makes **design intent**, **structural decisions**, and **declared alignments** explicit, inspectable, and reproducible, while deliberately avoiding automated judgement or enforcement.  
 
 This supports **quality assurance, audit, and review conversations** with clearer evidence, reduced ambiguity, and lower operational risk — **without constraining academic autonomy or pedagogical practice**.
+
+---
+
+## What’s new in v1.14
+
+v1.14 is a **stability and governance-credibility release**.
+
+It introduces **no new schema, validation rules, or enforcement behaviour**.
+Instead, it focuses on ensuring that versioning, release verification, and
+governance artefacts are **consistent, reproducible, and defensible**.
+
+### Highlights
+
+- **Version alignment hardened**
+  - CLI version, Python package version, and build metadata are now fully aligned
+    and verifiable prior to release.
+
+- **Release verification workflow clarified**
+  - A dedicated maintainer script (`scripts/verify-release.sh`) provides
+    end-to-end release assurance covering tests, demo builds, manifests,
+    explain output, and policy resolution.
+  - This supports institutional QA, audit, and external review workflows.
+
+- **Repository hygiene improved**
+  - Ignore rules clarified to prevent accidental masking of tracked content.
+  - Build artefacts and local caches are cleanly separated from source control.
+
+This release is intended to **increase trust and confidence** in the Course Engine
+without changing its behaviour or governance posture.
+
 
 ---
 
@@ -311,6 +341,9 @@ Detailed history is maintained in `CHANGELOG.md`.
 - **Explainability JSON contract:** `docs/explainability-json-contract.md`
 - **Release notes:** `docs/releases/`
 - **AI scoping & governance notes:** `docs/releases/v1.13.1-ai-scoping.md`
+- **Maintainer release verification:** see `scripts/verify-release.sh` and
+  Section 12 of `END_USER_INSTRUCTIONS.md`
+
 
 Derived Word and PDF artefacts (where available) are in:
 

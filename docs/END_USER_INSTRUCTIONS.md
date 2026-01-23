@@ -334,3 +334,43 @@ course-engine build --help
 course-engine explain --help
 course-engine validate --help
 ```
+
+---
+
+## 12. Release verification (maintainers)
+
+This section is intended for **maintainers and contributors**, not routine end users.
+
+The script `scripts/verify-release.sh` is a **pre-release verification tool** designed to support
+confidence, auditability, and institutional credibility.
+
+### When to use this script
+
+Run `verify-release.sh`:
+
+- before merging a development branch into `master`
+- before tagging a new release
+- before sharing release artefacts with external institutions or QA reviewers
+
+It is **not** intended for routine development or day-to-day editing.
+
+### What the script verifies
+
+The script performs a full release-level sanity check, including:
+
+- CLI version and Python package version consistency
+- linting, type checking, and test execution
+- end-to-end demo course build and manifest generation
+- inspect and explain output integrity
+- policy explainability sanity checks
+
+The script reports git status for transparency, but does not enforce a clean working tree
+unless required by release policy.
+
+### Relationship to smoke tests
+
+- `scripts/smoke_test.sh` answers: *“Does the tool basically work?”*
+- `scripts/verify-release.sh` answers: *“Is this release credible and defensible?”*
+
+Maintainers should typically run **both scripts together** before major merges or releases.
+

@@ -1,3 +1,9 @@
+# Purpose:
+# Maintainer-facing pre-release verification.
+# Run before merging to master or tagging a release.
+# Not intended for routine development use.
+
+
 #!/usr/bin/env bash
 set -e
 
