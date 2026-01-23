@@ -24,7 +24,7 @@ from .plugins import BuildContext, load_plugins
 from .schema import validate_course_dict
 from .utils.fileops import write_text
 from .utils.manifest import load_manifest, update_manifest_after_render, write_manifest
-from .utils.preflight import PrereqError, build_preflight_report, has_quarto, require_pdf_toolchain
+from .utils.preflight import PrereqError, build_preflight_report, require_pdf_toolchain
 from .utils.reporting import build_capability_report, report_to_json, report_to_text
 from .pack.packer import run_pack
 from .utils.validation import (
@@ -178,25 +178,68 @@ def check(
             raise typer.Exit(code=2)
         raise typer.Exit(code=0)
 
-    # Existing human output (keep as-is)
-    typer.echo(f"Python: {sys.version.split()[0]} ({platform.system()})")
+    # -------------------------
+    # Human/adoption-grade mode
+    # -------------------------
+    typer.echo("Course Engine preflight check\n")
 
-    if has_quarto():
-        typer.echo("✔ Quarto found")
+    python_ver = sys.version.split()[0]
+    os_name = platform.system()
+    typer.echo(f"Python: {python_ver} ({os_name})")
+
+    payload = build_preflight_report()
+    tools = payload.get("tools") or {}
+    pdf = payload.get("pdf") or {}
+
+    quarto = tools.get("quarto") or {}
+    pandoc = tools.get("pandoc") or {}
+
+    quarto_present = bool(quarto.get("present"))
+    quarto_version = quarto.get("version")
+    pandoc_present = bool(pandoc.get("present"))
+    pandoc_version = pandoc.get("version")
+
+    # Quarto
+    if quarto_present:
+        if quarto_version:
+            typer.echo(f"✔ Quarto found: {quarto_version}")
+        else:
+            typer.echo("✔ Quarto found")
     else:
         typer.echo("✖ Quarto not found")
         typer.echo("Fix: Install Quarto from https://quarto.org/")
         raise typer.Exit(code=1)
 
-    try:
-        require_pdf_toolchain()
-        typer.echo("✔ PDF rendering available (LaTeX OK)")
-    except PrereqError:
-        typer.echo("✖ PDF rendering unavailable")
-        typer.echo("Fix: quarto install tinytex")
-        raise typer.Exit(code=2)
+    # Pandoc (informational)
+    if pandoc_present:
+        if pandoc_version:
+            typer.echo(f"✔ Pandoc found: {pandoc_version}")
+        else:
+            typer.echo("✔ Pandoc found")
+    else:
+        typer.echo("• Pandoc not detected on PATH (may be bundled with Quarto)")
 
-    typer.echo("\nSystem ready.")
+    # PDF toolchain (LaTeX)
+    pdf_ready = bool(pdf.get("ready"))
+    if pdf_ready:
+        typer.echo("✔ PDF ready: yes (LaTeX OK)")
+        typer.echo("\nSystem ready.")
+        raise typer.Exit(code=0)
+
+    typer.echo("✖ PDF ready: no")
+    typer.echo("Fix: quarto install tinytex")
+
+    # Optional: include concise error tail if present
+    pdf_error = pdf.get("error")
+    if isinstance(pdf_error, str) and pdf_error.strip():
+        # Keep it short and readable; avoid dumping huge logs.
+        lines = [ln.rstrip() for ln in pdf_error.splitlines() if ln.strip()]
+        if lines:
+            tail = "\n".join(lines[-12:])
+            typer.echo("\nDetails (tail):")
+            typer.echo(tail)
+
+    raise typer.Exit(code=2)
 
 
 @app.command()
