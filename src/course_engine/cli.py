@@ -26,6 +26,7 @@ from .utils.fileops import write_text
 from .utils.manifest import load_manifest, update_manifest_after_render, write_manifest
 from .utils.preflight import PrereqError, has_quarto, require_pdf_toolchain
 from .utils.reporting import build_capability_report, report_to_json, report_to_text
+from .pack.packer import run_pack
 from .utils.validation import (
     load_profile,  # v1.3 legacy profile file loader
     validate_manifest,
@@ -370,6 +371,45 @@ def explain(
         write_text(Path(out), text)
     else:
         typer.echo(text, nl=False)
+
+
+@app.command()
+def pack(
+    path: str = typer.Argument(..., help="Path to course project folder OR dist/<course> folder."),
+    out: str = typer.Option(..., "--out", help="Output folder for the governance pack."),
+    overwrite: bool = typer.Option(
+        False,
+        "--overwrite",
+        help="If the output directory exists, delete it first (safe, opt-in).",
+    ),
+) -> None:
+    """
+    Generate a governance pack folder (facts only; no build/render; no policy enforcement).
+    """
+    in_path = Path(path)
+    out_dir = Path(out)
+
+    if not in_path.exists():
+        raise typer.BadParameter(f"Input path not found: {in_path}")
+
+    # Reuse existing safe delete guard
+    _maybe_overwrite_dir(out_dir, overwrite=overwrite)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    result = run_pack(
+        input_path=in_path,
+        out_dir=out_dir,
+        engine_version=__version__,
+        command="course-engine " + " ".join(sys.argv[1:]),
+    )
+
+    typer.echo(f"Pack generated: {out_dir}")
+    # Optional: print a tiny summary of what was written
+    if isinstance(result, dict) and "contents" in result:
+        written = [k for k, v in (result.get("contents") or {}).items() if v]
+        if written:
+            typer.echo("Included: " + ", ".join(written))
 
 
 @app.command()
