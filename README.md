@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.14.0)
+# CloudPedagogy Course Engine (v1.15.0)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -30,6 +30,43 @@ Universities increasingly need to demonstrate **how** and **why** courses are de
 The **CloudPedagogy Course Engine** provides a practical middle ground: it makes **design intent**, **structural decisions**, and **declared alignments** explicit, inspectable, and reproducible, while deliberately avoiding automated judgement or enforcement.  
 
 This supports **quality assurance, audit, and review conversations** with clearer evidence, reduced ambiguity, and lower operational risk — **without constraining academic autonomy or pedagogical practice**.
+
+---
+
+## What’s new in v1.15
+
+v1.15 is a **clarity and explainability refinement release**.
+
+It introduces **no schema changes, no new validation rules, and no enforcement behaviour**.
+Instead, it focuses on making `course-engine explain` outputs
+**accurate, non-interpretive, and safe for governance communication**.
+
+### Highlights
+
+- **Explain mode inference fixed**
+  - `course-engine explain` now reliably distinguishes between:
+    - source projects (`course.yml`), and
+    - built artefacts (directories containing `manifest.json`)
+  - This eliminates ambiguous or incorrect explain output when pointing at build directories.
+
+- **Summary output clarified**
+  - Summary output now reports:
+    - `Generated at (UTC)` instead of `Built at (UTC)`
+  - This avoids implying that a build or render occurred when running explain-only commands.
+
+- **Non-interpretive capability wording**
+  - Capability mapping status in summaries is now reported as:
+    - `present: yes | no`
+  - This avoids implying completeness, quality, or evaluation.
+
+- **Email- and report-safe summaries**
+  - `course-engine explain --summary` is now designed to be:
+    - one-screen,
+    - non-judgemental,
+    - safe to paste directly into emails, QA notes, or governance papers.
+
+This release strengthens **trust, precision, and governance credibility**
+without changing Course Engine’s underlying behaviour.
 
 ---
 
@@ -272,6 +309,14 @@ course-engine validate dist/course   --policy policies/my-policy.yml   --profile
 The JSON contract is documented in:
 
 - `docs/explainability-json-contract.md`
+
+`course-engine explain` automatically infers whether it is operating on:
+- a course source (`course.yml`), or
+- a built artefact directory containing `manifest.json`.
+
+This allows the same explain command to be used consistently across
+authoring, build verification, CI, QA, and audit workflows.
+
 
 ---
 

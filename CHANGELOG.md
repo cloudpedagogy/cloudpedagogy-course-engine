@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+## v1.15.0
+
+### Fixed
+- `explain` now correctly distinguishes between:
+  - course project directories (source `course.yml`)
+  - built artefact directories (`manifest.json`)
+- Summary output no longer mislabels explain time as a “build”.
+
+### Improved
+- Summary wording clarified to avoid interpretive claims:
+  - “Generated at (UTC)” replaces “Built at (UTC)” in summaries
+  - Capability mapping status now reported as `present: yes|no`
+- `explain --summary` output is now safe to paste into emails and reports.
+
+---
 
 ## v1.14.0 – Stability & governance credibility
 
