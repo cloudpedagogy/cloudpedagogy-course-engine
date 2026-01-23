@@ -43,29 +43,41 @@ echo
 echo "== 6) Build demo (writes to a temp dist folder) =="
 
 DEMO_YML="demo/scenario-planning-environmental-scanning/course.yml"
+COURSE_ID="scenario-planning-environmental-scanning"
+
 if [[ ! -f "$DEMO_YML" ]]; then
   echo "ERROR: demo course.yml not found at: $DEMO_YML"
   exit 1
 fi
 
-OUT="dist/_smoke_demo"
+# Use a temp-ish location to avoid repo clutter and the parent-dir trap
+OUT="/tmp/ce-e2e"
 rm -rf "$OUT"
 mkdir -p "$OUT"
 
-# Build into OUT. Depending on CLI semantics, this may either:
-#  - write directly into OUT (manifest.json in OUT), or
-#  - create a subfolder under OUT (manifest.json in OUT/<slug>)
 course-engine build "$DEMO_YML" --out "$OUT" --overwrite
 
-ARTEFACT_DIR="$OUT"
+# Prefer deterministic child path (avoids parent-dir trap)
+ARTEFACT_DIR="$OUT/$COURSE_ID"
+
+# Fallbacks: handle alternate --out semantics
 if [[ ! -f "$ARTEFACT_DIR/manifest.json" ]]; then
-  # fallback: first subdir under OUT
-  SUBDIR="$(find "$OUT" -mindepth 1 -maxdepth 1 -type d | head -n 1 || true)"
-  if [[ -z "${SUBDIR:-}" ]]; then
-    echo "ERROR: build produced no manifest.json in $OUT and no subdirectory."
-    exit 1
+  if [[ -f "$OUT/manifest.json" ]]; then
+    ARTEFACT_DIR="$OUT"
+  else
+    SUBDIR="$(find "$OUT" -mindepth 1 -maxdepth 2 -type f -name manifest.json -print \
+      | sed 's|/manifest.json$||' \
+      | head -n 1 || true)"
+    if [[ -z "${SUBDIR:-}" ]]; then
+      echo "ERROR: build produced no manifest.json in $OUT."
+      echo "Expected either:"
+      echo "  - $OUT/$COURSE_ID/manifest.json"
+      echo "  - $OUT/manifest.json"
+      echo "  - another child artefact dir under $OUT containing manifest.json"
+      exit 1
+    fi
+    ARTEFACT_DIR="$SUBDIR"
   fi
-  ARTEFACT_DIR="$SUBDIR"
 fi
 
 echo "Artefact dir: $ARTEFACT_DIR"
@@ -78,7 +90,7 @@ course-engine explain "$DEMO_YML" --json | python -m json.tool >/dev/null
 course-engine explain "$DEMO_YML" --format text | sed -n '1,60p'
 
 course-engine explain "$ARTEFACT_DIR" --json | python -m json.tool >/dev/null
-course-engine explain "$ARTEFACT_DIR" --format text | sed -n '1,80p'
+course-engine explain "$ARTEFACT_DIR" --format text | sed -n '1,90p'
 
 echo
 echo "== 8) Inspect (artefact) =="
@@ -104,21 +116,12 @@ else
 fi
 
 echo
-echo "== 10) Policy explain sanity (prefer policy explain; fallback to validate --explain) =="
-if course-engine policy --help >/dev/null 2>&1; then
-  course-engine policy explain preset:baseline --json | python -m json.tool >/dev/null
-  course-engine policy explain preset:baseline --json | head -n 60
-else
-  # Fallback: only if validate supports --explain
-  if course-engine validate --help 2>/dev/null | rg -q -- "--explain"; then
-    course-engine validate "$DEMO_YML" --policy preset:baseline --profile baseline --explain --json \
-      | python -m json.tool >/dev/null
-    course-engine validate "$DEMO_YML" --policy preset:baseline --profile baseline --explain --json \
-      | head -n 60
-  else
-    echo "(skip) no policy explain route detected"
-  fi
-fi
+echo "== 10) Pack (artefact) =="
+rm -rf /tmp/ce-pack-test
+course-engine pack "$ARTEFACT_DIR" --out /tmp/ce-pack-test --overwrite >/dev/null
+test -f /tmp/ce-pack-test/manifest.json && echo "pack manifest OK"
+test -f /tmp/ce-pack-test/explain.json && echo "pack explain.json OK"
+test -f /tmp/ce-pack-test/summary.txt && echo "pack summary.txt OK"
 
 echo
 echo "== DONE: smoke test completed successfully =="

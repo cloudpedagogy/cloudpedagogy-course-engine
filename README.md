@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.15.0)
+# CloudPedagogy Course Engine (v1.16.0)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -30,6 +30,20 @@ Universities increasingly need to demonstrate **how** and **why** courses are de
 The **CloudPedagogy Course Engine** provides a practical middle ground: it makes **design intent**, **structural decisions**, and **declared alignments** explicit, inspectable, and reproducible, while deliberately avoiding automated judgement or enforcement.  
 
 This supports **quality assurance, audit, and review conversations** with clearer evidence, reduced ambiguity, and lower operational risk — **without constraining academic autonomy or pedagogical practice**.
+
+
+---
+
+## What’s new in v1.16
+
+v1.16 is a **release-hygiene and workflow hardening** update.
+
+It focuses on ensuring that:
+- the published version is **consistently reflected** across the CLI, package metadata, and build artefacts, and
+- maintainer workflows (including smoke tests) reliably use the **correct artefact directory semantics** (i.e., the directory that actually contains `manifest.json`).
+
+No new schema, validation rules, or enforcement behaviour are introduced in this release.
+
 
 ---
 
@@ -214,7 +228,7 @@ Build a website:
 
 ```bash
 course-engine build examples/sample-course/course.yml --out dist --overwrite
-course-engine render dist/sample-course
+course-engine render dist/<course-id>
 ```
 
 Explain resolved validation rules (no validation executed; read-only):
@@ -236,6 +250,8 @@ course-engine validate dist/<course> --policy preset:strict-ci --explain --json
 - **validate** – Validate or explain policy resolution
 - **clean** – Remove generated artefacts safely
 - **check** – Run dependency preflight checks
+
+> Note: Policy handling is accessed via `course-engine validate --policy ...` (and `--explain --json` for explain-only resolution). There is no separate `course-engine policy` subcommand.
 
 ---
 
@@ -294,7 +310,7 @@ Policies and profiles are documented in:
 
 ## Explain-only policy resolution (v1.5+)
 
-Explain mode resolves policies and profiles **without executing validation**.
+Explain mode resolves policy + profile configuration **without executing validation**.
 
 This mode is:
 
@@ -302,8 +318,14 @@ This mode is:
 - safe for CI and automation
 - available as stable JSON output
 
+Examples:
+
 ```bash
-course-engine validate dist/course   --policy policies/my-policy.yml   --profile strict-ci   --explain   --json
+# Explain policy/profile resolution only (no validation executed)
+course-engine validate dist/<course-id> --policy preset:baseline --explain --json
+
+# Explain with an explicit profile (if your policy defines profiles)
+course-engine validate dist/<course-id> --policy policies/my-policy.yml --profile strict-ci --explain --json
 ```
 
 The JSON contract is documented in:

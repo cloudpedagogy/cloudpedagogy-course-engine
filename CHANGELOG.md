@@ -5,6 +5,36 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+## v1.16.0 – Release hygiene & artefact path correctness
+
+### Changed
+- Hardened release and smoke-test workflows to **consistently operate on the correct artefact directory**
+  (i.e. the directory that actually contains `manifest.json`, not its parent).
+- Ensured published version is **fully aligned and verifiable** across:
+  - CLI (`course-engine --version`)
+  - Python package metadata
+  - Build artefact manifests
+- Clarified maintainer expectations around build output paths in verification and packing workflows.
+
+### Fixed
+- Eliminated a common maintainer error where `explain`, `validate`, or `pack` were run
+  against a parent output directory rather than the generated artefact subdirectory.
+- Smoke tests now reliably detect and resolve the correct artefact path before running
+  explain, validate, and pack steps.
+
+### Behaviour guarantees
+- No schema changes
+- No validation or enforcement changes
+- No impact on build or render outputs
+- Fully backward compatible with v1.15.0
+
+### Notes
+- This is a **release hygiene and workflow correctness** update.
+- It improves maintainer confidence, CI reliability, and governance reproducibility
+  without changing user-facing behaviour.
+
+----
+
 ## v1.15.0
 
 ### Fixed

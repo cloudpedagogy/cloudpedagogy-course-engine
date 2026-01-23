@@ -274,6 +274,15 @@ course-engine render dist/my-course
 course-engine inspect dist/my-course
 ```
 
+> **Important note on artefact paths**
+>
+> When using `course-engine explain`, `validate`, or `pack` on a built course,
+> always point the command at the **artefact directory that contains `manifest.json`**
+> (typically `dist/<course-id>/`), not the parent output folder (e.g. `dist/`).
+>
+> The engine will reject directories that do not directly contain `manifest.json`
+> to avoid ambiguous or misleading governance output.
+
 ### Explain (artefact-level)
 
 ```bash
