@@ -24,7 +24,7 @@ from .plugins import BuildContext, load_plugins
 from .schema import validate_course_dict
 from .utils.fileops import write_text
 from .utils.manifest import load_manifest, update_manifest_after_render, write_manifest
-from .utils.preflight import PrereqError, has_quarto, require_pdf_toolchain
+from .utils.preflight import PrereqError, build_preflight_report, has_quarto, require_pdf_toolchain
 from .utils.reporting import build_capability_report, report_to_json, report_to_text
 from .pack.packer import run_pack
 from .utils.validation import (
@@ -156,7 +156,9 @@ structure:
 
 
 @app.command()
-def check() -> None:
+def check(
+    json_out: bool = typer.Option(False, "--json", help="Output a machine-readable JSON preflight report."),
+) -> None:
     """
     Check whether required external tools are installed.
 
@@ -165,6 +167,18 @@ def check() -> None:
       1 = Quarto missing
       2 = PDF toolchain missing (TinyTeX not installed / not working)
     """
+    if json_out:
+        payload = build_preflight_report()
+        typer.echo(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", nl=False)
+
+        # Preserve existing exit code semantics
+        if not payload["tools"]["quarto"]["present"]:
+            raise typer.Exit(code=1)
+        if not payload["pdf"]["ready"]:
+            raise typer.Exit(code=2)
+        raise typer.Exit(code=0)
+
+    # Existing human output (keep as-is)
     typer.echo(f"Python: {sys.version.split()[0]} ({platform.system()})")
 
     if has_quarto():
