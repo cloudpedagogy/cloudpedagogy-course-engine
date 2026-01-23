@@ -251,3 +251,184 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
         lines.append("")
 
     return "\n".join(lines)
+
+
+def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
+    """
+    v1.15: Render a one-screen, deterministic summary from the canonical explain payload.
+
+    Pure formatting only:
+      - no file reads
+      - no build
+      - no validation
+      - no policy execution
+
+    Summary rules:
+      - facts + absences only (no judgements)
+      - stable ordering
+      - compact (intended for email/slide paste)
+    """
+    lines: List[str] = []
+
+    def add(s: str = "") -> None:
+        lines.append(s)
+
+    def present(v: Any) -> str:
+        return "present" if v else "not present"
+
+    # Canonical blocks (match explain_payload_to_text expectations)
+    course = _as_dict(payload.get("course"))
+    engine = _as_dict(payload.get("engine"))
+    input_info = _as_dict(payload.get("input"))
+    rendering = _as_dict(payload.get("rendering"))
+    artefact_block = _as_dict(rendering.get("artefact"))
+    sources = _as_dict(payload.get("sources"))
+    source_files = sources.get("files") or []
+    source_counts = _as_dict(sources.get("counts"))
+    errors = payload.get("errors") or []
+    notes = payload.get("notes") or payload.get("warnings") or []
+
+    # Determine mode robustly
+    input_type = input_info.get("type")
+    is_artefact = bool(artefact_block) or (input_type == "dist_dir")
+    mode = "artefact (manifest-backed)" if is_artefact else "source (course.yml)"
+
+    # Header
+    add("Course Engine Summary (v1.15)")
+    add(f"Mode: {mode}")
+    add(f"Path: {input_info.get('path_normalised') or input_info.get('path') or '—'}")
+    if engine.get("built_at_utc"):
+        # v1.15 summary: avoid implying a build/render occurred for source explains
+        add(f"Generated at (UTC): {engine.get('built_at_utc')}")
+    add("")
+
+    # Artefacts / inventory (compact)
+    add("Artefacts")
+    add(f"- manifest.json: {present(is_artefact)}")
+
+    # For source explains, course.yml is implied; for artefact explains, manifest may carry it
+    src_course_yml = _get_nested(payload, "rendering", "artefact", "input", "course_yml")
+    add(f"- course.yml: {present(src_course_yml or (not is_artefact))}")
+
+    # Files / lesson-ish counts (best-effort using existing counts)
+    file_count = source_counts.get("files") if source_counts else None
+    if file_count is None and isinstance(source_files, list):
+        file_count = len(source_files)
+    add(f"- file count: {file_count if file_count is not None else '—'}")
+    add("")
+
+    # Declared metadata snapshot
+    add("Declared metadata")
+    add(f"- title: {course.get('title') or 'not declared'}")
+    add(f"- id: {course.get('id') or 'not declared'}")
+    add(f"- version: {course.get('version') or 'not declared'}")
+    add(f"- language: {course.get('language') or 'not declared'}")
+    add("")
+
+    # Framework alignment snapshot (facts)
+    fw = payload.get("framework_alignment")
+    if not (isinstance(fw, dict) and fw):
+        fw = _get_nested(payload, "rendering", "artefact", "framework_alignment")
+    fw = _as_dict(fw)
+
+    add("Framework alignment")
+    if fw:
+        add(f"- framework: {fw.get('framework_name') or 'not declared'}")
+        domains = fw.get("domains") or []
+        if isinstance(domains, list) and domains:
+            add(f"- domains (declared): {', '.join([str(d) for d in domains])}")
+        else:
+            add("- domains (declared): none declared")
+        if fw.get("mapping_mode"):
+            add(f"- mapping mode: {fw.get('mapping_mode')}")
+    else:
+        add("- declared: no")
+    add("")
+
+    # Capability mapping snapshot
+    cap = _as_dict(payload.get("capability_mapping"))
+    cap_present = cap.get("present")
+    add("Capability mapping")
+    if cap_present is True or (cap and cap_present is None):
+        add("- present: yes")
+    else:
+        add("- present: no")
+    add("")
+
+    # Design intent snapshot (v1.12+)
+    di = payload.get("design_intent") or {}
+    di = _as_dict(di)
+    add("Design intent")
+    add(f"- declared: {'yes' if di.get('present') is True else 'no'}")
+    add("")
+
+    # Governance signals (observed) — payload may or may not include them, so be conservative
+    sigs = payload.get("signals") or _get_nested(payload, "rendering", "artefact", "signals") or []
+    add("Governance signals (observed)")
+    if isinstance(sigs, list) and sigs:
+        # stable ordering by id if dict-shaped
+        dict_sigs = [s for s in sigs if isinstance(s, dict)]
+        if dict_sigs:
+            def _sid(s: Dict[str, Any]) -> str:
+                return str(s.get("id") or s.get("signal") or s.get("code") or "")
+            for s in sorted(dict_sigs, key=_sid)[:12]:
+                sid = s.get("id") or s.get("signal") or s.get("code") or "—"
+                label = s.get("label") or s.get("message") or ""
+                label = _truncate(str(label), n=88)
+                if label:
+                    add(f"- {sid}: {label}")
+                else:
+                    add(f"- {sid}")
+        else:
+            # If they’re plain strings
+            strs = sorted([str(s) for s in sigs])[:12]
+            for s in strs:
+                add(f"- {s}")
+    else:
+        add("- none")
+    add("")
+
+    # Missing declarations (observed) — absences only, no judgement
+    missing: List[str] = []
+
+    # Lifecycle metadata is not yet in payload schema; reserve for later without breaking
+    lifecycle = course.get("lifecycle") if isinstance(course, dict) else None
+    if lifecycle is None:
+        missing.append("lifecycle metadata not declared")
+
+    if not (isinstance(di, dict) and di.get("present") is True):
+        missing.append("design intent not declared")
+
+    # AI scope: only report absence if key is not present at all
+    ai_scope = payload.get("ai_scope") or payload.get("ai_usage") or payload.get("ai") or None
+    if ai_scope is None:
+        missing.append("ai_scope not declared")
+
+    if not (cap_present is True or (cap and cap_present is None)):
+        missing.append("capability mapping not declared")
+
+    # Framework alignment absence
+    if not fw:
+        missing.append("framework alignment not declared")
+
+    add("Missing declarations (observed)")
+    if missing:
+        for item in missing:
+            add(f"- {item}")
+    else:
+        add("- none")
+
+    # Keep summary one-screen: do not include full Errors/Warnings, only counts (facts)
+    if errors or notes:
+        add("")
+        add("Notes")
+        if isinstance(errors, list) and errors:
+            add(f"- errors: {len(errors)}")
+        elif errors:
+            add("- errors: present")
+        if isinstance(notes, list) and notes:
+            add(f"- warnings/notes: {len(notes)}")
+        elif notes:
+            add("- warnings/notes: present")
+
+    return "\n".join(lines)

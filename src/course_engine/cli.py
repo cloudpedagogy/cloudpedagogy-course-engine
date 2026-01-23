@@ -16,7 +16,7 @@ from jinja2 import Template
 from . import __version__
 from .explain import explain_course_yml
 from .explain.artefact import explain_dist_dir
-from .explain.text import explain_payload_to_text
+from .explain.text import explain_payload_to_text, explain_payload_to_summary
 from .generator.build import build_quarto_project
 from .generator.html_single import build_html_single_project
 from .generator.render import render_quarto
@@ -285,6 +285,11 @@ def explain(
         "--format",
         help="Output format: json | text (preferred; overrides --json).",
     ),
+    summary: bool = typer.Option(
+        False,
+        "--summary",
+        help="One-screen human-readable summary (no policy execution; no judgement).",
+    ),
     out: Optional[str] = typer.Option(None, "--out", help="Write output to a file instead of stdout."),
 ) -> None:
     """
@@ -301,20 +306,43 @@ def explain(
     else:
         resolved_format = format.strip().lower()
 
-    allowed = {"json", "text"}
+    # v1.15: summary is a text rendering mode (formatter), not a new payload kind.
+    # Precedence: --summary overrides format/json_out selection.
+    if summary:
+        resolved_format = "summary"
+
+    allowed = {"json", "text", "summary"}
     if resolved_format not in allowed:
-        raise typer.BadParameter("Unknown --format. Use: json | text")
+        raise typer.BadParameter("Unknown output selection. Use --format json|text or --summary.")
 
     command_str = "course-engine " + " ".join(sys.argv[1:])
 
     p = Path(path)
 
     if p.exists() and p.is_dir():
-        payload = explain_dist_dir(
-            dist_dir=p,
-            engine_version=__version__,
-            command=command_str,
-        )
+        manifest_path = p / "manifest.json"
+        course_yml_path = p / "course.yml"
+
+        if manifest_path.exists():
+            payload = explain_dist_dir(
+                dist_dir=p,
+                engine_version=__version__,
+                command=command_str,
+            )
+        elif course_yml_path.exists():
+            payload = explain_course_yml(
+                course_yml_path=str(course_yml_path),
+                engine_version=__version__,
+                command=command_str,
+            )
+        else:
+            raise typer.BadParameter(
+                f"Directory does not look like a dist artefact or course project: {p}\n"
+                "Expected one of:\n"
+                "  - manifest.json (dist/<course-id>)\n"
+                "  - course.yml (course project folder)\n"
+                "Tip: You can also pass an explicit file path to course.yml."
+            )
     else:
         payload = explain_course_yml(
             course_yml_path=path,
@@ -324,8 +352,10 @@ def explain(
 
     if resolved_format == "json":
         text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
-    else:
+    elif resolved_format == "text":
         text = explain_payload_to_text(payload) + "\n"
+    else:
+        text = explain_payload_to_summary(payload) + "\n"
 
     if out:
         write_text(Path(out), text)
