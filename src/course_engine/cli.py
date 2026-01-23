@@ -16,7 +16,7 @@ from jinja2 import Template
 from . import __version__
 from .explain import explain_course_yml
 from .explain.artefact import explain_dist_dir
-from .explain.text import explain_payload_to_text, explain_payload_to_summary
+from .explain.text import explain_payload_to_summary, explain_payload_to_text
 from .generator.build import build_quarto_project
 from .generator.html_single import build_html_single_project
 from .generator.render import render_quarto
@@ -35,8 +35,8 @@ from .utils.validation import (
 
 # v1.4+ policy support (profiles, presets, external policy files)
 from .utils.policy import (
-    load_policy_source,
     list_profiles as policy_list_profiles,
+    load_policy_source,
     resolve_profile as policy_resolve_profile,
 )
 
@@ -319,7 +319,16 @@ def explain(
 
     p = Path(path)
 
-    if p.exists() and p.is_dir():
+    # Fail fast: prevents confusing "source explain" output when a dist dir is mistyped.
+    if not p.exists():
+        raise typer.BadParameter(
+            f"Path not found: {path}\n"
+            "Pass either:\n"
+            "  - a path to course.yml, or\n"
+            "  - a dist/<course-id> folder containing manifest.json."
+        )
+
+    if p.is_dir():
         manifest_path = p / "manifest.json"
         course_yml_path = p / "course.yml"
 
