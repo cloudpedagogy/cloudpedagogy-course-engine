@@ -1,0 +1,58 @@
+# demo/examples/course.scenario-planning.yml
+# Single-chapter demo course for CloudPedagogy Course Engine v1.6
+# Pattern A: explicit lessons declared in YAML (external lesson sources)
+
+course:
+  id: scenario-planning-environmental-scanning
+  title: Scenario Planning and Environmental Scanning
+  subtitle: Single-chapter demo course for CloudPedagogy Course Engine v1.6
+  version: 0.1.0
+  framework: CloudPedagogy AI Capability Framework (2026 Edition)
+
+framework_alignment:
+  framework_name: CloudPedagogy AI Capability Framework (2026 Edition)
+  domains:
+    - awareness
+    - co-agency
+    - practice
+    - ethics
+    - governance
+    - reflection
+  mapping_mode: informational
+  notes: >
+    This course declares broad alignment for transparency and review.
+    It does not claim compliance, scoring, or automated assurance.
+
+capability:
+  domains:
+    - awareness
+    - co-agency
+    - practice
+    - ethics
+    - governance
+    - reflection
+
+structure:
+  modules:
+    - id: module-1
+      title: Scenario Planning and Environmental Scanning
+      lessons:
+        - id: lesson-1
+          title: AI Tools for Real-Time Environmental Scanning
+          source: ../scenario-planning-environmental-scanning/content/lessons/lesson-01-ai-tools-for-real-time-environmental-scanning.md
+
+        - id: lesson-2
+          title: Trend Analysis in Higher Education using GenAI
+          source: ../scenario-planning-environmental-scanning/content/lessons/lesson-02-trend-analysis-in-higher-education-using-genai.md
+
+        - id: lesson-3
+          title: Building Strategic Scenarios with AI Support
+          source: ../scenario-planning-environmental-scanning/content/lessons/lesson-03-building-strategic-scenarios-with-ai-support.md
+
+        - id: lesson-4
+          title: Stress-Testing Institutional Plans with Simulations
+          source: ../scenario-planning-environmental-scanning/content/lessons/lesson-04-stress-testing-institutional-plans-with-simulations.md
+
+        - id: lesson-5
+          title: Linking Strategic Foresight to Operational Strategy
+          source: ../scenario-planning-environmental-scanning/content/lessons/lesson-05-linking-strategic-foresight-to-operational-strategy.md

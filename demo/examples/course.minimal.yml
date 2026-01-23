@@ -1,0 +1,26 @@
+schema_version: "1.5"
+
+course:
+  id: "example-course"
+  slug: "example-course"
+  version: "0.1.0"
+  title: "Example Course"
+  description: "Minimal example course for the CloudPedagogy Course Engine."
+  language: "en"
+  author:
+    name: "Your Name"
+    organisation: "Your Organisation"
+
+content:
+  root: "content"
+  modules:
+    - id: "module-1"
+      title: "Module 1"
+      items:
+        - id: "lesson-1"
+          title: "Lesson 1"
+          type: "markdown"
+          source: "lesson-1.md"
+
+outputs:
+  default_format: "html"

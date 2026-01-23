@@ -1,0 +1,65 @@
+course:
+  id: ai-capability-foundations
+  title: "AI Capability Foundations"
+  subtitle: "Practical, responsible, framework-aligned e-learning"
+  version: "0.1.0"
+  language: "en-GB"
+
+framework_alignment:
+  framework_name: "CloudPedagogy AI Capability Framework (2026 Edition)"
+  domains:
+    - Awareness
+    - Co-Agency
+    - Applied Practice & Innovation
+    - Ethics, Equity & Impact
+    - Decision-Making & Governance
+    - Reflection, Learning & Renewal
+
+outputs:
+  formats: ["html"]
+  theme: "cosmo"
+  toc: true
+
+structure:
+  modules:
+    - id: m1
+      title: "Orientation"
+      lessons:
+        - id: l1
+          title: "Welcome and how this course works"
+          duration: 15
+          tags: ["orientation", "foundations"]
+          prerequisites: []
+          readings:
+            - title: "CloudPedagogy AI Capability Framework (2026 Edition)"
+              url: "https://www.cloudpedagogy.com/pages/ai-capability-framework"
+              required: true
+          learning_objectives:
+            - "Explain what AI capability means in this course context."
+            - "Identify how the six domains will be used."
+          content_blocks:
+            - type: "markdown"
+              body: |
+                This is a sample lesson body.
+
+            - type: "callout"
+              style: "note"
+              title: "Tip"
+              body: "Keep this course practical and defensible."
+
+            - type: "quiz"
+              prompt: "Which domain focuses most directly on governance?"
+              options:
+                - "Awareness"
+                - "Decision-Making & Governance"
+                - "Reflection, Learning & Renewal"
+              answer: 1
+              solution: "Governance sits most directly in Decision-Making & Governance, even though other domains contribute."
+
+            - type: "reflection"
+              prompt: "Where in your current work would a capability lens reduce risk or improve clarity?"
+
+            - type: "markdown"
+              audience: "instructor"
+              body: |
+                Emphasise that governance is not a 'policy afterthought' — it shapes design choices from the start.

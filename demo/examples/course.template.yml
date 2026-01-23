@@ -1,0 +1,144 @@
+# ============================================================
+# CloudPedagogy Course Engine — Course YAML Template
+# Schema version: 1.5
+#
+# This file is a HUMAN-EDITABLE template.
+# Comments explain what each section does.
+# You may safely delete comments after understanding them.
+# ============================================================
+
+schema_version: "1.5"
+
+# ------------------------------------------------------------
+# COURSE METADATA (required)
+# ------------------------------------------------------------
+course:
+  # Stable identifier (no spaces, no capitals)
+  id: "your-course-id"
+
+  # URL / folder-safe slug (usually same as id)
+  slug: "your-course-id"
+
+  # Semantic version of the course itself
+  version: "0.1.0"
+
+  # Human-readable title
+  title: "Your Course Title"
+
+  # Optional subtitle
+  subtitle: "Optional subtitle shown in rendered outputs"
+
+  # Short description (supports multi-line text)
+  description: >
+    Brief description of what this course is about.
+    This is used for documentation and manifests.
+
+  # Language code
+  language: "en"
+
+  # Author information
+  author:
+    name: "Your Name"
+    organisation: "Your Organisation"
+
+  # Optional licence metadata
+  license:
+    name: "CC BY-NC-SA 4.0"
+
+  # Optional tags for indexing/search
+  tags:
+    - "example"
+    - "education"
+
+# ------------------------------------------------------------
+# FRAMEWORK ALIGNMENT (optional but recommended)
+#
+# IMPORTANT:
+# - domains MUST be a LIST OF STRINGS
+# - NOT objects
+# - NOT dictionaries
+# ------------------------------------------------------------
+framework_alignment:
+  framework_name: "CloudPedagogy AI Capability Framework (2026 Edition)"
+  version: "2026"
+
+  # informational | enforced (enforcement comes via policies)
+  mode: "informational"
+
+  # Allowed values are free strings, but consistency is advised
+  domains:
+    - "awareness"
+    - "co-agency"
+    - "practice"
+    - "ethics"
+    - "governance"
+    - "reflection"
+
+# ------------------------------------------------------------
+# COURSE CONTENT STRUCTURE (required)
+# ------------------------------------------------------------
+content:
+  # Root folder where content files live
+  root: "content"
+
+  # One or more modules
+  modules:
+    - id: "module-1"
+      title: "Module 1"
+
+      items:
+        - id: "lesson-1"
+          title: "Lesson 1"
+          type: "markdown"
+
+          # Path is RELATIVE TO content.root
+          source: "lesson-1.md"
+
+# ------------------------------------------------------------
+# CAPABILITY MAPPING (optional, governance/audit use)
+#
+# IMPORTANT:
+# - domains MUST be a DICTIONARY
+# - each domain value MUST be an object
+# ------------------------------------------------------------
+capability_mapping:
+  framework: "CloudPedagogy AI Capability Framework (2026 Edition)"
+  version: "2026"
+
+  domains:
+    awareness:
+      name: "AI Awareness & Orientation"
+
+    co-agency:
+      name: "Human–AI Co-Agency"
+
+    practice:
+      name: "Applied Practice & Innovation"
+
+    ethics:
+      name: "Ethics, Equity & Impact"
+
+    governance:
+      name: "Decision-Making & Governance"
+
+    reflection:
+      name: "Reflection, Learning & Renewal"
+
+# ------------------------------------------------------------
+# OUTPUT CONFIGURATION
+# ------------------------------------------------------------
+outputs:
+  # Default format produced by `build`
+  default_format: "html"
+
+  # Additional formats allowed
+  formats:
+    - "html"
+    - "pdf"
+
+# ------------------------------------------------------------
+# BUILD BEHAVIOUR
+# ------------------------------------------------------------
+build:
+  # Prevent accidental overwrites unless --overwrite is passed
+  non_destructive: true

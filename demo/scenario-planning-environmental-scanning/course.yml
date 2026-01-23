@@ -1,0 +1,270 @@
+course:
+  id: scenario-planning-environmental-scanning
+  title: "Scenario Planning and Environmental Scanning"
+  subtitle: "Demo course for CloudPedagogy Course Engine v1.11 (auditability + explainability + capability mapping)"
+  version: "0.3.0"
+  language: "en-GB"
+
+design_intent:
+  summary: >
+    This course is designed to support critical engagement with AI-informed
+    environmental scanning and scenario planning practices while preserving
+    human judgement, clear decision boundaries, and transparent design rationale.
+
+  ai_position:
+    assessments: >
+      Generative AI tools may be used for formative exploration and drafting,
+      but students should follow module and programme guidance for what is
+      permitted in summative assessment. Where AI is used, students should be
+      able to describe and reflect on their process.
+
+    learning_activities: >
+      AI tools are introduced as optional supports for analysis, ideation, and
+      scenario exploration. Learners are encouraged to evaluate outputs critically,
+      check assumptions, and surface limitations, bias, and uncertainty.
+
+  roles_and_responsibilities:
+    module_organiser: >
+      Maintain clarity of the course’s AI position and design intent, ensure
+      consistency across student-facing surfaces (e.g. handbook, LMS, briefs),
+      and review this intent as part of annual module evaluation.
+    tutor: >
+      Reinforce appropriate AI use boundaries, support reflective discussion,
+      and help learners distinguish between tool assistance and academic judgement.
+    marker: >
+      Assess learning outcomes, reasoning, and evidence of critical engagement,
+      not the sophistication of tool use.
+
+  framework_references:
+    - name: "CloudPedagogy AI Capability Framework (2026 Edition)"
+      version: "2026"
+      alignment_type: "informational"
+      notes: >
+        Used as a reflective lens for course design and learning activities;
+        it is not enforced for compliance and does not imply quality approval.
+
+  policy_context:
+    - title: "Institutional guidance on AI use (reference)"
+      scope: "student_and_staff"
+      url: "https://example.org/ai-guidance"
+      notes: >
+        Referenced to support consistent messaging and expectations. The Course Engine
+        does not interpret or enforce policy; it only surfaces declared context.
+
+  review_and_evolution:
+    last_reviewed: "2026-01-20"
+    review_cycle: "annual"
+    reflection_prompt: >
+      What has changed this year in how AI influences teaching, learning, or assessment
+      decisions in this course, and what updates to design intent or guidance are needed?
+
+# -------------------------
+# Option A1: AI scoping metadata (STRUCTURED)
+# -------------------------
+ai_scoping:
+  scope_summary: >
+    AI tools may be used to support learning activities (e.g., scanning, synthesis,
+    ideation, scenario exploration) and formative drafting. Use in summative assessment
+    is governed by programme/module rules; where allowed, learners must disclose and
+    be able to explain how AI contributed.
+
+  # IMPORTANT: must be a YAML LIST (not a mapping)
+  permitted_uses:
+    - "Learning activities: optional support for scanning, synthesis, ideation, and scenario exploration."
+    - "Formative drafting: outlines, early drafts, alternative framings, and planning support."
+    - "Study support: practice questions, concept clarification, and reflective prompts (no private data)."
+    - "Tutor support (staff): preparing workshop prompts, alternative examples, and draft feedback phrasing."
+
+  # Also a list
+  not_permitted:
+    - "Summative assessment: generating final answers where policy does not permit AI use."
+    - "Misrepresentation: presenting AI-generated work as wholly original without required disclosure."
+    - "Sensitive data: entering personal, confidential, or restricted information into third-party tools."
+
+  disclosure_expectations: >
+    Where AI use is permitted, learners should be able to describe the tool(s) used,
+    the prompts/inputs at a high level, what was accepted/changed/rejected, and why.
+
+  data_handling: >
+    Do not paste personal, confidential, or identifiable data into AI tools unless an
+    institutionally approved service is explicitly designated for that purpose.
+
+  decision_boundaries: >
+    AI outputs must not be treated as authoritative. Learners are expected to verify
+    claims, check sources, and apply academic and professional judgement.
+
+framework_alignment:
+  framework_name: "CloudPedagogy AI Capability Framework (2026 Edition)"
+  domains:
+    - "Awareness"
+    - "Co-Agency"
+    - "Applied Practice & Innovation"
+    - "Ethics, Equity & Impact"
+    - "Decision-Making & Governance"
+    - "Reflection, Learning & Renewal"
+
+# Defensible (structural) mapping used by policy-based validation.
+# - This is not a quality claim.
+# - Evidence items reference lessons explicitly using lesson:<lesson-id>.
+# - Coverage items reference modules explicitly (module IDs).
+capability_mapping:
+  framework: "CloudPedagogy AI Capability Framework (2026 Edition)"
+  version: "2026"
+  domains:
+    awareness:
+      label: "AI Awareness & Orientation"
+      intent: "Build foundational literacy for environmental scanning and scenario work with GenAI."
+      coverage: ["module-1", "lesson:lesson-01"]
+      evidence: ["lesson:lesson-01", "lesson:lesson-02"]
+
+    co_agency:
+      label: "Human–AI Co-Agency"
+      intent: "Clarify roles, prompts, and decision boundaries when collaborating with GenAI for foresight tasks."
+      coverage: ["module-1", "lesson:lesson-03"]
+      evidence: ["lesson:lesson-03", "lesson:lesson-09"]
+
+    applied_practice_innovation:
+      label: "Applied Practice & Innovation"
+      intent: "Apply GenAI to real-world scanning, synthesis, and scenario construction workflows."
+      coverage: ["module-1", "lesson:lesson-02"]
+      evidence: ["lesson:lesson-02", "lesson:lesson-04", "lesson:lesson-10"]
+
+    ethics_equity_impact:
+      label: "Ethics, Equity & Impact"
+      intent: "Surface bias, risk, and impact considerations in AI-assisted trend and scenario work."
+      coverage: ["module-1", "lesson:lesson-07"]
+      evidence: ["lesson:lesson-07", "lesson:lesson-11"]
+
+    decision_making_governance:
+      label: "Decision-Making & Governance"
+      intent: "Support defensible choices, accountability, and governance framing in foresight-to-strategy workflows."
+      coverage: ["module-1", "lesson:lesson-05"]
+      evidence: ["lesson:lesson-05", "lesson:lesson-04"]
+
+    reflection_learning_renewal:
+      label: "Reflection, Learning & Renewal"
+      intent: "Embed reflective practice and continuous improvement across scanning and scenario cycles."
+      coverage: ["module-1", "lesson:lesson-14"]
+      evidence: ["lesson:lesson-06", "lesson:lesson-11", "lesson:lesson-14"]
+
+outputs:
+  formats: ["html"]
+  theme: "cosmo"
+  toc: true
+
+structure:
+  modules:
+    - id: module-1
+      title: "Scenario Planning and Environmental Scanning"
+      lessons:
+        - id: lesson-01
+          display_label: "5.3.1"
+          title: "AI Tools for Real-Time Environmental Scanning"
+          duration: 30
+          tags: []
+          prerequisites: []
+          source: "content/lessons/provenance-test.md"
+
+        - id: lesson-02
+          display_label: "5.3.2"
+          title: "Trend Analysis in Higher Education using GenAI"
+          duration: 30
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-02-trend-analysis-in-higher-education-using-genai.md"
+
+        - id: lesson-03
+          display_label: "5.3.3"
+          title: "Building Strategic Scenarios with AI Support"
+          duration: 30
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-03-building-strategic-scenarios-with-ai-support.md"
+
+        - id: lesson-04
+          display_label: "5.3.4"
+          title: "Stress-Testing Institutional Plans with Simulations"
+          duration: 30
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-04-stress-testing-institutional-plans-with-simulations.md"
+
+        - id: lesson-05
+          display_label: "5.3.5"
+          title: "Linking Strategic Foresight to Operational Strategy"
+          duration: 30
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-05-linking-strategic-foresight-to-operational-strategy.md"
+
+        - id: lesson-06
+          display_label: "5.3.6"
+          title: "Key Takeaways"
+          duration: 10
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-06-key-takeaways.md"
+
+        - id: lesson-07
+          display_label: "5.3.A"
+          title: "Practical Use Cases"
+          duration: 20
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-07-practical-use-cases.md"
+
+        - id: lesson-08
+          display_label: "5.3.B"
+          title: "Learning Activities"
+          duration: 30
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-08-learning-activities.md"
+
+        - id: lesson-09
+          display_label: "5.3.C"
+          title: "Prompt Templates"
+          duration: 20
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-09-prompt-templates.md"
+
+        - id: lesson-10
+          display_label: "5.3.D"
+          title: "Innovative Use Cases"
+          duration: 20
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-10-innovative-use-cases.md"
+
+        - id: lesson-11
+          display_label: "5.3.E"
+          title: "Reflection & Discussion"
+          duration: 15
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-11-reflection-and-discussion.md"
+
+        - id: lesson-12
+          display_label: "5.3.F"
+          title: "Productivity Tips"
+          duration: 15
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-12-productivity-tips.md"
+
+        - id: lesson-13
+          display_label: "5.3.G"
+          title: "Prompt Library"
+          duration: 30
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-13-prompt-library.md"
+
+        - id: lesson-14
+          display_label: "5.3.H"
+          title: "Applying the AI Capability Framework"
+          duration: 45
+          tags: []
+          prerequisites: []
+          source: "content/lessons/lesson-14-applying-the-genai-framework.md"
