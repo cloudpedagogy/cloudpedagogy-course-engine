@@ -7,7 +7,7 @@ import platform
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 import typer
 import yaml
@@ -20,25 +20,23 @@ from .explain.text import explain_payload_to_summary, explain_payload_to_text
 from .generator.build import build_quarto_project
 from .generator.html_single import build_html_single_project
 from .generator.render import render_quarto
+from .pack.packer import PackInputError, run_pack
 from .plugins import BuildContext, load_plugins
 from .schema import validate_course_dict
 from .utils.fileops import write_text
 from .utils.manifest import load_manifest, update_manifest_after_render, write_manifest
+from .utils.policy import (
+    list_profiles as policy_list_profiles,
+    load_policy_source,
+    resolve_profile as policy_resolve_profile,
+)
 from .utils.preflight import PrereqError, build_preflight_report, require_pdf_toolchain
 from .utils.reporting import build_capability_report, report_to_json, report_to_text
-from .pack.packer import run_pack, PackInputError
 from .utils.validation import (
     load_profile,  # v1.3 legacy profile file loader
     validate_manifest,
     validation_to_json,
     validation_to_text,
-)
-
-# v1.4+ policy support (profiles, presets, external policy files)
-from .utils.policy import (
-    list_profiles as policy_list_profiles,
-    load_policy_source,
-    resolve_profile as policy_resolve_profile,
 )
 
 app = typer.Typer(no_args_is_help=True)
@@ -157,7 +155,16 @@ structure:
 
 @app.command()
 def check(
-    json_out: bool = typer.Option(False, "--json", help="Output a machine-readable JSON preflight report."),
+    json_out: bool = typer.Option(
+        False,
+        "--json",
+        help="Legacy/compatibility flag. Prefer --format json|text.",
+    ),
+    output_format: Optional[str] = typer.Option(
+        None,
+        "--format",
+        help="Output format: json | text (preferred; overrides --json).",
+    ),
 ) -> None:
     """
     Check whether required external tools are installed.
@@ -167,8 +174,19 @@ def check(
       1 = Quarto missing
       2 = PDF toolchain missing (TinyTeX not installed / not working)
     """
-    if json_out:
-        payload = build_preflight_report()
+    # Resolve output format (same pattern as explain)
+    if output_format is None:
+        resolved_format = "json" if json_out else "text"
+    else:
+        resolved_format = output_format.strip().lower()
+
+    if resolved_format not in {"json", "text"}:
+        raise typer.BadParameter("Unknown output selection. Use --format json|text.")
+
+    payload = build_preflight_report()
+
+    # JSON mode (facts-only)
+    if resolved_format == "json":
         typer.echo(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", nl=False)
 
         # Preserve existing exit code semantics
@@ -187,7 +205,6 @@ def check(
     os_name = platform.system()
     typer.echo(f"Python: {python_ver} ({os_name})")
 
-    payload = build_preflight_report()
     tools = payload.get("tools") or {}
     pdf = payload.get("pdf") or {}
 
@@ -201,10 +218,7 @@ def check(
 
     # Quarto
     if quarto_present:
-        if quarto_version:
-            typer.echo(f"✔ Quarto found: {quarto_version}")
-        else:
-            typer.echo("✔ Quarto found")
+        typer.echo(f"✔ Quarto found: {quarto_version}" if quarto_version else "✔ Quarto found")
     else:
         typer.echo("✖ Quarto not found")
         typer.echo("Fix: Install Quarto from https://quarto.org/")
@@ -212,10 +226,7 @@ def check(
 
     # Pandoc (informational)
     if pandoc_present:
-        if pandoc_version:
-            typer.echo(f"✔ Pandoc found: {pandoc_version}")
-        else:
-            typer.echo("✔ Pandoc found")
+        typer.echo(f"✔ Pandoc found: {pandoc_version}" if pandoc_version else "✔ Pandoc found")
     else:
         typer.echo("• Pandoc not detected on PATH (may be bundled with Quarto)")
 
@@ -229,10 +240,8 @@ def check(
     typer.echo("✖ PDF ready: no")
     typer.echo("Fix: quarto install tinytex")
 
-    # Optional: include concise error tail if present
     pdf_error = pdf.get("error")
     if isinstance(pdf_error, str) and pdf_error.strip():
-        # Keep it short and readable; avoid dumping huge logs.
         lines = [ln.rstrip() for ln in pdf_error.splitlines() if ln.strip()]
         if lines:
             tail = "\n".join(lines[-12:])
@@ -334,11 +343,11 @@ def inspect(project_dir: str) -> None:
 def explain(
     path: str = typer.Argument(..., help="Path to course.yml OR dist/<course> folder to explain."),
     json_out: bool = typer.Option(
-        True,
+        False,
         "--json",
-        help="Legacy/compatibility flag (default: true). Prefer --format json|text.",
+        help="Legacy/compatibility flag (default: false). Prefer --format json|text.",
     ),
-    format: Optional[str] = typer.Option(
+    output_format: Optional[str] = typer.Option(
         None,
         "--format",
         help="Output format: json | text (preferred; overrides --json).",
@@ -359,10 +368,10 @@ def explain(
 
     This command does not build outputs and does not enforce policies.
     """
-    if format is None:
+    if output_format is None:
         resolved_format = "json" if json_out else "text"
     else:
-        resolved_format = format.strip().lower()
+        resolved_format = output_format.strip().lower()
 
     # v1.15: summary is a text rendering mode (formatter), not a new payload kind.
     # Precedence: --summary overrides format/json_out selection.
@@ -460,8 +469,6 @@ def pack(
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Normalise pack profile early for cleaner UX
-
     try:
         result = run_pack(
             input_path=in_path,
@@ -474,7 +481,6 @@ def pack(
         raise typer.BadParameter(str(e)) from e
 
     typer.echo(f"Pack generated: {out_dir}")
-    # Optional: print a tiny summary of what was written
     if isinstance(result, dict) and "contents" in result:
         written = [k for k, v in (result.get("contents") or {}).items() if v]
         if written:
@@ -662,15 +668,12 @@ def validate(
         except FileNotFoundError as e:
             raise typer.BadParameter(str(e)) from e
 
-        # Defensive: legacy profiles may not include signals
         if "signals" not in prof:
             prof["signals"] = {"default_action": "info", "overrides": {}, "ignore": []}
 
     else:
         prof = load_profile(None)
 
-        # Defensive: engine defaults should always include signals too.
-        # (Keeps validate_manifest() stable if defaults change.)
         if "signals" not in prof:
             prof["signals"] = {"default_action": "info", "overrides": {}, "ignore": []}
 
@@ -681,9 +684,6 @@ def validate(
     else:
         typer.echo(validation_to_text(result), nl=False)
 
-    # Exit behaviour:
-    # - If --strict is set and validation failed, exit 3 (existing convention).
-    # - In non-strict mode, rule violations remain warnings, but signal action=error gates CI.
     if not result.ok:
         if strict:
             raise typer.Exit(code=3)
@@ -785,7 +785,12 @@ def build(
     course_yml: str,
     out: str = "dist",
     templates: Optional[str] = None,
-    format: str = typer.Option("quarto", "--format", "-f", help="quarto | markdown | html-single | pdf"),
+    output_format: str = typer.Option(
+        "quarto",
+        "--format",
+        "-f",
+        help="quarto | markdown | html-single | pdf",
+    ),
     overwrite: bool = typer.Option(
         False,
         "--overwrite",
@@ -804,10 +809,10 @@ def build(
         raise typer.BadParameter(f"Invalid course.yml: {e}") from e
 
     allowed = {"quarto", "markdown", "html-single", "pdf"}
-    if format not in allowed:
+    if output_format not in allowed:
         raise typer.BadParameter("Unknown --format. Use: quarto | markdown | html-single | pdf")
 
-    if format == "quarto":
+    if output_format == "quarto":
         out_dir = out_root / spec.id
         _maybe_overwrite_dir(out_dir, overwrite=overwrite)
 
@@ -826,7 +831,7 @@ def build(
         typer.echo(f"ARTEFACT={out_dir.resolve()}")
         return
 
-    if format == "markdown":
+    if output_format == "markdown":
         try:
             from .generator.markdown import build_markdown_package  # type: ignore
         except ModuleNotFoundError:
@@ -847,7 +852,7 @@ def build(
         typer.echo(f"ARTEFACT={Path(out_dir).resolve()}")
         return
 
-    if format == "html-single":
+    if output_format == "html-single":
         out_dir = build_html_single_project(spec, out_root=out_root, templates_dir=templates_dir)
         typer.echo(f"Built single-page HTML Quarto project: {out_dir}")
         _emit_manifest(spec, out_dir, "html-single", course_path)
@@ -855,7 +860,7 @@ def build(
         typer.echo("Next: course-engine render " + str(out_dir))
         return
 
-    if format == "pdf":
+    if output_format == "pdf":
         try:
             require_pdf_toolchain()
         except PrereqError as e:
@@ -886,16 +891,24 @@ def build(
 @app.command()
 def render(
     project_dir: str,
-    to: Optional[str] = typer.Option(None, "--to", help="Optional Quarto output format override (e.g., pdf, html)."),
-    input: Optional[str] = typer.Option(None, "--input", help='Optional input file to render (e.g., "index.qmd").'),
+    to: Optional[str] = typer.Option(
+        None,
+        "--to",
+        help="Optional Quarto output format override (e.g., pdf, html).",
+    ),
+    input_file: Optional[str] = typer.Option(
+        None,
+        "--input",
+        help='Optional input file to render (e.g., "index.qmd").',
+    ),
 ):
     p = Path(project_dir)
 
-    render_quarto(p, input_file=input, to=to)
+    render_quarto(p, input_file=input_file, to=to)
     typer.echo("Render complete.")
 
     try:
-        mp = update_manifest_after_render(p, to=to, input_file=input, include_hashes=True)
+        mp = update_manifest_after_render(p, to=to, input_file=input_file, include_hashes=True)
         typer.echo(f"Updated manifest: {mp}")
     except FileNotFoundError:
         pass
@@ -909,7 +922,7 @@ def main() -> None:
     imported safely by __main__.py.
     """
     app()
-    
+
+
 if __name__ == "__main__":
     main()
-

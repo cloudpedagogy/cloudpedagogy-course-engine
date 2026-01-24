@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.18.0**
+**course-engine v1.19.0**
 
 ---
 
@@ -97,13 +97,63 @@ quarto install tinytex
 
 ---
 
-### 3.4 Preflight check (recommended)
+## 3.4 Preflight check (recommended)
 
-Verify required external tools at any time:
+`course-engine` includes a built-in **preflight check** to verify that required
+external tools are installed and working correctly.
+
+This is recommended:
+- before your first build,
+- when setting up a new machine,
+- in CI or automation workflows,
+- or when troubleshooting PDF or rendering issues.
+
+### Run the preflight check
 
 ```bash
 course-engine check
 ```
+
+This performs a non-destructive environment check and reports:
+
+- Python version and platform
+- Quarto availability and version
+- Pandoc availability (as reported by Quarto, if exposed)
+- PDF toolchain readiness (TinyTeX / LaTeX)
+- Clear remediation guidance if something is missing
+
+### Explicit output formats (v1.19+)
+
+From v1.19 onward, preflight output format can be selected explicitly.
+
+For **machine-readable output** (CI, scripts, support tooling):
+
+```bash
+course-engine check --format json
+```
+
+For **human-readable diagnostic output**:
+
+```bash
+course-engine check --format text
+```
+
+Notes:
+
+- `--format` is the **preferred** output selector.
+- `--json` remains supported as a **legacy / compatibility flag**.
+- If both are supplied, `--format` takes precedence.
+
+### Behaviour guarantees
+
+The preflight check:
+
+- does **not** modify your system or project,
+- does **not** build or render content,
+- does **not** enforce policies or validation rules,
+- is safe to run repeatedly.
+
+It is intended purely as a **diagnostic and onboarding aid**.
 
 ---
 
