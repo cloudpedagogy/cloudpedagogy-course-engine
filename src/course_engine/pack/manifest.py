@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Literal, Optional
 
-
 InputType = Literal["project", "artefact"]
 
 
@@ -18,6 +17,11 @@ def build_pack_manifest(
 ) -> Dict[str, Any]:
     """
     Build pack_manifest.json (facts only; contract-like).
+
+    Notes:
+      - pack.input.path records the user-provided input path (which may be a parent OUT directory).
+      - If the engine auto-resolves the effective artefact directory, packer may record it in notes
+        (e.g., "resolved_input: /path/to/dist/<course-id>").
     """
     return {
         "pack": {

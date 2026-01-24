@@ -5,7 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from course_engine.pack.packer import run_pack
+import pytest
+
+from course_engine.pack.packer import PackInputError, run_pack
 
 
 def test_pack_packer_mvp_on_dist_artefact(tmp_path: Path) -> None:
@@ -27,7 +29,7 @@ def test_pack_packer_mvp_on_dist_artefact(tmp_path: Path) -> None:
     result = run_pack(
         input_path=artefact_dir,
         out_dir=out_dir,
-        engine_version="1.16.0-test",
+        engine_version="1.17.0-test",
         command="course-engine pack dist/... --out ...",
     )
 
@@ -48,7 +50,7 @@ def test_pack_packer_mvp_on_dist_artefact(tmp_path: Path) -> None:
     pm = json.loads((out_dir / "pack_manifest.json").read_text(encoding="utf-8"))
 
     assert pm["pack"]["engine"]["name"] == "course-engine"
-    assert pm["pack"]["engine"]["version"] == "1.16.0-test"
+    assert pm["pack"]["engine"]["version"] == "1.17.0-test"
     assert pm["pack"]["input"]["type"] == "artefact"
 
     contents = pm["contents"]
@@ -61,3 +63,95 @@ def test_pack_packer_mvp_on_dist_artefact(tmp_path: Path) -> None:
     assert "contents" in result
     assert result["contents"]["explain_json"] is True
     assert result["contents"]["manifest_json"] is True
+
+
+def test_pack_packer_accepts_parent_out_dir_with_single_artefact(tmp_path: Path) -> None:
+    """
+    v1.17: pack should accept a parent OUT directory if it contains exactly one
+    child directory with manifest.json (auto-detect artefact dir).
+    """
+    parent_out = tmp_path / "out"
+    artefact = parent_out / "course-123"
+    artefact.mkdir(parents=True)
+    (artefact / "manifest.json").write_text("{}", encoding="utf-8")
+
+    out_dir = tmp_path / "pack-out"
+
+    result = run_pack(
+        input_path=parent_out,
+        out_dir=out_dir,
+        engine_version="1.17.0-test",
+        command="course-engine pack OUTDIR --out ...",
+    )
+
+    # Must still produce core pack outputs
+    assert (out_dir / "pack_manifest.json").exists()
+    assert (out_dir / "explain.json").exists()
+    assert (out_dir / "explain.txt").exists()
+    assert (out_dir / "summary.txt").exists()
+
+    # Should have copied manifest.json from the auto-detected artefact dir
+    assert (out_dir / "manifest.json").exists()
+
+    pm = json.loads((out_dir / "pack_manifest.json").read_text(encoding="utf-8"))
+    assert pm["pack"]["input"]["type"] == "artefact"
+
+    # Optional but valuable: confirm that resolution was recorded (notes)
+    notes = pm.get("notes") or []
+    assert any("resolved_input:" in str(n) for n in notes)
+
+    # Returned runtime structure present
+    assert "contents" in result
+    assert result["contents"]["manifest_json"] is True
+
+
+def test_pack_packer_parent_out_dir_with_no_candidates_errors(tmp_path: Path) -> None:
+    """
+    v1.17: if a parent OUT dir contains no artefact candidates, pack should
+    fail with a clear, helpful error.
+    """
+    parent_out = tmp_path / "out"
+    parent_out.mkdir(parents=True)
+
+    out_dir = tmp_path / "pack-out"
+
+    with pytest.raises(PackInputError) as e:
+        run_pack(
+            input_path=parent_out,
+            out_dir=out_dir,
+            engine_version="1.17.0-test",
+            command="course-engine pack OUTDIR --out ...",
+        )
+
+    msg = str(e.value)
+    assert "not recognised" in msg.lower()
+    assert "manifest.json" in msg
+
+
+def test_pack_packer_parent_out_dir_with_multiple_candidates_errors(tmp_path: Path) -> None:
+    """
+    v1.17: if a parent OUT dir contains multiple candidate artefact dirs,
+    pack should fail with a helpful error listing candidates.
+    """
+    parent_out = tmp_path / "out"
+    a1 = parent_out / "a"
+    a2 = parent_out / "b"
+    a1.mkdir(parents=True)
+    a2.mkdir(parents=True)
+    (a1 / "manifest.json").write_text("{}", encoding="utf-8")
+    (a2 / "manifest.json").write_text("{}", encoding="utf-8")
+
+    out_dir = tmp_path / "pack-out"
+
+    with pytest.raises(PackInputError) as e:
+        run_pack(
+            input_path=parent_out,
+            out_dir=out_dir,
+            engine_version="1.17.0-test",
+            command="course-engine pack OUTDIR --out ...",
+        )
+
+    msg = str(e.value)
+    assert "multiple artefact candidates" in msg.lower()
+    assert str(a1) in msg
+    assert str(a2) in msg

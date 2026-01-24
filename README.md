@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.16.0)
+# CloudPedagogy Course Engine (v1.17.0)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -31,6 +31,42 @@ The **CloudPedagogy Course Engine** provides a practical middle ground: it makes
 
 This supports **quality assurance, audit, and review conversations** with clearer evidence, reduced ambiguity, and lower operational risk — **without constraining academic autonomy or pedagogical practice**.
 
+
+---
+
+## What’s new in v1.17
+
+v1.17 is a **workflow ergonomics and adoption-readiness** release.
+
+It focuses on removing common points of friction when moving between
+build, explain, validation, and governance packaging — especially in
+CI, QA, and institutional onboarding contexts.
+
+### Highlights
+
+- **Resolved artefact path printed on build**
+  - `course-engine build` now prints a copy/paste-ready artefact path:
+    ```text
+    ARTEFACT=/path/to/dist/<course-id>
+    ```
+  - This makes downstream commands and scripts unambiguous and CI-friendly.
+
+- **Governance pack auto-detects parent OUT directories**
+  - `course-engine pack` now accepts:
+    - a direct artefact directory (`dist/<course-id>`), **or**
+    - a parent OUT directory containing exactly one artefact subdirectory.
+  - This matches how users naturally point commands and reduces avoidable errors.
+
+- **Clear, human-grade error messages**
+  - Ambiguous or invalid input directories now fail with
+    helpful messages listing detected candidates and next steps.
+
+- **No schema, validation, or governance changes**
+  - This release does **not** introduce:
+    - new schema fields,
+    - new validation rules,
+    - or any enforcement behaviour.
+  - All changes are workflow-level and backwards compatible.
 
 ---
 
@@ -228,6 +264,7 @@ Build a website:
 
 ```bash
 course-engine build examples/sample-course/course.yml --out dist --overwrite
+# build prints: ARTEFACT=dist/<course-id>
 course-engine render dist/<course-id>
 ```
 

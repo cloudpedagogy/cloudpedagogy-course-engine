@@ -26,7 +26,7 @@ from .utils.fileops import write_text
 from .utils.manifest import load_manifest, update_manifest_after_render, write_manifest
 from .utils.preflight import PrereqError, build_preflight_report, require_pdf_toolchain
 from .utils.reporting import build_capability_report, report_to_json, report_to_text
-from .pack.packer import run_pack
+from .pack.packer import run_pack, PackInputError
 from .utils.validation import (
     load_profile,  # v1.3 legacy profile file loader
     validate_manifest,
@@ -454,12 +454,16 @@ def pack(
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    result = run_pack(
-        input_path=in_path,
-        out_dir=out_dir,
-        engine_version=__version__,
-        command="course-engine " + " ".join(sys.argv[1:]),
-    )
+    try:
+        result = run_pack(
+            input_path=in_path,
+            out_dir=out_dir,
+            engine_version=__version__,
+            command="course-engine " + " ".join(sys.argv[1:]),
+        )
+    except PackInputError as e:
+        raise typer.BadParameter(str(e)) from e
+
 
     typer.echo(f"Pack generated: {out_dir}")
     # Optional: print a tiny summary of what was written
@@ -811,6 +815,7 @@ def build(
 
         typer.echo(f"Built Quarto project: {out_dir}")
         _emit_manifest(spec, out_dir, "quarto", course_path)
+        typer.echo(f"ARTEFACT={out_dir.resolve()}")
         return
 
     if format == "markdown":
@@ -831,12 +836,14 @@ def build(
         out_dir = build_markdown_package(spec, out_root=out_root)
         typer.echo(f"Built Markdown package: {out_dir}")
         _emit_manifest(spec, out_dir, "markdown", course_path)
+        typer.echo(f"ARTEFACT={Path(out_dir).resolve()}")
         return
 
     if format == "html-single":
         out_dir = build_html_single_project(spec, out_root=out_root, templates_dir=templates_dir)
         typer.echo(f"Built single-page HTML Quarto project: {out_dir}")
         _emit_manifest(spec, out_dir, "html-single", course_path)
+        typer.echo(f"ARTEFACT={out_dir.resolve()}")
         typer.echo("Next: course-engine render " + str(out_dir))
         return
 
@@ -863,6 +870,7 @@ def build(
 
         typer.echo(f"Built single-page PDF Quarto project: {out_dir}")
         _emit_manifest(spec, out_dir, "pdf", course_path)
+        typer.echo(f"ARTEFACT={out_dir.resolve()}")
         typer.echo("Next: course-engine render " + str(out_dir))
         return
 
@@ -883,3 +891,7 @@ def render(
         typer.echo(f"Updated manifest: {mp}")
     except FileNotFoundError:
         pass
+
+
+if __name__ == "__main__":
+    app()

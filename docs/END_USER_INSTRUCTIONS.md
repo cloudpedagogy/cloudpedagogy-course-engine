@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.13.1**
+**course-engine v1.17.0**
 
 ---
 
@@ -50,8 +50,9 @@ You **do not** need to know Python beyond basic command-line usage.
 course-engine init my-course
 cd my-course
 course-engine build course.yml --out dist --overwrite
-course-engine render dist/my-course
-course-engine inspect dist/my-course
+# build prints: ARTEFACT=dist/<course-id>
+course-engine render dist/<course-id>
+course-engine inspect dist/<course-id>
 ```
 
 ---
@@ -262,6 +263,9 @@ This supports clearer QA, audit, and review conversations **without constraining
 course-engine build course.yml --overwrite
 ```
 
+On successful build, the resolved artefact path is printed as `ARTEFACT=...`
+for easy reuse in scripts and CI pipelines (v1.17+).
+
 ### Render
 
 ```bash
@@ -274,14 +278,19 @@ course-engine render dist/my-course
 course-engine inspect dist/my-course
 ```
 
-> **Important note on artefact paths**
+> **Important note on artefact paths (v1.17+)**
 >
-> When using `course-engine explain`, `validate`, or `pack` on a built course,
-> always point the command at the **artefact directory that contains `manifest.json`**
-> (typically `dist/<course-id>/`), not the parent output folder (e.g. `dist/`).
+> Most commands (`explain`, `validate`, `pack`) operate on the **artefact directory**
+> that contains `manifest.json` (typically `dist/<course-id>/`).
 >
-> The engine will reject directories that do not directly contain `manifest.json`
-> to avoid ambiguous or misleading governance output.
+> From v1.17 onward, `course-engine pack` will also accept a **parent output directory**
+> *if* it contains exactly one artefact subdirectory with `manifest.json`.
+>
+> If multiple artefact candidates are found, the engine will fail with a
+> clear, human-readable error listing the detected options.
+>
+> This behaviour matches common user workflows while preserving unambiguous
+> governance output.
 
 ### Explain (artefact-level)
 
