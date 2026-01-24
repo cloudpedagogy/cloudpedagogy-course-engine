@@ -15,7 +15,7 @@ from ..utils.manifest import load_manifest
 from ..utils.reporting import build_capability_report, report_to_json, report_to_text
 
 from .manifest import build_pack_manifest
-from .profiles import PackItem, resolve_pack_profile
+from .profiles import resolve_pack_profile
 from .readme import render_pack_readme
 
 InputType = Literal["project", "artefact"]
