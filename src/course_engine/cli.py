@@ -45,7 +45,7 @@ app = typer.Typer(no_args_is_help=True)
 
 
 @app.callback(invoke_without_command=True)
-def _main(
+def _callback(
     version: bool = typer.Option(
         False,
         "--version",
@@ -901,5 +901,15 @@ def render(
         pass
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """
+    Entry point for `python -m course_engine`.
+
+    Kept separate from Typer app definition so it can be
+    imported safely by __main__.py.
+    """
     app()
+    
+if __name__ == "__main__":
+    main()
+
