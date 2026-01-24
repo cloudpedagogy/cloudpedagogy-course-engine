@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+## v1.18.1 – 2026-01-24
+
+### Fixed
+- Restored and stabilised `python -m course_engine` entrypoint
+- Clarified Typer callback vs entrypoint structure
+- No functional changes to governance pack outputs
+
+> Note: v1.18.0 was re-aligned to include this fix for consistency.
+
+---
 
 ## v1.18.0 – Governance Pack Profiles & Composition Guarantees
 
