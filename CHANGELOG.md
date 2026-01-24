@@ -5,6 +5,46 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+
+## v1.18.0 – Governance Pack Profiles & Composition Guarantees
+
+### Added
+- **Profile-based governance pack composition**
+  - `course-engine pack` now enforces explicit profiles:
+    - `audit`
+    - `qa`
+    - `minimal`
+  - Profiles determine which factual artefacts are included in a pack.
+  - Profile selection is validated at the CLI layer.
+
+- **Facts-only pack README generation**
+  - Each governance pack now includes a generated `README.txt` describing:
+    - pack purpose and non-purpose,
+    - profile used,
+    - included artefacts,
+    - generation context.
+  - README content is non-evaluative and governance-safe by design.
+
+### Changed
+- **Strict CLI validation for pack profiles**
+  - Invalid `--profile` values are rejected immediately with clear error messages.
+  - Prevents ambiguous or partial governance outputs.
+
+### Behaviour guarantees
+- No schema changes
+- No validation or enforcement behaviour introduced
+- No impact on build or render outputs
+- Fully backward compatible with v1.17.0
+
+### Notes
+- This release completes the governance packaging workflow.
+- Pack generation remains:
+  - deterministic,
+  - facts-only,
+  - policy-agnostic.
+
+----
+
 ## v1.17.0
 
 ### Workflow ergonomics (CI- and institution-friendly)

@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.17.0**
+**course-engine v1.18.0**
 
 ---
 
@@ -313,6 +313,80 @@ Governance signals are:
 - computed at build time,
 - recorded in `manifest.json`,
 - interpreted during validation (not explain-only runs).
+
+---
+
+### 8.1 Governance packs (v1.18)
+
+`course-engine pack` generates a **facts-only governance pack** from an existing build artefact.
+
+Governance packs are designed for:
+- QA and review workflows
+- audit and accreditation evidence
+- institutional handover and assurance
+- CI and documentation pipelines
+
+They do **not**:
+- rebuild content,
+- render outputs,
+- enforce policies,
+- or evaluate pedagogical quality.
+
+#### Pack profiles
+
+From v1.18 onward, pack composition is controlled by an explicit `--profile`:
+
+- `audit` – full factual governance context (default)
+- `qa` – factual governance content suitable for internal QA and review workflows, where full audit traceability is not required
+- `minimal` – lightweight summary-only pack
+
+Profiles determine **which artefacts are included**.  
+Invalid profile values are rejected at the CLI layer.
+
+Example:
+
+```bash
+# Full governance / audit pack (default)
+course-engine pack dist/my-course \
+  --out packs/my-course-audit \
+  --profile audit \
+  --overwrite
+
+# QA review pack (reduced scope, same factual basis)
+course-engine pack dist/my-course \
+  --out packs/my-course-qa \
+  --profile qa \
+  --overwrite
+
+# Lightweight handover or archive pack
+course-engine pack dist/my-course \
+  --out packs/my-course-minimal \
+  --profile minimal \
+  --overwrite
+```
+
+#### Pack contents
+
+Depending on profile, a governance pack may include:
+
+- `README.txt` – generated description of pack scope and intent
+- summary text
+- explain text and JSON
+- `manifest.json`
+- capability report (text and/or JSON)
+
+All contents are:
+- deterministic,
+- facts-only,
+- derived from `manifest.json`,
+- safe for governance and audit use.
+
+The generated `README.txt` explains:
+- what the pack is for,
+- what it is *not* for,
+- which profile was used,
+- and how the contents should be interpreted.
+
 
 ---
 

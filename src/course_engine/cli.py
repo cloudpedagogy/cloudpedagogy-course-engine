@@ -7,7 +7,7 @@ import platform
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Literal
 
 import typer
 import yaml
@@ -434,7 +434,7 @@ def explain(
 def pack(
     path: str = typer.Argument(..., help="Path to course project folder OR dist/<course> folder."),
     out: str = typer.Option(..., "--out", help="Output folder for the governance pack."),
-    profile: str = typer.Option(
+    profile: Literal["audit", "qa", "minimal"] = typer.Option(
         "audit",
         "--profile",
         help="Pack profile: audit | qa | minimal (composition only; facts-only packaging).",
@@ -461,7 +461,6 @@ def pack(
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Normalise pack profile early for cleaner UX
-    profile = (profile or "audit").strip().lower()
 
     try:
         result = run_pack(

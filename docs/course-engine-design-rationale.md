@@ -196,7 +196,7 @@ Frameworks could articulate principles and values, while tools could generate co
 
 The Course Engine was conceived to occupy this middle layer: not a framework, not a generator, but a system that could **hold intent, structure, and evidence together**.
 
-From **v1.12**, this “hold intent together” requirement is supported through an optional `design_intent` block in `course.yml`. This provides a stable, inspectable place to record rationale, AI positioning, and governance context, and governance context as **informational metadata**, without turning intent into enforcement.
+From **v1.12**, this “hold intent together” requirement is supported through an optional `design_intent` block in `course.yml`. This provides a stable, inspectable place to record rationale, AI positioning, and governance context, as **informational metadata**, without turning intent into enforcement.
 
 ## **16. Summary of the Design Problem**
 
@@ -440,13 +440,29 @@ This preserves the system’s core stance: governance is supported through trans
 
 From **v1.13**, `ai_scoping` provides a **structural declaration** of **permitted**, **restricted**, and **expected** AI use. When present, it is recorded in `manifest.json` and can suppress advisory **absence signals** about missing AI boundaries.
 
-### **30D. AI Scoping and Absence Signals (Informational, v1.13+)**
+## **30D. AI Scoping and Absence Signals (Informational, v1.13+)**
 
 `ai_scoping` is **informational, structural metadata** describing **permitted**, **restricted**, and **expected** AI use boundaries.
 
 From v1.13, the Course Engine records **absence signals** in `manifest.json` to make **missing governance-relevant elements** explicit **without enforcement**.
 
 Absence signals are **advisory by default**. They are designed to support **review, assurance, and governance conversations**, rather than to trigger compliance decisions or automated approval outcomes.
+
+## **30E. Governance Packs as Facts-Only Packaging (v1.18+)**
+
+From **v1.18**, the Course Engine supports generating **governance packs** via `course-engine pack`.
+
+This is an architectural extension of the “manifest-as-evidence” principle: it packages **facts already present in `manifest.json`** (and derived, deterministic outputs such as explain and capability reports) into a portable bundle suitable for QA, audit, accreditation evidence, and institutional handover.
+
+Key design properties:
+
+- **facts-only**: packs contain descriptive artefacts and do not add interpretation or judgement
+- **manifest-derived**: pack contents are derived from `manifest.json`, preserving traceability
+- **non-destructive**: pack generation does not modify build artefacts
+- **separation of concerns**: packaging is distinct from build, render, and validation
+- **profile-controlled composition**: pack profiles (`audit`, `qa`, `minimal`) change included artefacts without changing validation logic or governance facts
+
+This feature exists to support institutional workflows where evidence needs to be shared or archived without requiring the full build environment or rerunning commands.
 
 ## **31. Informational Capability Mapping by Design**
 

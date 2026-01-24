@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.17.0)
+# CloudPedagogy Course Engine (v1.18.0)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -31,6 +31,54 @@ The **CloudPedagogy Course Engine** provides a practical middle ground: it makes
 
 This supports **quality assurance, audit, and review conversations** with clearer evidence, reduced ambiguity, and lower operational risk — **without constraining academic autonomy or pedagogical practice**.
 
+
+---
+
+## What’s new in v1.18
+
+v1.18 introduces **profile-based governance pack composition**, completing the
+separation between:
+
+- build and render workflows, and
+- downstream QA, audit, and review packaging.
+
+This release adds **no schema changes, no validation rules, and no enforcement behaviour**.
+
+### Highlights
+
+- **Governance pack profiles introduced**
+  - `course-engine pack` now supports explicit profiles:
+    - `audit`
+    - `qa`
+    - `minimal`
+  - Profiles control **which factual artefacts are included** in a pack.
+  - Profiles do **not** interpret, evaluate, or score content.
+
+- **Facts-only pack composition guaranteed**
+  - All pack contents are either:
+    - generated directly by the engine, or
+    - copied verbatim from existing artefacts (e.g. `manifest.json`)
+  - No additional interpretation or policy execution occurs during packing.
+
+- **Human-readable README generated per pack**
+  - Each governance pack now includes a `README.txt` describing:
+    - purpose and non-purpose of the pack,
+    - generation context,
+    - pack profile used,
+    - included artefacts.
+  - README content is factual and non-evaluative by design.
+
+- **Strict CLI-level profile validation**
+  - Invalid pack profiles are rejected immediately at the CLI layer.
+  - Error messages are human-readable and prevent ambiguous or partial output.
+
+- **Workflow-safe defaults**
+  - `audit` remains the default profile.
+  - `--overwrite` is still required for destructive output replacement.
+  - All changes are backwards compatible.
+
+This release strengthens **governance usability and adoption readiness**
+without changing Course Engine’s governance contract or behaviour.
 
 ---
 

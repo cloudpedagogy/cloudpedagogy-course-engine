@@ -30,6 +30,7 @@ def build_pack_manifest(
             "input": {"path": input_path, "type": input_type},
         },
         "contents": {
+            "readme_txt": bool(contents.get("readme_txt")),
             "summary_txt": bool(contents.get("summary_txt")),
             "explain_txt": bool(contents.get("explain_txt")),
             "explain_json": bool(contents.get("explain_json")),
