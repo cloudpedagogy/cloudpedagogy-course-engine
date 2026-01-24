@@ -434,6 +434,12 @@ def explain(
 def pack(
     path: str = typer.Argument(..., help="Path to course project folder OR dist/<course> folder."),
     out: str = typer.Option(..., "--out", help="Output folder for the governance pack."),
+    profile: str = typer.Option(
+        "audit",
+        "--profile",
+        help="Pack profile: audit | qa | minimal (composition only; facts-only packaging).",
+        show_default=True,
+    ),
     overwrite: bool = typer.Option(
         False,
         "--overwrite",
@@ -454,16 +460,19 @@ def pack(
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    # Normalise pack profile early for cleaner UX
+    profile = (profile or "audit").strip().lower()
+
     try:
         result = run_pack(
             input_path=in_path,
             out_dir=out_dir,
             engine_version=__version__,
             command="course-engine " + " ".join(sys.argv[1:]),
+            profile=profile,
         )
-    except PackInputError as e:
+    except (PackInputError, ValueError) as e:
         raise typer.BadParameter(str(e)) from e
-
 
     typer.echo(f"Pack generated: {out_dir}")
     # Optional: print a tiny summary of what was written
