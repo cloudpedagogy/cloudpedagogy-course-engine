@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+## v1.17.0
+
+### Workflow ergonomics (CI- and institution-friendly)
+
+- **build:** prints a copy/paste-ready resolved artefact path (`ARTEFACT=...`) on success.
+- **pack:** accepts either an artefact directory *or* a parent OUT directory containing exactly one artefact subdirectory (auto-detected via `manifest.json`).
+- **pack:** improved failure messages for ambiguous or unrecognised directories, including candidate listings.
+- **tests:** added coverage for parent-OUT auto-detection and multi-candidate failure behaviour.
+- **cli:** supports `python -m course_engine.cli ...` module execution.
+
+----
+
 ## v1.16.0 – Release hygiene & artefact path correctness
 
 ### Changed
