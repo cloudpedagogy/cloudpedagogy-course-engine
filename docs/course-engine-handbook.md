@@ -13,16 +13,16 @@ This handbook exists to support a different way of working.
 
 Rather than treating AI as an author or decision-maker, the Course Engine treats AI as an **assistant within a structured, human-led design process**. It is designed to help educators, learning designers, technologists, and institutions use AI **without losing control of purpose, quality, or accountability**.
 
-At a practical level, the CloudPedagogy Course Engine is a **structured course compilation system**. It turns a single, explicit course specification into **consistent, auditable learning artefacts** that can be reviewed, updated, and justified over time. This makes it particularly suitable for contexts where courses must stand up to internal review, quality assurance, governance and audit processes, and long-term maintenance and revision.
+At a practical level, the CloudPedagogy Course Engine is a **structured course compilation system**. It turns a single, explicit course specification into **consistent, auditable learning artefacts** that can be reviewed, updated, and justified over time. This makes it particularly suitable for contexts where courses must stand up to internal review, quality assurance, governance and audit processes, and long-term maintenance and revision. From **v1.19**, the engine also provides an explicit **preflight diagnostic interface** (`course-engine check`) with format-selectable output for onboarding, CI, and support workflows.
 
 Rather than generating content directly, the Course Engine treats **course intent, structure, and governance-relevant declarations** as first-class design elements. Courses are compiled from a single source of truth, produce reproducible outputs across formats such as web, PDF, and markdown, and generate machine-readable metadata to support inspection, reporting, and audit.
 
 Where capability frameworks are used, the system supports four related but distinct mechanisms:
 
-- **Framework alignment** (v1.6+): a *declaration* of which framework and domains the course intends to reference (informational, non-enforced).
+- **Framework alignment**: a *declaration* of which framework and domains the course intends to reference (informational, non-enforced).
 - **Capability mapping** (v1.1+): structured *coverage/evidence metadata* that can be reported on, and (optionally) validated against policy rules.
 - **Design intent** (v1.12+): a *declaration* of rationale, AI positioning, and governance/review context (informational, non-enforced). Design intent is recorded in `manifest.json` with a stable hash and surfaced via `course-engine explain`.
-- **AI scoping** (v1.13+): a *structural, machine-readable declaration* of AI use boundaries (what is permitted, restricted, and expected). AI scoping is recorded in `manifest.json` and may suppress advisory **absence signals** about missing AI boundaries.
+- **AI scoping** (v1.13+): a *structural, machine-readable declaration* of AI use boundaries (what is permitted, restricted, and expected). AI scoping is recorded in `manifest.json` and may suppress advisory **absence signals** about missing AI boundaries. (Signals are computed facts recorded in `manifest.json`, interpreted only by policy.)
 
 The Course Engine is intentionally **non-prescriptive**. It supports reflection, review, traceability, and transparency, but it does not evaluate pedagogical quality, determine academic merit, or decide whether a course should be approved or adopted. Those responsibilities remain firmly with the human user.
 

@@ -5,14 +5,24 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
-## v1.18.1 – 2026-01-24
+## v1.19.0 – 2026-01-24
 
-### Fixed
-- Restored and stabilised `python -m course_engine` entrypoint
-- Clarified Typer callback vs entrypoint structure
-- No functional changes to governance pack outputs
+### Added
+- `course-engine check --format json|text` output selector for explicit, script-safe preflight output.
+- Human-readable preflight output mode (`--format text`) including:
+  - Python version + platform
+  - Quarto + Pandoc presence/version
+  - PDF toolchain readiness
+  - actionable remediation guidance
 
-> Note: v1.18.0 was re-aligned to include this fix for consistency.
+### Changed
+- `course-engine check --json` is now explicitly documented as a **legacy/compatibility flag** (prefer `--format json`).
+- Preflight JSON output is treated as a stable, machine-readable diagnostic payload suitable for CI/support workflows.
+
+### Behaviour guarantees
+- No schema changes
+- No validation or enforcement behaviour introduced
+- Fully backward compatible with existing `check --json` workflows
 
 ---
 
@@ -52,6 +62,11 @@ This project follows semantic versioning.
   - deterministic,
   - facts-only,
   - policy-agnostic.
+
+### Fixed
+- Restored and stabilised `python -m course_engine` entrypoint
+- Clarified Typer callback vs entrypoint structure
+- No functional changes to governance pack outputs
 
 ----
 

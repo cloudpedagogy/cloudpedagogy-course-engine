@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.18.0)
+# CloudPedagogy Course Engine (v1.19.0)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -30,6 +30,47 @@ Universities increasingly need to demonstrate **how** and **why** courses are de
 The **CloudPedagogy Course Engine** provides a practical middle ground: it makes **design intent**, **structural decisions**, and **declared alignments** explicit, inspectable, and reproducible, while deliberately avoiding automated judgement or enforcement.  
 
 This supports **quality assurance, audit, and review conversations** with clearer evidence, reduced ambiguity, and lower operational risk — **without constraining academic autonomy or pedagogical practice**.
+
+---
+
+## What’s new in v1.19
+
+v1.19 is a **CLI clarity and preflight hardening** release.
+
+It introduces **explicit, format-selectable preflight output** while preserving
+full backwards compatibility for existing workflows.
+
+No schema changes, validation rules, or enforcement behaviour are introduced.
+
+### Highlights
+
+- **Explicit preflight output format**
+  - `course-engine check` now supports:
+    ```bash
+    course-engine check --format json
+    course-engine check --format text
+    ```
+  - This removes ambiguity in CI, scripting, and institutional onboarding.
+
+- **Legacy flag retained for compatibility**
+  - `--json` remains supported as a legacy/compatibility flag.
+  - Help text now clearly signals that `--format` is preferred.
+
+- **Stable, machine-readable preflight contract**
+  - JSON output from `check` is explicitly structured and safe for:
+    - CI pipelines
+    - environment diagnostics
+    - support and onboarding workflows
+
+- **Improved human-readable preflight output**
+  - Text output now presents:
+    - Python version and platform
+    - Quarto and Pandoc presence
+    - PDF toolchain readiness
+    - Clear, actionable remediation guidance
+
+This release improves **adoption readiness and operational clarity**
+without altering Course Engine’s governance contract or behaviour.
 
 
 ---
@@ -306,6 +347,7 @@ Preflight checks (recommended):
 
 ```bash
 course-engine check
+course-engine check --format json   # for CI / automation
 ```
 
 Build a website:
