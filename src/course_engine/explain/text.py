@@ -20,8 +20,7 @@ def _bullet(items: List[str], indent: int = 2, max_items: int | None = None) -> 
 
 def _as_dict(value: Any) -> Dict[str, Any]:
     if isinstance(value, dict):
-        # Runtime guard ensures dict-ness; keys may not be str but we treat them defensively.
-        return dict(value)  # shallow copy (also helps some type checkers)
+        return dict(value)  # shallow copy
     return {}
 
 
@@ -42,22 +41,13 @@ def _truncate(s: str, n: int = 160) -> str:
 
 
 def explain_payload_to_text(payload: Dict[str, Any]) -> str:
-    """
-    Render a human-readable explain report from the canonical explain JSON payload.
-
-    Pure formatting only:
-      - does not read files
-      - does not build
-      - does not validate
-      - does not mutate payload
-    """
     kind = payload.get("kind") or payload.get("type") or "explain"
 
     course = _as_dict(payload.get("course"))
     engine = _as_dict(payload.get("engine"))
     input_info = _as_dict(payload.get("input"))
     rendering = _as_dict(payload.get("rendering"))
-    artefact_block = _as_dict(rendering.get("artefact"))  # dist explain block (manifest-backed)
+    artefact_block = _as_dict(rendering.get("artefact"))
 
     sources = _as_dict(payload.get("sources"))
     source_files = sources.get("files") or []
@@ -78,7 +68,6 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
     lines.append(_line("Mode", explain_mode))
     lines.append("")
 
-    # 1. Course Identity
     lines.append("1. Course Identity")
     lines.append(_line("  Title", course.get("title")))
     lines.append(_line("  ID", course.get("id")))
@@ -87,7 +76,6 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
         lines.append(_line("  Language", course.get("language")))
     lines.append("")
 
-    # 2. Provenance
     lines.append("2. Provenance")
     lines.append(_line("  Engine version", engine.get("version")))
     lines.append(_line("  Built at (UTC)", engine.get("built_at_utc")))
@@ -104,7 +92,6 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
         lines.append(_line("  Input path", input_info.get("path_normalised") or input_info.get("path")))
     lines.append("")
 
-    # 3. Artefact Summary (dist explain)
     if is_artefact:
         out = _as_dict(artefact_block.get("output"))
         b = _as_dict(artefact_block.get("builder"))
@@ -132,7 +119,6 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
 
         lines.append("")
 
-    # 4. Outputs / Files
     lines.append("4. Outputs")
 
     file_count = source_counts.get("files") if source_counts else None
@@ -156,10 +142,8 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
         lines.extend(_bullet(sample_paths, indent=4))
     lines.append("")
 
-    # 5. Governance signals
     lines.append("5. Governance Signals")
 
-    # Framework alignment (safe normalisation)
     fw_raw: Any = payload.get("framework_alignment")
     if not (isinstance(fw_raw, dict) and fw_raw):
         fw_raw = _get_nested(_as_dict(payload), "rendering", "artefact", "framework_alignment")
@@ -237,7 +221,7 @@ def explain_payload_to_text(payload: Dict[str, Any]) -> str:
 
 def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
     """
-    v1.15: Render a one-screen, deterministic summary from the canonical explain payload.
+    Render a one-screen, deterministic summary from the canonical explain payload.
 
     Pure formatting only:
       - no file reads
@@ -268,7 +252,7 @@ def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
     is_artefact = bool(artefact_block) or (input_type == "dist_dir")
     mode = "artefact (manifest-backed)" if is_artefact else "source (course.yml)"
 
-    add("Course Engine Summary (v1.15)")
+    add("Course Engine Summary")
     add(f"Mode: {mode}")
     add(f"Path: {input_info.get('path_normalised') or input_info.get('path') or '—'}")
     if engine.get("built_at_utc"):
@@ -294,7 +278,6 @@ def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
     add(f"- language: {course.get('language') or 'not declared'}")
     add("")
 
-    # Framework alignment (safe normalisation)
     fw_raw: Any = payload.get("framework_alignment")
     if not (isinstance(fw_raw, dict) and fw_raw):
         fw_raw = _get_nested(_as_dict(payload), "rendering", "artefact", "framework_alignment")
@@ -361,9 +344,22 @@ def explain_payload_to_summary(payload: Dict[str, Any]) -> str:
     if di.get("present") is not True:
         missing.append("design intent not declared")
 
-    ai_scope = payload.get("ai_scope") or payload.get("ai_usage") or payload.get("ai") or None
-    if ai_scope is None:
-        missing.append("ai_scope not declared")
+    # --- Robust ai_scoping detection (works across source + artefact payload shapes) ---
+    ai_scoping_any: Any = payload.get("ai_scoping")
+    if ai_scoping_any is None:
+        ai_scoping_any = _get_nested(_as_dict(payload), "rendering", "artefact", "ai_scoping")
+    ai_scoping_block = _as_dict(ai_scoping_any)
+
+    declared_any: Any = payload.get("declared")
+    if declared_any is None:
+        declared_any = _get_nested(_as_dict(payload), "rendering", "artefact", "declared")
+    declared_block = _as_dict(declared_any)
+
+    ai_scoping_present = bool(ai_scoping_block) or (declared_block.get("ai_scoping_present") is True)
+
+    if not ai_scoping_present:
+        missing.append("ai_scoping not declared")
+    # -------------------------------------------------------------------------------
 
     if not (cap_present is True or (cap and cap_present is None)):
         missing.append("capability mapping not declared")

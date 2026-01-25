@@ -24,6 +24,7 @@ from .pack.packer import PackInputError, run_pack
 from .plugins import BuildContext, load_plugins
 from .schema import validate_course_dict
 from .utils.fileops import write_text
+from .snapshot import snapshot_from_path, snapshot_payload_to_text
 from .utils.manifest import load_manifest, update_manifest_after_render, write_manifest
 from .utils.policy import (
     list_profiles as policy_list_profiles,
@@ -216,7 +217,6 @@ def check(
     require_pdf = ("pdf" in req_set) or bool(strict)
     # If PDF is required, Quarto must be required too (PDF readiness depends on Quarto).
     require_quarto = bool(strict) or bool(require_pdf)
-
 
     # Build payload (catch unexpected errors -> exit 1)
     try:
@@ -411,6 +411,78 @@ def explain(
         text = explain_payload_to_text(payload) + "\n"
     else:
         text = explain_payload_to_summary(payload) + "\n"
+
+    if out:
+        write_text(Path(out), text)
+    else:
+        typer.echo(text, nl=False)
+
+
+@app.command()
+def snapshot(
+    path: str = typer.Argument(..., help="Path to course.yml OR dist/<course> folder to snapshot."),
+    output_format: Optional[str] = typer.Option(
+        None,
+        "--format",
+        help="Output format: json | text (default: text).",
+    ),
+    out: Optional[str] = typer.Option(None, "--out", help="Write output to a file instead of stdout."),
+) -> None:
+    """
+    Emit a minimal, diff-friendly governance snapshot (facts only; no build; no policy enforcement).
+
+    Supported inputs:
+      - course.yml (source snapshot)
+      - dist/<course> directory containing manifest.json (artefact snapshot)
+    """
+    resolved_format = (output_format or "text").strip().lower()
+    if resolved_format not in {"json", "text"}:
+        raise typer.BadParameter("Unknown output selection. Use --format json|text.")
+
+    command_str = "course-engine " + " ".join(sys.argv[1:])
+    p = Path(path)
+
+    # Fail fast for clarity
+    if not p.exists():
+        raise typer.BadParameter(
+            f"Path not found: {path}\n"
+            "Pass either:\n"
+            "  - a path to course.yml, or\n"
+            "  - a dist/<course-id> folder containing manifest.json."
+        )
+
+    # Mirror explain() input resolution for clarity
+    resolved_path = p
+    if p.is_dir():
+        manifest_path = p / "manifest.json"
+        course_yml_path = p / "course.yml"
+
+        if manifest_path.exists():
+            resolved_path = manifest_path  # dist snapshot uses manifest.json
+        elif course_yml_path.exists():
+            resolved_path = course_yml_path  # project dir snapshot uses course.yml
+        else:
+            raise typer.BadParameter(
+                f"Directory does not look like a dist artefact or course project: {p}\n"
+                "Expected one of:\n"
+                "  - manifest.json (dist/<course-id>)\n"
+                "  - course.yml (course project folder)\n"
+                "Tip: You can also pass an explicit file path to course.yml."
+            )
+
+    try:
+        payload = snapshot_from_path(
+            path=resolved_path,
+            engine_version=__version__,
+            command=command_str,
+        )
+    except Exception as e:  # noqa: BLE001
+        raise typer.BadParameter(str(e)) from e
+
+    if resolved_format == "json":
+        text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+    else:
+        text = snapshot_payload_to_text(payload) + "\n"
 
     if out:
         write_text(Path(out), text)

@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.20.0**
+**course-engine v1.21.0**
 
 ---
 
@@ -49,10 +49,12 @@ You **do not** need to know Python beyond basic command-line usage.
 ```bash
 course-engine init my-course
 cd my-course
-course-engine build course.yml --out dist --overwrite
-# build prints: ARTEFACT=dist/<course-id>
-course-engine render dist/<course-id>
-course-engine inspect dist/<course-id>
+
+# Build prints: ARTEFACT=<resolved artefact path>
+ARTEFACT="$(course-engine build course.yml --out dist --overwrite | sed -n 's/^ARTEFACT=//p')"
+
+course-engine render "$ARTEFACT"
+course-engine explain "$ARTEFACT" --summary
 ```
 
 ---
@@ -427,12 +429,12 @@ for easy reuse in scripts and CI pipelines (v1.17+).
 course-engine render dist/my-course
 ```
 
-### Inspect
+### Explain (artefact-level)
 
 ```bash
-course-engine inspect dist/my-course
+course-engine explain dist/my-course --format text
+course-engine explain dist/my-course --format json
 ```
-
 > **Important note on artefact paths**
 >
 > Most commands (`explain`, `validate`, `pack`) operate on the **artefact directory**
@@ -447,27 +449,73 @@ course-engine inspect dist/my-course
 > This behaviour matches common user workflows while preserving unambiguous
 > governance output.
 
-### Explain (artefact-level)
-
-```bash
-course-engine explain dist/my-course --format text
-course-engine explain dist/my-course --format json
-```
-
 Explain surfaces (artefact-level, read-only):
 
 - course identity
 - build provenance
 - framework alignment
 - capability mapping presence
-- **design intent summary (v1.12)**
+- design intent summary (v1.12)
+- AI scoping presence and structure (v1.13)
 
-Explain does **not** compute, emit, or evaluate governance signals.
+Explain does not compute or evaluate new governance signals.
+It may surface **observed signals** already recorded in `manifest.json` for transparency.
 
 Governance signals are:
 - computed at build time,
 - recorded in `manifest.json`,
 - interpreted during validation (not explain-only runs).
+
+
+### Explain modes (source vs artefact)
+
+`course-engine explain` can operate in two distinct modes:
+
+- **Source mode** (when pointing at `course.yml`)
+  - Reports declarations exactly as authored in YAML
+  - Strict and pre-normalisation
+  - Intended for authoring-time inspection and diagnostics
+
+- **Artefact mode** (when pointing at a built output directory containing `manifest.json`)
+  - Reports canonical, normalised facts recorded at build time
+  - Intended for QA, audit, CI, governance review, and automation
+
+Both modes are read-only and non-evaluative.
+For governance and institutional workflows, **artefact-level explain should be treated as authoritative**.
+
+
+### Snapshot (diff-friendly, facts-only)
+
+```bash
+course-engine snapshot dist/my-course
+course-engine snapshot dist/my-course --format json
+```
+
+Snapshot emits a **minimal, deterministic, facts-only governance record** suitable for:
+
+- CI and automation
+- diff-based review
+- governance evidence capture
+
+Snapshot may be generated from either:
+- a source course specification (`course.yml`), or
+- a built artefact directory (manifest-backed and canonical).
+
+Snapshot does not interpret, summarise, or evaluate course quality.
+It complements `explain` by providing a machine- and diff-friendly state record.
+
+Snapshot:
+
+- does not build or render content
+- does not enforce policies
+- emits facts only (hashes, presence, declared metadata)
+- does not interpret or summarise semantic meaning
+
+It complements `explain`:
+
+- `explain` → human-readable understanding  
+- `snapshot` → machine- and diff-friendly state
+
 
 ---
 

@@ -14,7 +14,7 @@ __pycache__/
 pip-wheel-metadata/
 
 # =========================
-# Quarto / LaTeX build artefacts
+# Quarto / LaTeX build artefacts (generated)
 # =========================
 .quarto/
 _site/
@@ -26,7 +26,11 @@ _site/
 # =========================
 # Build outputs
 # =========================
-dist/
+# NOTE:
+# - dist/ is intentionally versioned in this repository.
+#   It contains demo artefacts, governance exemplars, and
+#   reference outputs used in smoke tests and verification.
+# - build/ contains transient build intermediates only.
 build/
 
 # =========================
@@ -51,7 +55,8 @@ Thumbs.db
 .idea/
 
 # =========================
-# Local scratch / experiments (safe to ignore)
+# Local scratch / experiments (not versioned)
 # =========================
 /tmp-manifest-check/
-packs/
+/tmp-*/
+snap*.json

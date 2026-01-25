@@ -5,6 +5,7 @@ course:
   version: "0.1.0"
   language: "en-GB"
 
+# Explicit framework alignment (governance-facing, informational)
 framework_alignment:
   framework_name: "CloudPedagogy AI Capability Framework (2026 Edition)"
   domains:
@@ -14,8 +15,10 @@ framework_alignment:
     - Ethics, Equity & Impact
     - Decision-Making & Governance
     - Reflection, Learning & Renewal
+  mapping_mode: informational
+  notes: "This declaration is informational (not a compliance claim). It makes intended alignment explicit for QA, review, and audit conversations."
 
-# v1.1 (informational): capability mapping metadata
+# v1.1+ (informational): capability mapping metadata (evidence of intent/coverage)
 capability_mapping:
   framework: "CloudPedagogy AI Capability Framework (2026 Edition)"
   version: "2026"

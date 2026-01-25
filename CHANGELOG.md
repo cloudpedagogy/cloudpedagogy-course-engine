@@ -5,6 +5,46 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
+## v1.21.0 – Deterministic Governance Snapshots & Explain Pipeline Hardening
+
+### Added
+- **Deterministic governance snapshots** via `course-engine snapshot`
+  - Emits minimal, facts-only, diff-friendly records suitable for:
+    - CI change tracking,
+    - QA and governance review,
+    - reproducible audit workflows.
+  - Supports both:
+    - **source snapshots** (derived directly from `course.yml`), and
+    - **artefact snapshots** (manifest-backed, canonical).
+- **Snapshot determinism guarantees**
+  - Snapshot output is stable across runs.
+  - Non-determinism is limited to the explicitly declared `generated_at_utc` field.
+
+### Changed
+- **Explain pipeline clarified and hardened**
+  - Clear separation between:
+    - *source explain* (strict, pre-normalisation YAML declarations), and
+    - *artefact explain* (canonical, manifest-backed facts).
+  - Artefact explain is explicitly treated as the authoritative record for
+    QA, audit, automation, and governance workflows.
+- **Release verification contracts encoded**
+  - Maintainer verification (`scripts/verify-release.sh`) now explicitly asserts:
+    - preflight contract stability,
+    - explain determinism,
+    - snapshot reproducibility,
+    - pack integrity.
+- **Smoke test coverage expanded**
+  - Smoke tests now exercise snapshot generation, explain outputs,
+    and pack composition end-to-end without introducing enforcement.
+
+### Behaviour guarantees
+- No course schema changes
+- No new validation or enforcement behaviour
+- No impact on build or render outputs
+- Snapshot and explain outputs are facts-only and policy-agnostic
+- Fully backward compatible with v1.20.0
+
+---
 
 ## v1.20.0
 
