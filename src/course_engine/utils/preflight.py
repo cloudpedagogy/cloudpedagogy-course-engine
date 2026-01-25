@@ -162,6 +162,61 @@ def _temp_write_check() -> Dict[str, Any]:
         return {"ok": False, "temp_dir": tempfile.gettempdir(), "error": str(e)}
 
 
+def get_preflight_exit_code(
+    payload: Dict[str, Any],
+    *,
+    strict: bool,
+    require_quarto: bool,
+    require_pdf: bool,
+) -> int:
+    """
+    Deterministic, CI-grade exit code classifier for `course-engine check`.
+
+    Codes (v1.20+):
+      0 = OK / informational pass
+      2 = Missing required tooling (e.g., Quarto missing) when required
+      3 = PDF not ready when required
+      4 = Filesystem/temp-write check failed when required
+      1 = Unexpected/internal error (reserved; caller should use for exceptions)
+
+    Precedence (when requirements are active):
+      2 (tooling) > 4 (filesystem) > 3 (pdf)
+    """
+    try:
+        tools = payload.get("tools") or {}
+        pdf = payload.get("pdf") or {}
+        fs = payload.get("filesystem") or {}
+
+        quarto_present = bool(((tools.get("quarto") or {}).get("present")))
+        pdf_ready = bool((pdf or {}).get("ready"))
+
+        temp_ok = True
+        if isinstance(fs, dict):
+            tw = fs.get("temp_write")
+            if isinstance(tw, dict) and isinstance(tw.get("ok"), bool):
+                temp_ok = bool(tw["ok"])
+
+        # Informational mode: never fail.
+        if not strict and not require_quarto and not require_pdf:
+            return 0
+
+        # Missing required toolchain
+        if require_quarto and not quarto_present:
+            return 2
+
+        # Filesystem gating (applies whenever requirements are active)
+        if not temp_ok:
+            return 4
+
+        # PDF readiness (only evaluated if required)
+        if require_pdf and not pdf_ready:
+            return 3
+
+        return 0
+    except Exception:
+        return 1
+
+
 def build_preflight_report() -> Dict[str, Any]:
     """
     Machine-readable preflight report (facts only).

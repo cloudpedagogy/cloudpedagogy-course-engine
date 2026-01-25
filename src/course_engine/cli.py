@@ -30,7 +30,12 @@ from .utils.policy import (
     load_policy_source,
     resolve_profile as policy_resolve_profile,
 )
-from .utils.preflight import PrereqError, build_preflight_report, require_pdf_toolchain
+from .utils.preflight import (
+    PrereqError,
+    build_preflight_report,
+    get_preflight_exit_code,
+    require_pdf_toolchain,
+)
 from .utils.reporting import build_capability_report, report_to_json, report_to_text
 from .utils.validation import (
     load_profile,  # v1.3 legacy profile file loader
@@ -165,14 +170,28 @@ def check(
         "--format",
         help="Output format: json | text (preferred; overrides --json).",
     ),
+    strict: bool = typer.Option(
+        False,
+        "--strict",
+        help="Fail (non-zero exit) if required prerequisites are missing.",
+    ),
+    require: Optional[list[str]] = typer.Option(
+        None,
+        "--require",
+        help="Require specific capabilities (repeatable): pdf",
+    ),
 ) -> None:
     """
-    Check whether required external tools are installed.
+    Check whether external runtime prerequisites are installed.
 
-    Exit codes:
-      0 = ready (Quarto + PDF available)
-      1 = Quarto missing
-      2 = PDF toolchain missing (TinyTeX not installed / not working)
+    Default behaviour is informational (exit 0), unless --strict or --require is used.
+
+    Exit codes (deterministic, CI-friendly):
+      0 = OK (all required prerequisites are ready; or informational mode)
+      2 = Missing required tooling (e.g., Quarto missing when required)
+      3 = PDF not ready when required
+      4 = Filesystem/temp-write diagnostic failed when required
+      1 = Unexpected/internal error
     """
     # Resolve output format (same pattern as explain)
     if output_format is None:
@@ -183,18 +202,49 @@ def check(
     if resolved_format not in {"json", "text"}:
         raise typer.BadParameter("Unknown output selection. Use --format json|text.")
 
-    payload = build_preflight_report()
+    # Resolve requirement mode
+    require_list = require or []
+    req_set = {r.strip().lower() for r in require_list if isinstance(r, str) and r.strip()}
+
+    allowed_requires = {"pdf"}
+    unknown = req_set - allowed_requires
+    if unknown:
+        raise typer.BadParameter(
+            f"Unknown --require value(s): {', '.join(sorted(unknown))}. Allowed: pdf"
+        )
+
+    require_pdf = ("pdf" in req_set) or bool(strict)
+    # If PDF is required, Quarto must be required too (PDF readiness depends on Quarto).
+    require_quarto = bool(strict) or bool(require_pdf)
+
+
+    # Build payload (catch unexpected errors -> exit 1)
+    try:
+        payload = build_preflight_report()
+    except Exception as e:  # noqa: BLE001 (intentional: CLI boundary)
+        typer.echo(f"Preflight check failed unexpectedly: {e}", err=True)
+        raise typer.Exit(code=1)
+
+    # Additive requirements metadata (v1.20 contract; safe for downstream consumers)
+    if isinstance(payload, dict):
+        payload["requirements"] = {
+            "mode": "strict" if strict else "default",
+            "require_pdf": bool(require_pdf),
+            "require_quarto": bool(require_quarto),
+            "require_pandoc": False,  # reserved; pandoc often bundled with Quarto
+        }
+
+    exit_code = get_preflight_exit_code(
+        payload,
+        strict=bool(strict),
+        require_quarto=bool(require_quarto),
+        require_pdf=bool(require_pdf),
+    )
 
     # JSON mode (facts-only)
     if resolved_format == "json":
         typer.echo(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", nl=False)
-
-        # Preserve existing exit code semantics
-        if not payload["tools"]["quarto"]["present"]:
-            raise typer.Exit(code=1)
-        if not payload["pdf"]["ready"]:
-            raise typer.Exit(code=2)
-        raise typer.Exit(code=0)
+        raise typer.Exit(code=exit_code)
 
     # -------------------------
     # Human/adoption-grade mode
@@ -222,7 +272,6 @@ def check(
     else:
         typer.echo("✖ Quarto not found")
         typer.echo("Fix: Install Quarto from https://quarto.org/")
-        raise typer.Exit(code=1)
 
     # Pandoc (informational)
     if pandoc_present:
@@ -234,109 +283,39 @@ def check(
     pdf_ready = bool(pdf.get("ready"))
     if pdf_ready:
         typer.echo("✔ PDF ready: yes (LaTeX OK)")
-        typer.echo("\nSystem ready.")
-        raise typer.Exit(code=0)
-
-    typer.echo("✖ PDF ready: no")
-    typer.echo("Fix: quarto install tinytex")
-
-    pdf_error = pdf.get("error")
-    if isinstance(pdf_error, str) and pdf_error.strip():
-        lines = [ln.rstrip() for ln in pdf_error.splitlines() if ln.strip()]
-        if lines:
-            tail = "\n".join(lines[-12:])
-            typer.echo("\nDetails (tail):")
-            typer.echo(tail)
-
-    raise typer.Exit(code=2)
-
-
-@app.command()
-def inspect(project_dir: str) -> None:
-    """Inspect an output folder's manifest.json in a human-readable way."""
-    out_dir = Path(project_dir)
-    try:
-        m = load_manifest(out_dir)
-    except FileNotFoundError as e:
-        raise typer.BadParameter(str(e)) from e
-
-    course = m.get("course", {})
-    output = m.get("output", {})
-    builder = m.get("builder", {})
-    files = m.get("files", []) or []
-    render = m.get("render")
-
-    typer.echo(f"Course: {course.get('title')} ({course.get('id')})")
-    typer.echo(f"Course version: {course.get('version')}")
-    typer.echo(f"Output: {output.get('format')}  |  Dir: {output.get('out_dir')}")
-    typer.echo(f"Built at (UTC): {m.get('built_at_utc')}")
-    if m.get("refreshed_at_utc"):
-        typer.echo(f"Refreshed at (UTC): {m.get('refreshed_at_utc')}")
-    typer.echo(f"Builder: {builder.get('name')} {builder.get('version')}  |  Python {builder.get('python')}")
-    if m.get("input", {}).get("course_yml"):
-        typer.echo(f"Source: {m['input']['course_yml']}")
-
-    fw = m.get("framework_alignment")
-    if not fw:
-        typer.echo("Framework alignment: none")
     else:
-        typer.echo("Framework alignment:")
-        typer.echo(f"  Framework: {fw.get('framework_name') or '—'}")
-        domains = fw.get("domains") or []
-        if domains:
-            typer.echo(f"  Domains: {', '.join(domains)}")
+        typer.echo("✖ PDF ready: no")
+        typer.echo("Fix: quarto install tinytex")
+
+        pdf_error = pdf.get("error")
+        if isinstance(pdf_error, str) and pdf_error.strip():
+            lines = [ln.rstrip() for ln in pdf_error.splitlines() if ln.strip()]
+            if lines:
+                tail = "\n".join(lines[-12:])
+                typer.echo("\nDetails (tail):")
+                typer.echo(tail)
+
+    # Filesystem diagnostic (if present)
+    fs = payload.get("filesystem") or {}
+    tw = (fs.get("temp_write") or {}) if isinstance(fs, dict) else {}
+    fs_ok = bool(tw.get("ok", True)) if isinstance(tw, dict) else True
+
+    if fs_ok:
+        typer.echo("✔ Filesystem temp-write: OK")
+    else:
+        typer.echo("✖ Filesystem temp-write: FAILED")
+
+    # Summary + exit
+    if exit_code == 0:
+        if strict or require_pdf:
+            typer.echo("\nSystem ready.")
         else:
-            typer.echo("  Domains: —")
-        if fw.get("mapping_mode"):
-            typer.echo(f"  Mapping mode: {fw.get('mapping_mode')}")
-        if fw.get("notes") not in (None, ""):
-            typer.echo(f"  Notes: {fw.get('notes')}")
-
-    if m.get("capability_mapping") is None:
-        typer.echo("Capability mapping: none")
+            typer.echo("\nSystem check complete (informational).")
     else:
-        cap = m["capability_mapping"] or {}
-        typer.echo("Capability mapping:")
-        typer.echo(f"  Framework: {cap.get('framework') or '—'}")
-        typer.echo(f"  Version: {cap.get('version') or '—'}")
-        typer.echo(f"  Domains declared: {cap.get('domains_declared') or 0}")
-        domains = cap.get("domains") or {}
-        if domains:
-            typer.echo(f"  Domains: {', '.join(domains.keys())}")
-        typer.echo(f"  Status: {cap.get('status') or 'informational'}")
+        typer.echo("\nSystem not ready (requirements unmet).")
 
-    ls = m.get("lesson_sources")
-    if ls:
-        typer.echo("Lesson sources:")
-        typer.echo(f"  Count: {ls.get('count') or 0}")
-        typer.echo(f"  Status: {ls.get('status') or 'informational (not enforced)'}")
+    raise typer.Exit(code=exit_code)
 
-    sigs = m.get("signals") or []
-    if isinstance(sigs, list) and sigs:
-        typer.echo("Signals:")
-        typer.echo(f"  Count: {len(sigs)}")
-
-    if render:
-        typer.echo("\nRender:")
-        typer.echo(f"  Rendered at (UTC): {render.get('rendered_at_utc')}")
-        typer.echo(f"  To: {render.get('to')}")
-        typer.echo(f"  Input file: {render.get('input_file')}")
-
-    total_bytes = 0
-    for f in files:
-        b = f.get("bytes")
-        if isinstance(b, int):
-            total_bytes += b
-
-    typer.echo("\nFiles:")
-    typer.echo(f"  Count: {len(files)}")
-    typer.echo(f"  Total bytes: {total_bytes}")
-
-    sample = files[:12]
-    if sample:
-        typer.echo("  Sample:")
-        for f in sample:
-            typer.echo(f"   - {f.get('path')}")
 
 
 @app.command()
