@@ -10,6 +10,35 @@ import pytest
 from course_engine.pack.packer import PackInputError, run_pack
 
 
+def _make_minimal_artefact_dir(tmp_path: Path, course_id: str = "scenario-planning-environmental-scanning") -> Path:
+    """
+    Create a minimal "dist artefact" directory that packer can consume.
+
+    We deliberately avoid relying on repo-committed dist/ outputs (which are
+    generated artefacts and may not exist in CI). For the packer, the only
+    hard requirement to recognise an artefact directory is manifest.json.
+    """
+    artefact_dir = tmp_path / "dist" / course_id
+    artefact_dir.mkdir(parents=True, exist_ok=True)
+
+    # Minimal manifest.json sufficient for packer input detection + copying.
+    # Keep it tiny; packer should not require a fully populated manifest.
+    (artefact_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "course_id": course_id,
+                "engine": {"name": "course-engine"},
+                "schema_version": "0",
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return artefact_dir
+
+
 def test_pack_packer_mvp_on_dist_artefact(tmp_path: Path) -> None:
     """
     MVP test for governance pack generation from a dist artefact.
@@ -20,9 +49,8 @@ def test_pack_packer_mvp_on_dist_artefact(tmp_path: Path) -> None:
     - returned runtime flags align with written artefacts
     """
 
-    # Use an existing dist artefact in the repo
-    artefact_dir = Path("dist/scenario-planning-environmental-scanning")
-    assert artefact_dir.exists(), "Expected demo dist artefact to exist for this test."
+    # Create an artefact dir in tmp_path (do not depend on repo dist/).
+    artefact_dir = _make_minimal_artefact_dir(tmp_path)
 
     out_dir = tmp_path / "pack-out"
 

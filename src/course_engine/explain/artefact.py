@@ -8,13 +8,37 @@ from typing import Any, Dict, List, Tuple
 
 
 def _utc_now_z() -> str:
-    # v1.8 determinism policy allows engine.built_at_utc to vary.
+    # Determinism policy allows engine.built_at_utc to vary.
     return datetime.now(timezone.utc).replace(microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _normalise_path(p: Path) -> str:
     # Deterministic normalisation for reporting (no filesystem resolution side effects).
     return p.as_posix()
+
+
+def _as_dict(value: Any) -> Dict[str, Any]:
+    if isinstance(value, dict):
+        return dict(value)  # shallow copy
+    return {}
+
+
+def _truthy_present(block: Any) -> bool:
+    """
+    Determine presence for optional declared sections.
+
+    We treat a section as "present" if:
+      - block is a dict AND
+      - block.present is True OR hash_sha256 is non-empty
+
+    This avoids false positives from merely having the key in the manifest.
+    """
+    if not isinstance(block, dict):
+        return False
+    if block.get("present") is True:
+        return True
+    h = block.get("hash_sha256")
+    return bool(h not in (None, ""))
 
 
 def _count_lesson_qmd_files(manifest_files: List[Dict[str, Any]]) -> int:
@@ -32,8 +56,7 @@ def _count_lesson_qmd_files(manifest_files: List[Dict[str, Any]]) -> int:
 def _sort_signals(signals: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     Deterministic ordering for signal lists.
-
-    We sort by (id, severity) to keep explain output stable for identical inputs.
+    Sort by (id, severity) to keep output stable for identical inputs.
     """
 
     def key(s: Dict[str, Any]) -> Tuple[str, str]:
@@ -51,7 +74,7 @@ def explain_dist_dir(
     command: str,
 ) -> Dict[str, Any]:
     """
-    Explain a built artefact directory (dist/<course>) into the stable explain JSON schema (v1.0).
+    Explain a built artefact directory (dist/<course>) into the stable explain JSON schema (v1.0+).
 
     This is explain-only:
       - read-only
@@ -61,7 +84,6 @@ def explain_dist_dir(
     Determinism:
       - deterministic except engine.built_at_utc
     """
-    # Top-level output is deliberately ordered.
     payload: Dict[str, Any] = {
         "explain_schema_version": "1.0",
         "engine": {
@@ -108,10 +130,27 @@ def explain_dist_dir(
         },
         # surfaced governance metadata (manifest-backed when present)
         "framework_alignment": {},
+        "capability_mapping": {
+            "present": False,
+            "summary": {},
+            "details": None,
+        },
         "design_intent": {
             "present": False,
             "hash_sha256": None,
             "summary": None,
+        },
+        # v1.13+ structural AI scoping (manifest-backed)
+        "ai_scoping": {
+            "present": False,
+            "hash_sha256": None,
+        },
+        # Derived presence flags (must reflect actual manifest-backed state)
+        "declared": {
+            "framework_alignment_present": False,
+            "capability_mapping_present": False,
+            "design_intent_present": False,
+            "ai_scoping_present": False,
         },
         "policies": {
             "active": [],
@@ -134,11 +173,6 @@ def explain_dist_dir(
                 "toc": True,
                 "toc_depth": 2,
             },
-        },
-        "capability_mapping": {
-            "present": False,
-            "summary": {},
-            "details": None,
         },
         # v1.13: absence signals (always present; copied from manifest if available)
         "signals": [],
@@ -186,9 +220,9 @@ def explain_dist_dir(
     # -------------------------
     # Populate from manifest
     # -------------------------
-    course = manifest.get("course") or {}
-    output = manifest.get("output") or {}
-    builder = manifest.get("builder") or {}
+    course = _as_dict(manifest.get("course"))
+    output = _as_dict(manifest.get("output"))
+    builder = _as_dict(manifest.get("builder"))
     files = manifest.get("files") or []
 
     # Course identity
@@ -219,29 +253,29 @@ def explain_dist_dir(
     out_files: List[Dict[str, Any]] = []
     missing = 0
 
-    for f in files:
-        if not isinstance(f, dict):
-            continue
-        rel_path = f.get("path")
-        if not isinstance(rel_path, str):
-            continue
+    if isinstance(files, list):
+        for f in files:
+            if not isinstance(f, dict):
+                continue
+            rel_path = f.get("path")
+            if not isinstance(rel_path, str):
+                continue
 
-        resolved_path = dist_dir / rel_path
-        exists = resolved_path.exists()
+            resolved_path = dist_dir / rel_path
+            exists = resolved_path.exists()
+            if not exists:
+                missing += 1
 
-        if not exists:
-            missing += 1
-
-        out_files.append(
-            {
-                "declared_path": rel_path,
-                "resolved_path": str(resolved_path),
-                "path_normalised": _normalise_path(resolved_path),
-                "exists": bool(exists),
-                "bytes": f.get("bytes"),
-                "hash_sha256": f.get("sha256"),
-            }
-        )
+            out_files.append(
+                {
+                    "declared_path": rel_path,
+                    "resolved_path": str(resolved_path),
+                    "path_normalised": _normalise_path(resolved_path),
+                    "exists": bool(exists),
+                    "bytes": f.get("bytes"),
+                    "hash_sha256": f.get("sha256"),
+                }
+            )
 
     payload["sources"]["files"] = out_files
     payload["sources"]["counts"]["files"] = len(out_files)
@@ -250,17 +284,19 @@ def explain_dist_dir(
     # Structure counts (artefact-level best-effort)
     lesson_count = _count_lesson_qmd_files(files if isinstance(files, list) else [])
     payload["structure"]["counts"]["lessons"] = int(lesson_count)
-    payload["structure"]["counts"]["modules"] = 0
-    payload["structure"]["counts"]["content_blocks"] = 0
 
     # Governance metadata copied from manifest (if present)
     fw = manifest.get("framework_alignment")
     if isinstance(fw, dict) and fw:
-        payload["framework_alignment"] = fw
+        payload["framework_alignment"] = dict(fw)
 
     di = manifest.get("design_intent")
     if isinstance(di, dict) and di:
-        payload["design_intent"] = di
+        payload["design_intent"] = dict(di)
+
+    ai = manifest.get("ai_scoping")
+    if isinstance(ai, dict) and ai:
+        payload["ai_scoping"] = dict(ai)
 
     # v1.13: signals copied from manifest (state-at-build-time)
     sigs = manifest.get("signals")
@@ -276,5 +312,15 @@ def explain_dist_dir(
         payload["capability_mapping"]["present"] = True
         payload["capability_mapping"]["summary"] = cap or {}
         payload["capability_mapping"]["details"] = None
+
+    # -------------------------
+    # Derived declared presence (MUST reflect manifest-backed truth)
+    # -------------------------
+    payload["declared"] = {
+        "framework_alignment_present": bool(payload.get("framework_alignment")),
+        "capability_mapping_present": bool(payload.get("capability_mapping", {}).get("present") is True),
+        "design_intent_present": _truthy_present(payload.get("design_intent")),
+        "ai_scoping_present": _truthy_present(payload.get("ai_scoping")),
+    }
 
     return payload

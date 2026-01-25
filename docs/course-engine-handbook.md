@@ -17,12 +17,35 @@ At a practical level, the CloudPedagogy Course Engine is a **structured course c
 
 Rather than generating content directly, the Course Engine treats **course intent, structure, and governance-relevant declarations** as first-class design elements. Courses are compiled from a single source of truth, produce reproducible outputs across formats such as web, PDF, and markdown, and generate machine-readable metadata to support inspection, reporting, and audit.
 
-Where capability frameworks are used, the system supports four related but distinct mechanisms:
+### Explain modes (source vs artefact)
+
+`course-engine explain` can operate in two distinct modes:
+
+- **Source mode** (when pointing at `course.yml`)
+  - Reports declarations exactly as authored in YAML
+  - Strict and pre-normalisation
+  - Best for authoring-time inspection and diagnostics
+
+- **Artefact mode** (when pointing at a built output directory containing `manifest.json`)
+  - Reports canonical, normalised facts recorded at build time
+  - Best for QA, audit, governance review, CI, and automation
+
+Both modes are read-only and non-evaluative.  
+For institutional workflows, **artefact-level explain should be treated as governance-authoritative**.
+
+Where capability frameworks are used, the system supports four related but distinct mechanisms, plus a governance snapshot interface:
 
 - **Framework alignment**: a *declaration* of which framework and domains the course intends to reference (informational, non-enforced).
 - **Capability mapping** (v1.1+): structured *coverage/evidence metadata* that can be reported on, and (optionally) validated against policy rules.
 - **Design intent** (v1.12+): a *declaration* of rationale, AI positioning, and governance/review context (informational, non-enforced). Design intent is recorded in `manifest.json` with a stable hash and surfaced via `course-engine explain`.
-- **AI scoping** (v1.13+): a *structural, machine-readable declaration* of AI use boundaries (what is permitted, restricted, and expected). AI scoping is recorded in `manifest.json` and may suppress advisory **absence signals** about missing AI boundaries. (Signals are computed facts recorded in `manifest.json`, Policies can interpret them for rule/severity workflows, but they remain informational by default.)
+- **AI scoping** (v1.13+): a *structural, machine-readable declaration* of AI use boundaries (what is permitted, restricted, and expected). AI scoping is recorded in `manifest.json` and may suppress advisory **absence signals** about missing AI boundaries. (Signals are computed facts recorded in `manifest.json`; policies can interpret them for rule/severity workflows, but they remain informational by default.)
+
+From **v1.21**, the engine also provides a **deterministic snapshot interface** (`course-engine snapshot`) that emits a minimal, diff-friendly, facts-only record of course state.  
+Snapshots can be generated from either:
+- a **source** (`course.yml`) input, or
+- a **built artefact** (manifest-backed and canonical).
+
+Snapshots are **non-evaluative** and are intended for change tracking, CI, QA, and governance diffing. They **complement** `explain` (they do not replace it).
 
 The Course Engine is intentionally **non-prescriptive**. It supports reflection, review, traceability, and transparency, but it does not evaluate pedagogical quality, determine academic merit, or decide whether a course should be approved or adopted. Those responsibilities remain firmly with the human user.
 

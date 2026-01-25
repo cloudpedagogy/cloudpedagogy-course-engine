@@ -56,21 +56,34 @@ def _presence(obj: Dict[str, Any], key: str) -> bool:
     return key in obj and obj[key] not in (None, {}, [])
 
 
+def _norm_str(v: Any) -> str:
+    """
+    Safe normaliser for values that may be None or non-string.
+
+    Used to satisfy type checkers and keep course id resolution robust.
+    """
+    if v is None:
+        return ""
+    s = v if isinstance(v, str) else str(v)
+    return s.strip()
+
+
 def _coalesce_course_id(d: Dict[str, Any]) -> str:
     """
     Best-effort course id resolution across schemas/eras.
     """
     # Common patterns seen across versions
     for k in ("course_id", "id"):
-        if isinstance(d.get(k), str) and d.get(k).strip():
-            return d.get(k).strip()
+        cid = _norm_str(d.get(k))
+        if cid:
+            return cid
 
     # Nested course: { course: { id: ... } }
     course = d.get("course")
     if isinstance(course, dict):
-        cid = course.get("id") or course.get("course_id")
-        if isinstance(cid, str) and cid.strip():
-            return cid.strip()
+        cid = _norm_str(course.get("id") or course.get("course_id"))
+        if cid:
+            return cid
 
     return "unknown"
 
