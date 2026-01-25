@@ -5,7 +5,45 @@ All notable changes to this project are documented in this file.
 This project follows semantic versioning.
 
 
-## v1.19.0 – 2026-01-24
+
+## v1.20.0
+
+### Added
+- **CI-grade preflight contract** for `course-engine check` with:
+  - deterministic, documented exit codes
+  - explicit workflow requirements declared in JSON output (`requirements` block)
+
+- **Deterministic preflight exit codes**
+  - `0` — OK (or informational mode)
+  - `2` — required tooling missing (e.g. Quarto) when required
+  - `3` — PDF toolchain not ready when required
+  - `4` — filesystem/temp-write diagnostic failed
+  - `1` — unexpected/internal error
+
+- **Strict and targeted requirement modes**
+  - `course-engine check --strict` enables CI-grade gating (Quarto + PDF required)
+  - `course-engine check --require pdf` requires PDF readiness (and implies Quarto requirement)
+
+- **Requirements block in JSON payload**
+  - `course-engine check --format json` now includes:
+    - `mode`: `"default"` or `"strict"`
+    - `require_quarto`, `require_pdf`, `require_pandoc`: booleans indicating what the workflow requires
+
+### Changed
+- Preflight output now cleanly separates:
+  - environment inspection (facts),
+  - requirement declaration (intent),
+  - exit semantics (decision).
+
+### Behaviour guarantees
+- No course schema changes
+- No validation or enforcement behaviour introduced
+- Fully backward compatible with v1.19 workflows (including `check --json`)
+- Default `course-engine check` remains informational and exits `0`
+
+---
+
+## v1.19.0
 
 ### Added
 - `course-engine check --format json|text` output selector for explicit, script-safe preflight output.

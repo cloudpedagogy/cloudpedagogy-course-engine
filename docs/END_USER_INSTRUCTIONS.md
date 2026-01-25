@@ -1,5 +1,5 @@
 # End User Instructions  
-**course-engine v1.19.0**
+**course-engine v1.20.0**
 
 ---
 
@@ -122,7 +122,7 @@ This performs a non-destructive environment check and reports:
 - PDF toolchain readiness (TinyTeX / LaTeX)
 - Clear remediation guidance if something is missing
 
-### Explicit output formats (v1.19+)
+### Explicit output formats 
 
 From v1.19 onward, preflight output format can be selected explicitly.
 
@@ -143,6 +143,111 @@ Notes:
 - `--format` is the **preferred** output selector.
 - `--json` remains supported as a **legacy / compatibility flag**.
 - If both are supplied, `--format` takes precedence.
+
+
+### Requirement modes and exit behaviour (v1.20+)
+
+From v1.20 onward, `course-engine check` cleanly separates:
+
+- environment inspection (facts),
+- workflow requirements (intent),
+- exit semantics (decision).
+
+By default, `course-engine check` runs in **informational mode**
+and will always exit `0`, even if optional tools are missing.
+
+This is suitable for:
+- local setup,
+- onboarding,
+- diagnostics,
+- support workflows.
+
+
+# CI-Grade Preflight Usage (course-engine v1.20+)
+
+This document describes how to use `course-engine check` in
+**CI, automation, and scripted workflows** where deterministic
+exit behaviour is required.
+
+It supplements the End User Instructions and focuses specifically
+on **preflight gating semantics**.
+
+---
+
+## CI-grade usage
+
+To enable deterministic gating in CI and automation workflows,
+invoke `course-engine check` with explicit requirements.
+
+```bash
+course-engine check --strict
+course-engine check --require pdf --format json
+```
+
+### Modes explained
+
+- `--strict`
+  - Requires **Quarto** and **PDF toolchain readiness**
+  - Intended for CI pipelines and release gating
+
+- `--require pdf`
+  - Explicitly enforces PDF readiness
+  - Useful when HTML builds are optional but PDFs are mandatory
+  - Does not implicitly enable other strict checks unless required
+
+By default (no flags), `course-engine check` runs in
+**informational mode** and always exits `0`.
+
+---
+
+## Exit codes
+
+When requirements are enabled, `course-engine check` returns
+**deterministic exit codes** suitable for CI and automation:
+
+- `0` — OK
+- `2` — required tooling missing (e.g. Quarto)
+- `3` — PDF toolchain not ready when required
+- `4` — filesystem / temp-write diagnostic failed
+- `1` — unexpected or internal error
+
+Exit codes are stable and versioned as part of the v1.20
+preflight contract.
+
+---
+
+## JSON contract note
+
+When `--format json` is used, the output always includes a
+`requirements` block describing **which capabilities were required**
+for the current invocation.
+
+This allows CI systems, dashboards, and support tooling to
+distinguish:
+
+- what the environment provides, from
+- what the workflow explicitly requires.
+
+The JSON payload is **additive, facts-only, and contract-stable**.
+
+
+### Requirement modes and exit behaviour (v1.20+)
+
+From v1.20 onward, `course-engine check` cleanly separates:
+
+- environment inspection (facts),
+- workflow requirements (intent),
+- exit semantics (decision).
+
+By default, `course-engine check` runs in **informational mode**
+and will always exit `0`, even if optional tools are missing.
+
+This is suitable for:
+- local setup,
+- onboarding,
+- diagnostics,
+- support workflows.
+
 
 ### Behaviour guarantees
 
@@ -194,7 +299,7 @@ Edit `course.yml` to define your course structure, lessons, and metadata.
 
 ---
 
-## 6. Authoring lessons (v1.6)
+## 6. Authoring lessons
 
 Lessons may be authored either:
 
@@ -252,7 +357,7 @@ Design intent is:
 
 ---
 
-## 7.1 AI scoping metadata (v1.13)
+## 7.1 AI scoping metadata 
 
 From v1.13 onward, courses may optionally declare **structural AI scoping metadata** using an `ai_scoping` block in `course.yml`.
 
@@ -328,7 +433,7 @@ course-engine render dist/my-course
 course-engine inspect dist/my-course
 ```
 
-> **Important note on artefact paths (v1.17+)**
+> **Important note on artefact paths**
 >
 > Most commands (`explain`, `validate`, `pack`) operate on the **artefact directory**
 > that contains `manifest.json` (typically `dist/<course-id>/`).
@@ -366,7 +471,7 @@ Governance signals are:
 
 ---
 
-### 8.1 Governance packs (v1.18)
+### 8.1 Governance packs
 
 `course-engine pack` generates a **facts-only governance pack** from an existing build artefact.
 

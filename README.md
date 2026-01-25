@@ -1,4 +1,4 @@
-# CloudPedagogy Course Engine (v1.19.0)
+# CloudPedagogy Course Engine (v1.20.0)
 
 A Python-first, Quarto-backed **course compiler** that generates consistent, auditable learning artefacts from a single `course.yml` source of truth.
 
@@ -30,6 +30,67 @@ Universities increasingly need to demonstrate **how** and **why** courses are de
 The **CloudPedagogy Course Engine** provides a practical middle ground: it makes **design intent**, **structural decisions**, and **declared alignments** explicit, inspectable, and reproducible, while deliberately avoiding automated judgement or enforcement.  
 
 This supports **quality assurance, audit, and review conversations** with clearer evidence, reduced ambiguity, and lower operational risk — **without constraining academic autonomy or pedagogical practice**.
+
+---
+
+## What’s new in v1.20
+
+v1.20 introduces a **formal, CI-grade preflight contract** for
+`course-engine check`, completing the separation between:
+
+- *environment inspection* (facts),
+- *requirement declaration* (intent), and
+- *exit semantics* (decision).
+
+This release strengthens **automation, onboarding, and support workflows**
+without introducing any schema changes, validation rules, or enforcement behaviour.
+
+### Highlights
+
+- **Deterministic preflight exit codes**
+  - `course-engine check` now returns **stable, documented exit codes**:
+    - `0` — OK (or informational mode)
+    - `2` — required tooling missing (e.g. Quarto)
+    - `3` — PDF toolchain not ready when required
+    - `4` — filesystem/temp-write diagnostic failed
+    - `1` — unexpected/internal error
+  - This makes the command safe for CI, scripts, and institutional automation.
+
+- **Explicit requirement declaration**
+  - Preflight output now includes a `requirements` block:
+    ```json
+    "requirements": {
+      "mode": "default",
+      "require_quarto": false,
+      "require_pdf": false,
+      "require_pandoc": false
+    }
+    ```
+    Where:
+    - `mode` is either `"default"` or `"strict"`
+    - `require_quarto`, `require_pdf`, and `require_pandoc` are booleans indicating which capabilities are required for the current workflow
+
+  - This separates *what the environment provides* from *what the workflow requires*.
+
+- **Strict and targeted requirement modes**
+  - `--strict` enables CI-grade gating (Quarto + PDF required).
+  - `--require pdf` enforces PDF readiness explicitly.
+  - Default mode remains **informational and non-blocking**.
+
+- **Stable, machine-readable JSON contract**
+  - `course-engine check --format json` now produces a
+    **stable, additive, facts-only payload** suitable for:
+    - CI pipelines
+    - environment diagnostics
+    - institutional onboarding and support.
+
+- **Backwards compatibility preserved**
+  - `--json` remains supported as a legacy flag.
+  - Default behaviour (`course-engine check`) continues to exit `0`.
+
+This release formalises preflight checking as a **first-class operational interface**
+while preserving the Course Engine’s non-enforcing governance posture.
+
 
 ---
 
@@ -347,7 +408,9 @@ Preflight checks (recommended):
 
 ```bash
 course-engine check
-course-engine check --format json   # for CI / automation
+course-engine check --format json           # informational, machine-readable
+course-engine check --strict                # CI-grade gating
+course-engine check --require pdf --format json
 ```
 
 Build a website:
@@ -376,7 +439,7 @@ course-engine validate dist/<course> --policy preset:strict-ci --explain --json
 - **report** – Generate capability coverage reports
 - **validate** – Validate or explain policy resolution
 - **clean** – Remove generated artefacts safely
-- **check** – Run dependency preflight checks
+- **check** – Run dependency preflight checks (informational or CI-grade)
 
 > Note: Policy handling is accessed via `course-engine validate --policy ...` (and `--explain --json` for explain-only resolution). There is no separate `course-engine policy` subcommand.
 

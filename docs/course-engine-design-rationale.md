@@ -1,4 +1,4 @@
-# **HANDBOOK B — COURSE ENGINE DESIGN & RATIONALE**
+# HANDBOOK B — COURSE ENGINE DESIGN & RATIONALE
 *A design record for capability-driven, governance-aware course infrastructure*
 
 > **Canonical source:** This Markdown file.  
@@ -256,7 +256,7 @@ Rather than allowing content to drive structure implicitly, the Course Engine re
 
 This principle shaped the decision to treat the course specification as a first-class artefact and to separate structural design from content elaboration. It also influenced the system’s resistance to “one-click” generation workflows that collapse design decisions into a single step.
 
-## **19A. Intent Must Be Inspectable (v1.12+)**
+## **19A. Intent Must Be Inspectable**
 
 A recurring governance failure mode in AI-supported course design is that intent exists only in tacit knowledge or transient prompts.
 
@@ -390,7 +390,7 @@ This manifest exists to support inspection, reporting, and validation. It allows
 
 This design choice follows directly from the principles of transparency and governance-as-design. The manifest is not an optimisation; it is evidence.
 
-## **30A. External Lesson Sources as an Architectural Extension (v1.6)**
+## **30A. External Lesson Sources as an Architectural Extension**
 
 In v1.6, the Course Engine introduced support for authoring lessons as **external source files**.
 
@@ -409,9 +409,9 @@ External lesson sources were treated as an authoring affordance, not as a mechan
 
 This extension demonstrates how the Course Engine can evolve authoring flexibility while preserving its foundational principles.
 
-## **30B. Fail-Fast Authoring Guardrails (v1.6)**
+## **30B. Fail-Fast Authoring Guardrails**
 
-In v1.6, the Course Engine added **fail-fast preflight checks** for common authoring mistakes and ambiguous course layouts.
+In v1.6, the Course Engine added **fail-fast authoring guardrails** for common authoring mistakes and ambiguous course layouts.
 
 This is a governance-relevant architectural decision: it reduces “silent correctness” (where a build succeeds but the authored intent is misrepresented), and it produces clearer, actionable errors that keep responsibility visible.
 
@@ -423,7 +423,7 @@ This guardrail approach supports:
 
 The system’s bias is toward clear failure with explanation, rather than permissive behaviour that produces hard-to-trace outcomes.
 
-## **30C. Design Intent as Manifest-Backed Metadata (v1.12)**
+## **30C. Design Intent as Manifest-Backed Metadata**
 
 In **v1.12**, the Course Engine introduced support for an optional `design_intent` block in `course.yml`.
 
@@ -440,7 +440,7 @@ This preserves the system’s core stance: governance is supported through trans
 
 From **v1.13**, `ai_scoping` provides a **structural declaration** of **permitted**, **restricted**, and **expected** AI use. When present, it is recorded in `manifest.json` and can suppress advisory **absence signals** about missing AI boundaries.
 
-## **30D. AI Scoping and Absence Signals (Informational, v1.13+)**
+## **30D. AI Scoping and Absence Signals**
 
 `ai_scoping` is **informational, structural metadata** describing **permitted**, **restricted**, and **expected** AI use boundaries.
 
@@ -448,7 +448,7 @@ From v1.13, the Course Engine records **absence signals** in `manifest.json` to 
 
 Absence signals are **advisory by default**. They are designed to support **review, assurance, and governance conversations**, rather than to trigger compliance decisions or automated approval outcomes.
 
-## **30E. Governance Packs as Facts-Only Packaging (v1.18+)**
+## **30E. Governance Packs as Facts-Only Packaging**
 
 From **v1.18**, the Course Engine supports generating **governance packs** via `course-engine pack`.
 
@@ -472,7 +472,7 @@ Architecturally, this meant designing capability declarations to be read, report
 
 This reflects a deliberate refusal to collapse complex judgement into automated scoring. The system supports visibility and discussion, but it does not claim authority over what constitutes sufficient or appropriate capability development.
 
-## **31A. Three Layers of Governance Signalling: Intent, Alignment, and Defensibility (v1.12)**
+## **31A. Three Layers of Governance Signalling: Intent, Alignment, and Defensibility**
 
 The Course Engine supports **three distinct layers** of governance signalling:
 
@@ -509,7 +509,7 @@ By allowing policies and profiles to be resolved and inspected **without requiri
 
 Architecturally, this required treating policy resolution as a distinct concern, rather than as a side effect of validation.
 
-## **33A. Explainability as a Contract-Stable Governance Interface (v1.10+)**
+## **33A. Explainability as a Contract-Stable Governance Interface**
 
 From v1.10 onwards, the Course Engine’s explainability interface is treated as a
 **contract-stable governance surface**, not merely a debugging aid.
