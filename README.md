@@ -209,3 +209,5 @@ inspecting, and explaining course artefacts.
 It records declared intent and structure for transparency, but does
 **not** evaluate pedagogical quality or replace institutional governance
 processes.
+
+All example data and structures are synthetic and do not represent any real institution, programme, or curriculum.
