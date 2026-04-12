@@ -1,0 +1,90 @@
+project:
+  type: website
+
+website:
+  title: "Scenario Planning and Environmental Scanning"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: lessons/index.qmd
+        text: Lessons
+
+  sidebar:
+    style: "docked"
+    search: true
+
+    contents:
+
+
+
+      - section: "Scenario Planning and Environmental Scanning"
+        contents:
+
+          - href: "lessons/module-1-lesson-01-ai-tools-for-real-time-environmental-scanning.qmd"
+            
+            text: "5.3.1 AI Tools for Real-Time Environmental Scanning"
+
+          - href: "lessons/module-1-lesson-02-trend-analysis-in-higher-education-using-genai.qmd"
+            
+            text: "5.3.2 Trend Analysis in Higher Education using GenAI"
+
+          - href: "lessons/module-1-lesson-03-building-strategic-scenarios-with-ai-support.qmd"
+            
+            text: "5.3.3 Building Strategic Scenarios with AI Support"
+
+          - href: "lessons/module-1-lesson-04-stress-testing-institutional-plans-with-simulations.qmd"
+            
+            text: "5.3.4 Stress-Testing Institutional Plans with Simulations"
+
+          - href: "lessons/module-1-lesson-05-linking-strategic-foresight-to-operational-strategy.qmd"
+            
+            text: "5.3.5 Linking Strategic Foresight to Operational Strategy"
+
+          - href: "lessons/module-1-lesson-06-key-takeaways.qmd"
+            
+            text: "5.3.6 Key Takeaways"
+
+          - href: "lessons/module-1-lesson-07-practical-use-cases.qmd"
+            
+            text: "5.3.A Practical Use Cases"
+
+          - href: "lessons/module-1-lesson-08-learning-activities.qmd"
+            
+            text: "5.3.B Learning Activities"
+
+          - href: "lessons/module-1-lesson-09-prompt-templates.qmd"
+            
+            text: "5.3.C Prompt Templates"
+
+          - href: "lessons/module-1-lesson-10-innovative-use-cases.qmd"
+            
+            text: "5.3.D Innovative Use Cases"
+
+          - href: "lessons/module-1-lesson-11-reflection-discussion.qmd"
+            
+            text: "5.3.E Reflection & Discussion"
+
+          - href: "lessons/module-1-lesson-12-productivity-tips.qmd"
+            
+            text: "5.3.F Productivity Tips"
+
+          - href: "lessons/module-1-lesson-13-prompt-library.qmd"
+            
+            text: "5.3.G Prompt Library"
+
+          - href: "lessons/module-1-lesson-14-applying-the-ai-capability-framework.qmd"
+            
+            text: "5.3.H Applying the AI Capability Framework"
+
+
+
+
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+
+# Optional: if Quarto ever errors on this, remove the line entirely.
+lang: en

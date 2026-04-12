@@ -1,0 +1,20 @@
+Capability Coverage Report (v1.2)
+Course: Scenario Planning and Environmental Scanning (scenario-planning-environmental-scanning) v0.3.0
+Framework: CloudPedagogy AI Capability Framework (2026 Edition) (2026)
+Status: informational (not enforced)
+
+Domains
+- Declared: 6
+
+| Domain key                  | Label                          | Coverage items | Evidence items | Notes |
+|-----------------------------|--------------------------------|----------------|----------------|-------|
+| applied_practice_innovation | Applied Practice & Innovation  | 2              | 3              | OK    |
+| awareness                   | AI Awareness & Orientation     | 2              | 2              | OK    |
+| co_agency                   | Human–AI Co-Agency             | 2              | 2              | OK    |
+| decision_making_governance  | Decision-Making & Governance   | 2              | 2              | OK    |
+| ethics_equity_impact        | Ethics, Equity & Impact        | 2              | 2              | OK    |
+| reflection_learning_renewal | Reflection, Learning & Renewal | 2              | 3              | OK    |
+
+Summary
+- Domains with gaps: 0
+- Tip: run with --verbose to see declared coverage/evidence lists.

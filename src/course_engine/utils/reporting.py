@@ -141,4 +141,72 @@ def report_to_text(report: Dict[str, Any], *, verbose: bool = False) -> str:
     else:
         lines.append("- Tip: run with --verbose to see declared coverage/evidence lists.")
 
+def build_governance_self_audit(spec: Any) -> Dict[str, Any]:
+    """
+    Assess the completeness of governance declarations (AI Scoping, Design Intent).
+    Returns a health report with findings and a stability score (0-100).
+    """
+    findings = []
+    points = 100
+
+    # 1. AI Scoping
+    sc = getattr(spec, "ai_scoping", None)
+    if not sc:
+        findings.append({"level": "WARN", "msg": "Missing 'ai_scoping' block entirely."})
+        points -= 40
+    else:
+        if not getattr(sc, "scope_summary", None):
+            findings.append({"level": "WARN", "msg": "AI Scoping: 'scope_summary' is empty."})
+            points -= 10
+        if not getattr(sc, "permitted_uses", []):
+            findings.append({"level": "WARN", "msg": "AI Scoping: No 'permitted_uses' declared."})
+            points -= 10
+        if not getattr(sc, "not_permitted", []):
+            findings.append({"level": "WARN", "msg": "AI Scoping: No 'not_permitted' constraints declared."})
+            points -= 10
+
+    # 2. Design Intent
+    di = getattr(spec, "design_intent", None)
+    if not di:
+        findings.append({"level": "WARN", "msg": "Missing 'design_intent' block."})
+        points -= 20
+    else:
+        if not getattr(di, "summary", None):
+            findings.append({"level": "INFO", "msg": "Design Intent: 'summary' is missing."})
+            points -= 5
+        if not getattr(di, "ai_position", None):
+            findings.append({"level": "WARN", "msg": "Design Intent: 'ai_position' (assessments/activities) is empty."})
+            points -= 10
+
+    # 3. Capability Mapping
+    cap = getattr(spec, "capability_mapping", None)
+    if not cap:
+        findings.append({"level": "INFO", "msg": "No 'capability_mapping' found (breadth analysis limited)."})
+        points -= 5
+
+    return {
+        "score": max(0, points),
+        "health": "STABLE" if points >= 80 else "NEEDS_ATTENTION" if points >= 50 else "CRITICAL",
+        "findings": findings,
+    }
+
+
+def governance_audit_to_text(audit: Dict[str, Any]) -> str:
+    lines = []
+    lines.append("Governance Self-Audit (Internal Diagnostic)")
+    lines.append(f"Stability Score: {audit['score']}/100 [{audit['health']}]")
+    lines.append("-" * 45)
+    
+    findings = audit.get("findings") or []
+    if not findings:
+        lines.append("✔ No governance gaps detected. High-integrity syllabus.")
+    else:
+        for f in findings:
+            symbol = "⚠" if f["level"] == "WARN" else "•" if f["level"] == "INFO" else "✖"
+            lines.append(f" {symbol} [{f['level']}] {f['msg']}")
+    
+    lines.append("-" * 45)
+    lines.append("Note: This audit is heuristic and indicative only.")
+    lines.append("Final authority remains with institutional governance bodies.")
+            
     return "\n".join(lines) + "\n"

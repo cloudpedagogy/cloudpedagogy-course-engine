@@ -1,0 +1,90 @@
+---
+title: "Scenario Planning and Environmental Scanning"
+toc: false
+page-navigation: false
+sidebar:
+  nav: false
+---
+
+
+
+Demo course for CloudPedagogy Course Engine v1.11 (auditability + explainability + capability mapping)
+
+
+## Start here
+
+Go to **[Lessons](lessons/index.qmd)** to navigate the full course.
+
+## Course information
+
+Course ID: `scenario-planning-environmental-scanning`  
+Version: `0.3.0`  
+Framework: CloudPedagogy AI Capability Framework (2026 Edition)
+
+
+## Capability domains
+
+Awareness  
+
+Co-Agency  
+
+Applied Practice & Innovation  
+
+Ethics, Equity & Impact  
+
+Decision-Making & Governance  
+
+Reflection, Learning & Renewal  
+
+
+
+## Modules
+
+### Scenario Planning and Environmental Scanning
+
+
+
+[5.3.1 AI Tools for Real-Time Environmental Scanning](lessons/module-1-lesson-01-ai-tools-for-real-time-environmental-scanning.qmd)  
+
+
+[5.3.2 Trend Analysis in Higher Education using GenAI](lessons/module-1-lesson-02-trend-analysis-in-higher-education-using-genai.qmd)  
+
+
+[5.3.3 Building Strategic Scenarios with AI Support](lessons/module-1-lesson-03-building-strategic-scenarios-with-ai-support.qmd)  
+
+
+[5.3.4 Stress-Testing Institutional Plans with Simulations](lessons/module-1-lesson-04-stress-testing-institutional-plans-with-simulations.qmd)  
+
+
+[5.3.5 Linking Strategic Foresight to Operational Strategy](lessons/module-1-lesson-05-linking-strategic-foresight-to-operational-strategy.qmd)  
+
+
+[5.3.6 Key Takeaways](lessons/module-1-lesson-06-key-takeaways.qmd)  
+
+
+[5.3.A Practical Use Cases](lessons/module-1-lesson-07-practical-use-cases.qmd)  
+
+
+[5.3.B Learning Activities](lessons/module-1-lesson-08-learning-activities.qmd)  
+
+
+[5.3.C Prompt Templates](lessons/module-1-lesson-09-prompt-templates.qmd)  
+
+
+[5.3.D Innovative Use Cases](lessons/module-1-lesson-10-innovative-use-cases.qmd)  
+
+
+[5.3.E Reflection & Discussion](lessons/module-1-lesson-11-reflection-discussion.qmd)  
+
+
+[5.3.F Productivity Tips](lessons/module-1-lesson-12-productivity-tips.qmd)  
+
+
+[5.3.G Prompt Library](lessons/module-1-lesson-13-prompt-library.qmd)  
+
+
+[5.3.H Applying the AI Capability Framework](lessons/module-1-lesson-14-applying-the-ai-capability-framework.qmd)  
+
+
+
+

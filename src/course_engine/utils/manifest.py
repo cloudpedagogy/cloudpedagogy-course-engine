@@ -17,6 +17,7 @@ except Exception:  # pragma: no cover
     pkg_version = None  # type: ignore
 
 from .signals import compute_signals
+from .reporting import build_governance_self_audit
 
 MANIFEST_VERSION = "1.5.0"
 
@@ -384,6 +385,9 @@ def build_manifest(
     lesson_sources = _lesson_sources_for_manifest(spec)
     if lesson_sources is not None:
         manifest["lesson_sources"] = lesson_sources
+
+    # v1.13+ / manifest v1.5.0: Governance Self-Audit
+    manifest["governance_audit"] = build_governance_self_audit(spec)
 
     return manifest
 

@@ -37,7 +37,13 @@ from .utils.preflight import (
     get_preflight_exit_code,
     require_pdf_toolchain,
 )
-from .utils.reporting import build_capability_report, report_to_json, report_to_text
+from .utils.reporting import (
+    build_capability_report,
+    build_governance_self_audit,
+    governance_audit_to_text,
+    report_to_json,
+    report_to_text,
+)
 from .utils.validation import (
     load_profile,  # v1.3 legacy profile file loader
     validate_manifest,
@@ -852,12 +858,25 @@ def build(
     out_root = Path(out)
     templates_dir = Path(templates) if templates else DEFAULT_TEMPLATES_DIR
 
-    data = yaml.safe_load(course_path.read_text(encoding="utf-8"))
+    typer.echo(f"• Loading course project: {course_path.name}")
+    try:
+        data = yaml.safe_load(course_path.read_text(encoding="utf-8"))
+        typer.echo("✔ YAML parse complete.")
+    except Exception as e:
+        raise typer.BadParameter(f"Failed to parse {course_path}: {e}")
 
     try:
+        typer.echo("• Validating syllabus schema & logic...")
         spec = validate_course_dict(data, source_course_yml=course_path)
+        typer.echo("✔ Schema validation OK.")
     except ValueError as e:
         raise typer.BadParameter(f"Invalid course.yml: {e}") from e
+
+    # Governance Self-Audit
+    typer.echo("-" * 45)
+    audit = build_governance_self_audit(spec)
+    typer.echo(governance_audit_to_text(audit))
+    typer.echo("-" * 45)
 
     allowed = {"quarto", "markdown", "html-single", "pdf"}
     if output_format not in allowed:

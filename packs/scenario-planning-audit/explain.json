@@ -1,0 +1,625 @@
+{
+  "explain_schema_version": "1.0",
+  "engine": {
+    "name": "cloudpedagogy-course-engine",
+    "version": "1.21.0",
+    "command": "course-engine pack dist/scenario-planning-environmental-scanning --out packs/scenario-planning-audit --profile audit --overwrite",
+    "built_at_utc": "2026-01-25T19:03:23Z"
+  },
+  "input": {
+    "type": "dist_dir",
+    "path": "dist/scenario-planning-environmental-scanning",
+    "path_normalised": "dist/scenario-planning-environmental-scanning",
+    "exists": true,
+    "hash_sha256": null,
+    "bytes": null
+  },
+  "course": {
+    "id": "scenario-planning-environmental-scanning",
+    "version": "0.3.0",
+    "title": "Scenario Planning and Environmental Scanning",
+    "subtitle": null,
+    "description": null,
+    "language": "en",
+    "authors": [],
+    "license": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "structure": {
+    "modules": [],
+    "counts": {
+      "modules": 0,
+      "lessons": 15,
+      "content_blocks": 0
+    }
+  },
+  "sources": {
+    "files": [
+      {
+        "declared_path": "_quarto.yml",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_quarto.yml",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_quarto.yml",
+        "exists": true,
+        "bytes": 2616,
+        "hash_sha256": "ba28e3a20f3f3ff76662dba81792cc450fc34c3b0f5ed2c96bc2fabd75b18082"
+      },
+      {
+        "declared_path": "_site/index.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/index.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/index.html",
+        "exists": true,
+        "bytes": 29736,
+        "hash_sha256": "b6f56c3dd1d15b0d1cd9a433c74afa54a613e81073f78a7b7749da1080596a4d"
+      },
+      {
+        "declared_path": "_site/lessons/index.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/index.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/index.html",
+        "exists": true,
+        "bytes": 28865,
+        "hash_sha256": "19e43fe43ef92cb8d2607be484f362ac4c2a5835b837682cf7e4f23c614a7dbe"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-01-ai-tools-for-real-time-environmental-scanning.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-01-ai-tools-for-real-time-environmental-scanning.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-01-ai-tools-for-real-time-environmental-scanning.html",
+        "exists": true,
+        "bytes": 29577,
+        "hash_sha256": "24e04c7c637e182db01badcee7de8848216f8cc1cab8b67dba353fe10a95acf8"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-02-trend-analysis-in-higher-education-using-genai.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-02-trend-analysis-in-higher-education-using-genai.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-02-trend-analysis-in-higher-education-using-genai.html",
+        "exists": true,
+        "bytes": 43991,
+        "hash_sha256": "f64b5950f465615ba688b1c697b0f832e3fb124ae4467d67fd9fe638b41f7828"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-03-building-strategic-scenarios-with-ai-support.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-03-building-strategic-scenarios-with-ai-support.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-03-building-strategic-scenarios-with-ai-support.html",
+        "exists": true,
+        "bytes": 42325,
+        "hash_sha256": "fcfb1525d66c1b1e9bec9b53b81fbabcc5541f4f4906820bdf79d5d9b6b28e10"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-04-stress-testing-institutional-plans-with-simulations.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-04-stress-testing-institutional-plans-with-simulations.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-04-stress-testing-institutional-plans-with-simulations.html",
+        "exists": true,
+        "bytes": 43035,
+        "hash_sha256": "7386b9044f35b0d1448e22c6d37901c865ea48aa17509bcf1e62c1a9f9ae71b3"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-05-linking-strategic-foresight-to-operational-strategy.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-05-linking-strategic-foresight-to-operational-strategy.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-05-linking-strategic-foresight-to-operational-strategy.html",
+        "exists": true,
+        "bytes": 44878,
+        "hash_sha256": "9cfcec1f0111bcb56d77808953d2d778807b5c595a624355a685b84ba31688de"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-06-key-takeaways.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-06-key-takeaways.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-06-key-takeaways.html",
+        "exists": true,
+        "bytes": 35646,
+        "hash_sha256": "8888616ff8097f68cc2afea406071dcab590243538a6534df063d897be9e8182"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-07-practical-use-cases.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-07-practical-use-cases.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-07-practical-use-cases.html",
+        "exists": true,
+        "bytes": 42730,
+        "hash_sha256": "eb936be7270df34f0adec1d40105088e4d58db5186b105dbbbf3d2a53cdf2145"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-08-learning-activities.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-08-learning-activities.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-08-learning-activities.html",
+        "exists": true,
+        "bytes": 54814,
+        "hash_sha256": "b687a5ea41a3a1497cb71e0321691bc4753d623d9397cdbb72c75544ce4fd2a8"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-09-prompt-templates.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-09-prompt-templates.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-09-prompt-templates.html",
+        "exists": true,
+        "bytes": 49338,
+        "hash_sha256": "83808cd6635d042d202d5473bcc6af974e7e75bcf2b39609c1e2383665ee5097"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-10-innovative-use-cases.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-10-innovative-use-cases.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-10-innovative-use-cases.html",
+        "exists": true,
+        "bytes": 47023,
+        "hash_sha256": "158edbf8bbefeb355698f33ba1de5528fb817406bd49631541decabdcde72b72"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-11-reflection-discussion.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-11-reflection-discussion.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-11-reflection-discussion.html",
+        "exists": true,
+        "bytes": 44890,
+        "hash_sha256": "f180604303e40d2a1339784042ae58ba08b29a222607476b327fb5cd6092d72a"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-12-productivity-tips.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-12-productivity-tips.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-12-productivity-tips.html",
+        "exists": true,
+        "bytes": 40947,
+        "hash_sha256": "d0789844c4942bb6e4ed75c7f1761ead5bdf9a88771963b96877422a222aa2d6"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-13-prompt-library.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-13-prompt-library.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-13-prompt-library.html",
+        "exists": true,
+        "bytes": 45771,
+        "hash_sha256": "d39e1113a42321684a2c559d6db5fb5fd0a368541c319d87c2b544cab47ebd8f"
+      },
+      {
+        "declared_path": "_site/lessons/module-1-lesson-14-applying-the-ai-capability-framework.html",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-14-applying-the-ai-capability-framework.html",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/lessons/module-1-lesson-14-applying-the-ai-capability-framework.html",
+        "exists": true,
+        "bytes": 55366,
+        "hash_sha256": "0968a3c349061756ecb71f47e9ddfd23b83020b3981804d58d39c0a6f1267619"
+      },
+      {
+        "declared_path": "_site/search.json",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/search.json",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/search.json",
+        "exists": true,
+        "bytes": 207321,
+        "hash_sha256": "ff5677cb3364619be20b219a0b39c8f6715cec628d270a24fb1dec3b04a5cdbd"
+      },
+      {
+        "declared_path": "_site/site_libs/bootstrap/bootstrap-b337f537912f5ab074b938eebad4c5d7.min.css",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/bootstrap/bootstrap-b337f537912f5ab074b938eebad4c5d7.min.css",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/bootstrap/bootstrap-b337f537912f5ab074b938eebad4c5d7.min.css",
+        "exists": true,
+        "bytes": 498119,
+        "hash_sha256": "0d67a4ec741d2721158f4ca4b4dbdc84cebeaa51a3aa6e939fc9608deb7b2085"
+      },
+      {
+        "declared_path": "_site/site_libs/bootstrap/bootstrap-icons.css",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/bootstrap/bootstrap-icons.css",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/bootstrap/bootstrap-icons.css",
+        "exists": true,
+        "bytes": 99464,
+        "hash_sha256": "01253947f506e030589e4f33fc7ec7ccdfb9505e2e596dedf16445f12e243c0a"
+      },
+      {
+        "declared_path": "_site/site_libs/bootstrap/bootstrap-icons.woff",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/bootstrap/bootstrap-icons.woff",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/bootstrap/bootstrap-icons.woff",
+        "exists": true,
+        "bytes": 180288,
+        "hash_sha256": "f55513b7b591cb84a3b87ff0e34ea24d4831d6fedc22e54b911ca64b5b544a15"
+      },
+      {
+        "declared_path": "_site/site_libs/bootstrap/bootstrap.min.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/bootstrap/bootstrap.min.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/bootstrap/bootstrap.min.js",
+        "exists": true,
+        "bytes": 80668,
+        "hash_sha256": "d2ea6c1e0cabca20d18e924b25a1cd0187c38ba7c33f60ab06e1b0402b9bcdb5"
+      },
+      {
+        "declared_path": "_site/site_libs/clipboard/clipboard.min.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/clipboard/clipboard.min.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/clipboard/clipboard.min.js",
+        "exists": true,
+        "bytes": 9160,
+        "hash_sha256": "e17a1d816e13c0826e0ed7febfabc3277f45571234bde0bf9120829a7169edc9"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-html/anchor.min.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/anchor.min.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/anchor.min.js",
+        "exists": true,
+        "bytes": 5888,
+        "hash_sha256": "69098e105d990f834cff1b7886d873444228ff63c590e5ff834d568f1115ed8b"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-html/axe/axe-check.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/axe/axe-check.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/axe/axe-check.js",
+        "exists": true,
+        "bytes": 4884,
+        "hash_sha256": "88e2922e397018186991fa708947be84f96f85578e3c7601d29a5e58e367211d"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-html/popper.min.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/popper.min.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/popper.min.js",
+        "exists": true,
+        "bytes": 20084,
+        "hash_sha256": "4d50586b184724d39ddfe0f6582861664eddd5e806e5a79e0dbaa832361414d0"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css",
+        "exists": true,
+        "bytes": 3678,
+        "hash_sha256": "4eb3371f2eee25041e3b30ee7632147f488587077e494173ae917c7bd0502717"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-html/quarto.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/quarto.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/quarto.js",
+        "exists": true,
+        "bytes": 26885,
+        "hash_sha256": "14589dacd0cf625c4e6891269681a0a8e20aaa5390864ca6a69f2fff1514719a"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-html/tabsets/tabsets.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/tabsets/tabsets.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/tabsets/tabsets.js",
+        "exists": true,
+        "bytes": 2882,
+        "hash_sha256": "a9c226bf70e82eaf5476f619cecfb70b4446b87ce4d1634d6404b0b2ba006d15"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-html/tippy.css",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/tippy.css",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/tippy.css",
+        "exists": true,
+        "bytes": 1409,
+        "hash_sha256": "5969f497d9158d7682f8219c6f13fa67269cdf5bf50a3931d95327151dee5678"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-html/tippy.umd.min.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/tippy.umd.min.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-html/tippy.umd.min.js",
+        "exists": true,
+        "bytes": 24033,
+        "hash_sha256": "41181eeec6d7ba64cb9165f0e95563e34e026bde79e7c13aeec83270429b6fae"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-nav/headroom.min.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-nav/headroom.min.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-nav/headroom.min.js",
+        "exists": true,
+        "bytes": 4570,
+        "hash_sha256": "5b80cc4165a661a3f2060d6bdb5ccff591f04c4f8e39a06c12d3c2544587cb17"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-nav/quarto-nav.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-nav/quarto-nav.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-nav/quarto-nav.js",
+        "exists": true,
+        "bytes": 9636,
+        "hash_sha256": "a3e9c8c52dd54d783a6d9294357ef104d17d03faf0a404b592216c0d71a9f717"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-search/autocomplete.umd.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-search/autocomplete.umd.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-search/autocomplete.umd.js",
+        "exists": true,
+        "bytes": 96397,
+        "hash_sha256": "cd9db3b7d812139a4679a2566ea8f01b2a80159490a60b9e9e813e81b5e00a05"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-search/fuse.min.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-search/fuse.min.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-search/fuse.min.js",
+        "exists": true,
+        "bytes": 23539,
+        "hash_sha256": "c57339c3fa16b1d69d9a6b46749a8139ef8d4fc9bbfe48144ff897aa7d4222ec"
+      },
+      {
+        "declared_path": "_site/site_libs/quarto-search/quarto-search.js",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-search/quarto-search.js",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/_site/site_libs/quarto-search/quarto-search.js",
+        "exists": true,
+        "bytes": 37174,
+        "hash_sha256": "b685d6ad9b22c04e3f55bcf54e56db7fed463bc881bc92007406e9879a0ec6be"
+      },
+      {
+        "declared_path": "index.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/index.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/index.qmd",
+        "exists": true,
+        "bytes": 2187,
+        "hash_sha256": "0ca6833e2ec305ff680c6722727abbd3379ab4d58c123095ffb4734dd01d19f0"
+      },
+      {
+        "declared_path": "lessons/index.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/index.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/index.qmd",
+        "exists": true,
+        "bytes": 1571,
+        "hash_sha256": "55f4a05e34be0aebad0eb085a24167d5ab7b03e09ef61a7634d58fe13a8281da"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-01-ai-tools-for-real-time-environmental-scanning.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-01-ai-tools-for-real-time-environmental-scanning.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-01-ai-tools-for-real-time-environmental-scanning.qmd",
+        "exists": true,
+        "bytes": 1016,
+        "hash_sha256": "d304fe94cc9609ebfabb9282512fc58ba3c7dd20a3db0d30fb6152ab7f9aa834"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-02-trend-analysis-in-higher-education-using-genai.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-02-trend-analysis-in-higher-education-using-genai.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-02-trend-analysis-in-higher-education-using-genai.qmd",
+        "exists": true,
+        "bytes": 11524,
+        "hash_sha256": "785339395bd8165bbb458bacfcefdf869d4bb7fd3cf8de748aa4f1a931b6d87a"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-03-building-strategic-scenarios-with-ai-support.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-03-building-strategic-scenarios-with-ai-support.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-03-building-strategic-scenarios-with-ai-support.qmd",
+        "exists": true,
+        "bytes": 11355,
+        "hash_sha256": "8935a533eb28d3d9f30f04f14a090e5b91a898f7f1835ba56e6e97d868849e8d"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-04-stress-testing-institutional-plans-with-simulations.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-04-stress-testing-institutional-plans-with-simulations.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-04-stress-testing-institutional-plans-with-simulations.qmd",
+        "exists": true,
+        "bytes": 10953,
+        "hash_sha256": "b36e8a7f6a1f0cbe094d0132dcb200a5bf3a5ebcfc05ab01121f507fce1f4d4b"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-05-linking-strategic-foresight-to-operational-strategy.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-05-linking-strategic-foresight-to-operational-strategy.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-05-linking-strategic-foresight-to-operational-strategy.qmd",
+        "exists": true,
+        "bytes": 11798,
+        "hash_sha256": "7f1f692b9adff527f1f4eab61d9f16a724800dc1d85c494b61a76869caa79a39"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-06-key-takeaways.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-06-key-takeaways.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-06-key-takeaways.qmd",
+        "exists": true,
+        "bytes": 3785,
+        "hash_sha256": "ef8fa28dfac5abb17ebd59558518536d5f199a484269e5c8817688240176ba14"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-07-practical-use-cases.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-07-practical-use-cases.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-07-practical-use-cases.qmd",
+        "exists": true,
+        "bytes": 11518,
+        "hash_sha256": "29ed6361025463c77413d4c89b185c52d2f8e6a5c7063a7ce661e5fd31b5122f"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-08-learning-activities.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-08-learning-activities.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-08-learning-activities.qmd",
+        "exists": true,
+        "bytes": 20004,
+        "hash_sha256": "e0869138621886065fe42659a2e7361282ecde27a3a746edbed8d0d5536aef94"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-09-prompt-templates.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-09-prompt-templates.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-09-prompt-templates.qmd",
+        "exists": true,
+        "bytes": 17379,
+        "hash_sha256": "9e0a3c9a60c9270a4a3a120dde1ab2ee7cc5975296e492bfc7fcfdf1166613a8"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-10-innovative-use-cases.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-10-innovative-use-cases.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-10-innovative-use-cases.qmd",
+        "exists": true,
+        "bytes": 14416,
+        "hash_sha256": "188a983ad1a868cc9d68de26e8f5a88cc46c62ba5239bbc560e718a4745af4fc"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-11-reflection-discussion.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-11-reflection-discussion.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-11-reflection-discussion.qmd",
+        "exists": true,
+        "bytes": 11509,
+        "hash_sha256": "5c830eefd8f05003bab4cf4e96b6110471df72ccab9cab67902f62207d8be731"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-12-productivity-tips.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-12-productivity-tips.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-12-productivity-tips.qmd",
+        "exists": true,
+        "bytes": 9922,
+        "hash_sha256": "ba967c080b6da4835593cf1b9b1b0c236c3a18564237b2b9161bddd07a0c9680"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-13-prompt-library.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-13-prompt-library.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-13-prompt-library.qmd",
+        "exists": true,
+        "bytes": 11370,
+        "hash_sha256": "2b1a6eda5419576058c03c533536ee6b817f0bc48a90de21a50822874976e973"
+      },
+      {
+        "declared_path": "lessons/module-1-lesson-14-applying-the-ai-capability-framework.qmd",
+        "resolved_path": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-14-applying-the-ai-capability-framework.qmd",
+        "path_normalised": "dist/scenario-planning-environmental-scanning/lessons/module-1-lesson-14-applying-the-ai-capability-framework.qmd",
+        "exists": true,
+        "bytes": 15873,
+        "hash_sha256": "b7db833b29dcf54e92d08a7db0090a7070f78098788e3f67acb7bbeb93a26ec7"
+      }
+    ],
+    "resolution": [],
+    "counts": {
+      "files": 52,
+      "missing": 0
+    }
+  },
+  "framework_alignment": {
+    "framework_name": "CloudPedagogy AI Capability Framework (2026 Edition)",
+    "domains": [
+      "Awareness",
+      "Co-Agency",
+      "Applied Practice & Innovation",
+      "Ethics, Equity & Impact",
+      "Decision-Making & Governance",
+      "Reflection, Learning & Renewal"
+    ],
+    "mapping_mode": "informational",
+    "notes": null
+  },
+  "capability_mapping": {
+    "present": true,
+    "summary": {
+      "framework": "CloudPedagogy AI Capability Framework (2026 Edition)",
+      "version": "2026",
+      "domains": {
+        "awareness": {
+          "label": "AI Awareness & Orientation",
+          "intent": "Build foundational literacy for environmental scanning and scenario work with GenAI.",
+          "coverage": [
+            "module-1",
+            "lesson:lesson-01"
+          ],
+          "evidence": [
+            "lesson:lesson-01",
+            "lesson:lesson-02"
+          ]
+        },
+        "co_agency": {
+          "label": "Human–AI Co-Agency",
+          "intent": "Clarify roles, prompts, and decision boundaries when collaborating with GenAI for foresight tasks.",
+          "coverage": [
+            "module-1",
+            "lesson:lesson-03"
+          ],
+          "evidence": [
+            "lesson:lesson-03",
+            "lesson:lesson-09"
+          ]
+        },
+        "applied_practice_innovation": {
+          "label": "Applied Practice & Innovation",
+          "intent": "Apply GenAI to real-world scanning, synthesis, and scenario construction workflows.",
+          "coverage": [
+            "module-1",
+            "lesson:lesson-02"
+          ],
+          "evidence": [
+            "lesson:lesson-02",
+            "lesson:lesson-04",
+            "lesson:lesson-10"
+          ]
+        },
+        "ethics_equity_impact": {
+          "label": "Ethics, Equity & Impact",
+          "intent": "Surface bias, risk, and impact considerations in AI-assisted trend and scenario work.",
+          "coverage": [
+            "module-1",
+            "lesson:lesson-07"
+          ],
+          "evidence": [
+            "lesson:lesson-07",
+            "lesson:lesson-11"
+          ]
+        },
+        "decision_making_governance": {
+          "label": "Decision-Making & Governance",
+          "intent": "Support defensible choices, accountability, and governance framing in foresight-to-strategy workflows.",
+          "coverage": [
+            "module-1",
+            "lesson:lesson-05"
+          ],
+          "evidence": [
+            "lesson:lesson-05",
+            "lesson:lesson-04"
+          ]
+        },
+        "reflection_learning_renewal": {
+          "label": "Reflection, Learning & Renewal",
+          "intent": "Embed reflective practice and continuous improvement across scanning and scenario cycles.",
+          "coverage": [
+            "module-1",
+            "lesson:lesson-14"
+          ],
+          "evidence": [
+            "lesson:lesson-06",
+            "lesson:lesson-11",
+            "lesson:lesson-14"
+          ]
+        }
+      },
+      "domains_declared": 6,
+      "status": "informational (not enforced)"
+    },
+    "details": null
+  },
+  "design_intent": {
+    "present": true,
+    "hash_sha256": "c4329887a980a3f10cd8cb8659563a49b12814812b8835bff00ef234d42169b5",
+    "summary": "This course is designed to support critical engagement with AI-informed environmental scanning and scenario planning practices while preserving human judgement, clear decision boundaries, and transparent design rationale."
+  },
+  "ai_scoping": {
+    "present": true,
+    "hash_sha256": "c76b477327edd007dbfc9d2b681a41b2332dc937f8ed163343a6095d7e376b24",
+    "scope_summary": "AI tools may be used to support learning activities (e.g., scanning, synthesis, ideation, scenario exploration) and formative drafting. Use in summative assessment is governed by programme/module rules; where allowed, learners must disclose and be able to explain how AI contributed."
+  },
+  "declared": {
+    "framework_alignment_present": true,
+    "capability_mapping_present": true,
+    "design_intent_present": true,
+    "ai_scoping_present": true
+  },
+  "policies": {
+    "active": [],
+    "composed": {
+      "layers": [],
+      "resolved": {}
+    },
+    "hypothetical": {
+      "would_fail": [],
+      "would_warn": []
+    }
+  },
+  "rendering": {
+    "profile": {
+      "requested": null,
+      "resolved": "default",
+      "resolution_reason": "no profile specified; default applied"
+    },
+    "quarto": {
+      "toc": true,
+      "toc_depth": 2
+    },
+    "artefact": {
+      "manifest_version": "1.5.0",
+      "built_at_utc": "2026-01-25T19:01:27.593839+00:00",
+      "refreshed_at_utc": null,
+      "builder": {
+        "name": "course-engine",
+        "version": "1.21.0",
+        "python": "3.14.2",
+        "platform": "macOS-12.5.1-arm64-arm-64bit-Mach-O"
+      },
+      "output": {
+        "format": "quarto",
+        "out_dir": "dist/scenario-planning-environmental-scanning"
+      },
+      "input": {
+        "course_yml": "demo/scenario-planning-environmental-scanning/course.yml"
+      },
+      "render": {
+        "rendered_at_utc": "2026-01-25T19:02:07.964915+00:00",
+        "to": null,
+        "input_file": null
+      }
+    }
+  },
+  "signals": [],
+  "warnings": [],
+  "errors": []
+}

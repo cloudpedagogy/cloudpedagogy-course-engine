@@ -1,0 +1,105 @@
+{
+  "course": {
+    "id": "scenario-planning-environmental-scanning",
+    "title": "Scenario Planning and Environmental Scanning",
+    "version": "0.3.0"
+  },
+  "capability_mapping": {
+    "framework": "CloudPedagogy AI Capability Framework (2026 Edition)",
+    "version": "2026",
+    "status": "informational (not enforced)",
+    "domains_declared": 6
+  },
+  "domains": {
+    "applied_practice_innovation": {
+      "label": "Applied Practice & Innovation",
+      "coverage_count": 2,
+      "evidence_count": 3,
+      "gap": false,
+      "coverage": [
+        "module-1",
+        "lesson:lesson-02"
+      ],
+      "evidence": [
+        "lesson:lesson-02",
+        "lesson:lesson-04",
+        "lesson:lesson-10"
+      ]
+    },
+    "awareness": {
+      "label": "AI Awareness & Orientation",
+      "coverage_count": 2,
+      "evidence_count": 2,
+      "gap": false,
+      "coverage": [
+        "module-1",
+        "lesson:lesson-01"
+      ],
+      "evidence": [
+        "lesson:lesson-01",
+        "lesson:lesson-02"
+      ]
+    },
+    "co_agency": {
+      "label": "Human–AI Co-Agency",
+      "coverage_count": 2,
+      "evidence_count": 2,
+      "gap": false,
+      "coverage": [
+        "module-1",
+        "lesson:lesson-03"
+      ],
+      "evidence": [
+        "lesson:lesson-03",
+        "lesson:lesson-09"
+      ]
+    },
+    "decision_making_governance": {
+      "label": "Decision-Making & Governance",
+      "coverage_count": 2,
+      "evidence_count": 2,
+      "gap": false,
+      "coverage": [
+        "module-1",
+        "lesson:lesson-05"
+      ],
+      "evidence": [
+        "lesson:lesson-05",
+        "lesson:lesson-04"
+      ]
+    },
+    "ethics_equity_impact": {
+      "label": "Ethics, Equity & Impact",
+      "coverage_count": 2,
+      "evidence_count": 2,
+      "gap": false,
+      "coverage": [
+        "module-1",
+        "lesson:lesson-07"
+      ],
+      "evidence": [
+        "lesson:lesson-07",
+        "lesson:lesson-11"
+      ]
+    },
+    "reflection_learning_renewal": {
+      "label": "Reflection, Learning & Renewal",
+      "coverage_count": 2,
+      "evidence_count": 3,
+      "gap": false,
+      "coverage": [
+        "module-1",
+        "lesson:lesson-14"
+      ],
+      "evidence": [
+        "lesson:lesson-06",
+        "lesson:lesson-11",
+        "lesson:lesson-14"
+      ]
+    }
+  },
+  "summary": {
+    "gaps": 0,
+    "gap_domains": []
+  }
+}

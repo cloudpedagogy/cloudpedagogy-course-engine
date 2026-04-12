@@ -8,6 +8,25 @@ The Course Engine is designed for **reproducible course production** in
 educator, learning design, quality assurance (QA), and academic
 governance contexts.
 
+## 🔗 Role in the CloudPedagogy Ecosystem
+
+**Phase:** Phase 5 — Infrastructure / Meta Layer
+
+**Role:**
+Functions as the technical compiler for building structured, portable curriculum outputs and learning artefacts from a single source of truth.
+
+**Upstream Inputs:**
+Structural curriculum data from the **Mapping Engine** and pedagogical assets from the **Shared Module Repository System**.
+
+**Downstream Outputs:**
+Generates publishable course artefacts (HTML/PDF) and machine-readable manifests for institutional LMS and QA systems.
+
+**Does NOT:**
+- Perform active workload simulation.
+- Manage institutional risk workflows or individual decision records.
+
+For a full system overview, see: [SYSTEM_OVERVIEW.md](../SYSTEM_OVERVIEW.md)
+
 It prioritises **determinism, transparency, and explainability** over
 automation or enforcement.
 

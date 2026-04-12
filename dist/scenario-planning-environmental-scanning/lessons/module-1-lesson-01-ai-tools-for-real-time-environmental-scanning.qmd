@@ -1,0 +1,120 @@
+---
+title: "5.3.1 AI Tools for Real-Time Environmental Scanning"
+toc: true
+toc-depth: 2
+toc-location: body
+---
+
+
+
+
+
+
+  
+  
+
+
+
+
+::: {.callout-note}
+## Lesson details
+
+Estimated time: 30 minutes  
+
+
+
+
+
+Label: 5.3.1
+
+:::
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Next: 5.3.2 Trend Analysis in Higher Education using GenAI](module-1-lesson-02-trend-analysis-in-higher-education-using-genai.qmd) →
+
+
+
+
+
+## Learning objectives
+
+- (Add learning objectives)
+
+
+
+
+
+
+
+  
+
+    
+# Provenance Test Lesson Content
+
+This is a file-based lesson source used to validate explain provenance output.
+
+
+    
+  
+
+
+
+
+
+
+
+  
+    
+  
+
+
+
+
+
+
+
+
+---
+
+### Framework alignment
+This lesson sits within: **CloudPedagogy AI Capability Framework (2026 Edition)**  
+Domains: Awareness, Co-Agency, Applied Practice & Innovation, Ethics, Equity & Impact, Decision-Making & Governance, Reflection, Learning & Renewal
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Next: 5.3.2 Trend Analysis in Higher Education using GenAI](module-1-lesson-02-trend-analysis-in-higher-education-using-genai.qmd) →
+
+

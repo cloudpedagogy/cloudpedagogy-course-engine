@@ -1,0 +1,67 @@
+COURSE ENGINE EXPLAIN REPORT
+============================
+
+Kind: explain
+Mode: artefact (manifest-backed)
+
+1. Course Identity
+  Title: Scenario Planning and Environmental Scanning
+  ID: scenario-planning-environmental-scanning
+  Version: 0.3.0
+  Language: en
+
+2. Provenance
+  Engine version: 1.21.0
+  Built at (UTC): 2026-01-25T19:03:23Z
+  Command: course-engine pack dist/scenario-planning-environmental-scanning --out packs/scenario-planning-audit --profile audit --overwrite
+  Input type: dist_dir
+  Input path: dist/scenario-planning-environmental-scanning
+
+3. Artefact Summary
+  Output format: quarto
+  Output dir: dist/scenario-planning-environmental-scanning
+  Manifest version: 1.5.0
+  Artefact built at (UTC): 2026-01-25T19:01:27.593839+00:00
+  Builder (from manifest):
+    Name: course-engine
+    Version: 1.21.0
+    Python: 3.14.2
+    Platform: macOS-12.5.1-arm64-arm-64bit-Mach-O
+  Source course.yml: demo/scenario-planning-environmental-scanning/course.yml
+
+4. Outputs
+  File count: 52
+  Sample files:
+    - _quarto.yml
+    - _site/index.html
+    - _site/lessons/index.html
+    - _site/lessons/module-1-lesson-01-ai-tools-for-real-time-environmental-scanning.html
+    - _site/lessons/module-1-lesson-02-trend-analysis-in-higher-education-using-genai.html
+    - _site/lessons/module-1-lesson-03-building-strategic-scenarios-with-ai-support.html
+    - _site/lessons/module-1-lesson-04-stress-testing-institutional-plans-with-simulations.html
+    - _site/lessons/module-1-lesson-05-linking-strategic-foresight-to-operational-strategy.html
+    - _site/lessons/module-1-lesson-06-key-takeaways.html
+    - _site/lessons/module-1-lesson-07-practical-use-cases.html
+    - _site/lessons/module-1-lesson-08-learning-activities.html
+    - _site/lessons/module-1-lesson-09-prompt-templates.html
+
+5. Governance Signals
+  Framework alignment:
+    Framework: CloudPedagogy AI Capability Framework (2026 Edition)
+    Domains:
+      - Awareness
+      - Co-Agency
+      - Applied Practice & Innovation
+      - Ethics, Equity & Impact
+      - Decision-Making & Governance
+      - Reflection, Learning & Renewal
+    Mapping mode: informational
+  Capability mapping: present
+  Design intent: present
+    Hash (sha256): c4329887a980a3f10cd8cb8659563a49b12814812b8835bff00ef234d42169b5
+    Summary: This course is designed to support critical engagement with AI-informed environmental scanning and scenario planning practices while preserving human judgement…
+
+6. Determinism
+  This report is derived from the canonical explain payload.
+  Non-determinism may occur only in runtime timestamps (e.g., built_at_utc).
+

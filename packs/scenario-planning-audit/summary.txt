@@ -1,0 +1,32 @@
+Course Engine Summary
+Mode: artefact (manifest-backed)
+Path: dist/scenario-planning-environmental-scanning
+Generated at (UTC): 2026-01-25T19:03:23Z
+
+Artefacts
+- manifest.json: present
+- course.yml: present
+- file count: 52
+
+Declared metadata
+- title: Scenario Planning and Environmental Scanning
+- id: scenario-planning-environmental-scanning
+- version: 0.3.0
+- language: en
+
+Framework alignment
+- framework: CloudPedagogy AI Capability Framework (2026 Edition)
+- domains (declared): Awareness, Co-Agency, Applied Practice & Innovation, Ethics, Equity & Impact, Decision-Making & Governance, Reflection, Learning & Renewal
+- mapping mode: informational
+
+Capability mapping
+- present: yes
+
+Design intent
+- declared: yes
+
+Governance signals (observed)
+- none
+
+Missing declarations (observed)
+- lifecycle metadata not declared
